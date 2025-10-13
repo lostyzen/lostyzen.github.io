@@ -38,6 +38,10 @@ defaultContentLanguageInSubdir = false
   comments = false
   hidemeta = false
   hideSummary = false
+  
+  # Dark mode configuration
+  defaultTheme = "auto" # Options: auto, light, dark
+  disableThemeToggle = false
   showtoc = false
   tocopen = false
 

@@ -1,5 +1,6 @@
 # 🚀 DevOps Tech Blog
 
+[![Deploy Hugo site to GitHub Pages](https://github.com/lostyzen/lostyzen.github.io/actions/workflows/hugo.yml/badge.svg)](https://github.com/lostyzen/lostyzen.github.io/actions/workflows/hugo.yml)
 [![Hugo](https://img.shields.io/badge/Hugo-0.151.0-FF4088?style=flat-square&logo=hugo)](https://gohugo.io/)
 [![PaperMod](https://img.shields.io/badge/Theme-PaperMod-success?style=flat-square)](https://github.com/adityatelange/hugo-PaperMod)
 [![GitHub Pages](https://img.shields.io/badge/Deployed%20on-GitHub%20Pages-181717?style=flat-square&logo=github)](https://lostyzen.github.io)
@@ -101,7 +102,7 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 - 🌐 **Site** : [lostyzen.github.io](https://lostyzen.github.io)
 - 💼 **GitHub** : [@lostyzen](https://github.com/lostyzen)
 - 📧 **Email** : [lostyzen@gmail.com](mailto:lostyzen@gmail.com)
-- 🔐 **PGP** : `02059854864DEE62C2BB455FD8253521EDD1630B` ([keys.openpgp.org](https://keys.openpgp.org/search?q=02059854864DEE62C2BB455FD8253521EDD1630B))
+- 🔐 **PGP** : `0205 9854 864D EE62 C2BB 455F D825 3521 EDD1 630B` ([keys.openpgp.org](https://keys.openpgp.org/search?q=02059854864DEE62C2BB455FD8253521EDD1630B))
 
 ---
 
