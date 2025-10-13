@@ -25,6 +25,11 @@ defaultContentLanguageInSubdir = false
 
 [params]
   author = "lostyzen"
+  
+  # SEO Global
+  keywords = ["devops", "java", "quarkus", "architecture", "microservices", "cloud-native", "spring-boot", "api", "software-design", "best-practices", "performance", "scoop", "windows", "powershell", "clean-architecture", "ddd"]
+  images = ["/images/default-og.png"]  # Image par défaut pour Open Graph
+  
   ShowReadingTime = true
   ShowShareButtons = false  # Désactivé temporairement - réseaux sociaux pas encore créés
   ShowPostNavLinks = true
@@ -52,6 +57,14 @@ defaultContentLanguageInSubdir = false
   [params.label]
     text = "DevOps Blog"
     iconHeight = 35
+
+  # Schema.org données structurées
+  [params.schema]
+    publisherType = "Person"  # ou "Organization"
+    sameAs = [
+      "https://github.com/lostyzen",
+      "https://lostyzen.github.io"
+    ]
 
   # Menu principal
   [[params.socialIcons]]

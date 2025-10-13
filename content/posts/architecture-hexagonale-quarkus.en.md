@@ -15,7 +15,7 @@ TocOpen: false
 hidemeta: false
 comments: true
 description: "Complete guide to hexagonal architecture in Java with Quarkus: structure, concrete examples, testing, and best practices for maintainable and scalable APIs."
-canonicalURL: "https://lostyzen.github.io/posts/architecture-hexagonale-quarkus/"
+canonicalURL: "https://lostyzen.github.io/en/posts/architecture-hexagonale-quarkus/"
 disableHLJS: false
 disableShare: false
 searchHidden: false

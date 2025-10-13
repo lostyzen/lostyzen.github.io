@@ -18,7 +18,7 @@ hidemeta: false
 comments: true
 # SEO Description (max 160 caractères)
 description: "Description concise et attractive qui apparaîtra dans Google. Max 160 caractères pour éviter la troncature."
-# URL canonique
+# URL canonique (adapter selon la langue : /posts/ pour FR, /en/posts/ pour EN)
 canonicalURL: "https://lostyzen.github.io/posts/slug-de-larticle/"
 # Paramètres d'affichage
 disableHLJS: false

@@ -15,7 +15,7 @@ TocOpen: false
 hidemeta: false
 comments: true
 description: "Discover Scoop, the revolutionary Windows package manager that allows installing tools without administrator rights, in a portable and clean way."
-canonicalURL: "https://lostyzen.github.io/posts/scoop-gestionnaire-windows/"
+canonicalURL: "https://lostyzen.github.io/en/posts/scoop-gestionnaire-windows/"
 disableHLJS: false
 disableShare: false
 searchHidden: false
