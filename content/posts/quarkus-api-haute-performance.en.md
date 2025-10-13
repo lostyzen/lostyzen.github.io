@@ -7,7 +7,7 @@ weight: 2
 tags: ["Java", "Quarkus", "Performance", "API", "Microservices", "Cloud Native", "Docker", "Best Practices"]
 categories: ["Performance", "Java"]
 author: 
-  name: "Votre Nom"
+  name: "lostyzen"
   link: "https://github.com/lostyzen"
   image: "https://github.com/lostyzen.png"
 showToc: true
@@ -40,13 +40,15 @@ schema:
   type: "BlogPosting"
   datePublished: "2025-10-13T09:00:00+02:00"
   dateModified: "2025-10-13T09:00:00+02:00"
-  author: "Votre Nom"
+  author: "lostyzen"
   publisher: "DevOps Blog"
-images: ["/images/quarkus-performance-og.png"]
-twitter:
-  card: "summary_large_image"
-  site: "@votre_twitter"
-  creator: "@votre_twitter"
+# Open Graph / Facebook (temporarily disabled)
+# images: ["/images/quarkus-performance-og.png"]
+# Twitter Card (temporarily disabled - reactivate when accounts created)
+# twitter:
+#   card: "summary_large_image"
+#   site: "@votre_twitter"
+#   creator: "@votre_twitter"
 ---
 
 🚀 **High-Performance APIs with Quarkus & Java: A Modern Solution for Current Challenges**

@@ -7,7 +7,7 @@ weight: 1
 tags: ["Java", "Quarkus", "Architecture", "Clean Architecture", "DDD", "API", "Ports and Adapters", "Software Design", "Best Practices"]
 categories: ["Architecture", "Java"]
 author: 
-  name: "Votre Nom"
+  name: "lostyzen"
   link: "https://github.com/lostyzen"
   image: "https://github.com/lostyzen.png"
 showToc: true
@@ -40,13 +40,15 @@ schema:
   type: "BlogPosting"
   datePublished: "2025-10-13T10:00:00+02:00"
   dateModified: "2025-10-13T10:00:00+02:00"
-  author: "Votre Nom"
+  author: "lostyzen"
   publisher: "DevOps Blog"
-images: ["/images/architecture-hexagonale-og.png"]
-twitter:
-  card: "summary_large_image"
-  site: "@votre_twitter"
-  creator: "@votre_twitter"
+# Open Graph / Facebook (temporarily disabled)
+# images: ["/images/architecture-hexagonale-og.png"]
+# Twitter Card (temporarily disabled - reactivate when accounts created)
+# twitter:
+#   card: "summary_large_image"
+#   site: "@votre_twitter"
+#   creator: "@votre_twitter"
 ---
 
 🏗️ **Hexagonal Architecture in Java: Structuring APIs for Maintainability**

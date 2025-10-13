@@ -24,9 +24,9 @@ defaultContentLanguageInSubdir = false
       description = "Technical blog focused on DevOps, software architecture and best practices"
 
 [params]
-  author = "Votre Nom"
+  author = "lostyzen"
   ShowReadingTime = true
-  ShowShareButtons = true
+  ShowShareButtons = false  # Désactivé temporairement - réseaux sociaux pas encore créés
   ShowPostNavLinks = true
   ShowBreadCrumbs = true
   ShowCodeCopyButtons = true

@@ -7,7 +7,7 @@ weight: 3
 tags: ["Scoop", "Windows", "Package Manager", "DevOps", "PowerShell", "Tools", "CLI", "Automation", "Productivity"]
 categories: ["DevOps", "Tools"]
 author: 
-  name: "Votre Nom"
+  name: "lostyzen"
   link: "https://github.com/lostyzen"
   image: "https://github.com/lostyzen.png"
 showToc: true
@@ -40,13 +40,15 @@ schema:
   type: "BlogPosting"
   datePublished: "2025-10-13T08:00:00+02:00"
   dateModified: "2025-10-13T08:00:00+02:00"
-  author: "Votre Nom"
+  author: "lostyzen"
   publisher: "DevOps Blog"
-images: ["/images/scoop-windows-og.png"]
-twitter:
-  card: "summary_large_image"
-  site: "@votre_twitter"
-  creator: "@votre_twitter"
+# Open Graph / Facebook (temporarily disabled)
+# images: ["/images/scoop-windows-og.png"]
+# Twitter Card (temporarily disabled - reactivate when accounts created)
+# twitter:
+#   card: "summary_large_image"
+#   site: "@votre_twitter"
+#   creator: "@votre_twitter"
 ---
 
 # 🚀 Scoop: The Windows Package Manager That Revolutionizes Tool Installation

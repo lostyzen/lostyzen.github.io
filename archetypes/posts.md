@@ -49,13 +49,13 @@ schema:
   type: "BlogPosting"
   datePublished: "{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}"
   dateModified: "{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}"
-  author: "Votre Nom"
+  author: "lostyzen"
   publisher: "DevOps Blog"
-# Open Graph / Réseaux sociaux
-images: ["/images/nom-article-og.png"]
-# Twitter Card
-twitter:
-  card: "summary_large_image"
-  site: "@votre_twitter"
-  creator: "@votre_twitter"
+# Open Graph / Réseaux sociaux (temporairement désactivé)
+# images: ["/images/nom-article-og.png"]
+# Twitter Card (temporairement désactivé - réactiver quand comptes créés)
+# twitter:
+#   card: "summary_large_image"
+#   site: "@votre_twitter"
+#   creator: "@votre_twitter"
 ---
