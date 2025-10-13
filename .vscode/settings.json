@@ -1,0 +1,29 @@
+{
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.profiles.windows": {
+    "Git Bash": {
+      "path": "C:\\Users\\bazydlo\\scoop\\apps\\git\\current\\usr\\bin\\bash.exe",
+      "args": ["--login"],
+      "icon": "terminal-bash"
+    },
+    "PowerShell 7": {
+      "path": "C:\\Users\\bazydlo\\scoop\\apps\\pwsh\\current\\pwsh.exe",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "& 'C:\\Users\\bazydlo\\AppData\\Local\\PowerShell\\Microsoft.PowerShell_profile.ps1'; $Host.EnterNestedPrompt()"
+      ],
+      "icon": "terminal-powershell"
+    },
+    "Command Prompt": {
+      "path": "cmd.exe",
+      "icon": "terminal-cmd"
+    },
+    "PowerShell": null
+  },
+  "files.associations": {
+    "*.md": "markdown"
+  },
+  "markdown.preview.enhancedEditor": true,
+  "jekyll.enabled": true
+}
