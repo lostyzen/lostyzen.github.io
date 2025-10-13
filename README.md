@@ -32,11 +32,13 @@ Ce blog technique couvre :
 | **SEO** | Sitemap, OpenGraph, Schema.org | ✅ |
 | **Performance** | Lighthouse 95+ | 🚀 |
 
-## 📚 **Articles Récents**
+## 📚 **Articles Disponibles**
 
-- [🏗️ Architecture Hexagonale en Java : Structurer vos APIs pour la maintenabilité](https://lostyzen.github.io/posts/architecture-hexagonale-quarkus/)
-- [⚡ Quarkus : API haute performance en Java](https://lostyzen.github.io/posts/quarkus-api-haute-performance/) *(bientôt)*
-- [🔧 Scoop : Gestionnaire de paquets moderne pour Windows](https://lostyzen.github.io/posts/scoop-gestionnaire-windows/) *(bientôt)*
+- 🏗️ **Architecture Hexagonale en Java** : Structurer vos APIs pour la maintenabilité
+- ⚡ **Quarkus Performance** : API haute performance avec Quarkus & Java
+- 🔧 **Scoop Windows** : Gestionnaire de paquets moderne pour Windows
+
+> 📖 **[Voir tous les articles sur le blog](https://lostyzen.github.io)** - Versions FR/EN disponibles
 
 ## 🚀 **Développement Local**
 
