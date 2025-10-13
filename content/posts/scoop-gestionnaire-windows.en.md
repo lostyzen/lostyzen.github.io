@@ -26,7 +26,7 @@ ShowWordCount: true
 ShowRssButtonInSectionTermList: true
 UseHugoToc: true
 cover:
-    image: ""
+    image: "/images/default-og.png" # Temporary image - replace with scoop-windows-og.png
     alt: "Scoop Windows Package Manager"
     caption: "Windows package manager without administrator privileges"
     relative: false

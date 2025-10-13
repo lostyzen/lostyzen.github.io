@@ -30,6 +30,9 @@ defaultContentLanguageInSubdir = false
   keywords = ["devops", "java", "quarkus", "architecture", "microservices", "cloud-native", "spring-boot", "api", "software-design", "best-practices", "performance", "scoop", "windows", "powershell", "clean-architecture", "ddd"]
   images = ["/images/default-og.png"]  # Image par défaut pour Open Graph
   
+  # RSS Configuration
+  ShowFullTextinRSS = false  # Afficher le résumé uniquement dans RSS
+  
   ShowReadingTime = true
   ShowShareButtons = false  # Désactivé temporairement - réseaux sociaux pas encore créés
   ShowPostNavLinks = true
@@ -107,6 +110,12 @@ defaultContentLanguageInSubdir = false
 [outputs]
   home = ["HTML", "RSS", "JSON"]
 
+# Configuration RSS
+[services]
+  [services.rss]
+    limit = 20  # Nombre d'articles dans le feed RSS
+
+# Configuration Sitemap
 [sitemap]
   changefreq = 'weekly'
   filename = 'sitemap.xml'

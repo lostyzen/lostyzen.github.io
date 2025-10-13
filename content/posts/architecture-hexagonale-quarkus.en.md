@@ -26,7 +26,7 @@ ShowWordCount: true
 ShowRssButtonInSectionTermList: true
 UseHugoToc: true
 cover:
-    image: "" 
+    image: "/images/default-og.png" # Temporary image - replace with architecture-hexagonale-og.png
     alt: "Hexagonal Architecture Java Quarkus"
     caption: "Structuring Java APIs with hexagonal architecture"
     relative: false

@@ -1,14 +1,22 @@
 User-agent: *
 Allow: /
 
-# Sitemap
+# Sitemaps
 Sitemap: https://lostyzen.github.io/sitemap.xml
+Sitemap: https://lostyzen.github.io/en/sitemap.xml
 
-# Disallow admin/private areas (si applicable)
+# Disallow admin/private areas
 Disallow: /admin/
 Disallow: /.git/
+Disallow: /.github/
 
-# Allow crawling of important content
+# Allow explicit crawling of important content
 Allow: /posts/
+Allow: /en/posts/
 Allow: /categories/
+Allow: /en/categories/
 Allow: /tags/
+Allow: /en/tags/
+
+# Crawl delay (optionnel - 1 seconde)
+Crawl-delay: 1

@@ -26,7 +26,7 @@ ShowWordCount: true
 ShowRssButtonInSectionTermList: true
 UseHugoToc: true
 cover:
-    image: ""
+    image: "/images/default-og.png" # Image temporaire - remplacer par quarkus-performance-og.png
     alt: "Quarkus Java Performance API"
     caption: "API haute performance avec Quarkus"
     relative: false
