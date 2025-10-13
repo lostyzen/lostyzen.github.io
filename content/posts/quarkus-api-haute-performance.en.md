@@ -6,10 +6,7 @@ draft: false
 weight: 2
 tags: ["Java", "Quarkus", "Performance", "API", "Microservices", "Cloud Native", "Docker", "Best Practices"]
 categories: ["Performance", "Java"]
-author: 
-  name: "lostyzen"
-  link: "https://github.com/lostyzen"
-  image: "https://github.com/lostyzen.png"
+author: "lostyzen"
 showToc: true
 TocOpen: false
 hidemeta: false

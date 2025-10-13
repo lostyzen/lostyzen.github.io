@@ -7,10 +7,7 @@ weight: 1
 # Tags spécifiques (8-12 tags max)
 tags: ["Tag1", "Tag2", "Tag3", "TechPrincipale", "Framework", "BestPractices"]
 categories: ["Catégorie Principale", "Catégorie Secondaire"]
-author: 
-  name: "lostyzen"
-  link: "https://github.com/lostyzen"
-  image: "https://github.com/lostyzen.png"
+author: "lostyzen"
 # Configuration d'affichage
 showToc: true
 TocOpen: false

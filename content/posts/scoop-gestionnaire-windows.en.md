@@ -6,10 +6,7 @@ draft: false
 weight: 3
 tags: ["Scoop", "Windows", "Package Manager", "DevOps", "PowerShell", "Tools", "CLI", "Automation", "Productivity"]
 categories: ["DevOps", "Tools"]
-author: 
-  name: "lostyzen"
-  link: "https://github.com/lostyzen"
-  image: "https://github.com/lostyzen.png"
+author: "lostyzen"
 showToc: true
 TocOpen: false
 hidemeta: false
