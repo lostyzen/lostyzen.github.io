@@ -26,7 +26,7 @@ ShowWordCount: true
 ShowRssButtonInSectionTermList: true
 UseHugoToc: true
 cover:
-    image: "/images/default-og.png" # Image temporaire - remplacer par architecture-hexagonale-og.png
+    image: "/images/architecture-hexagonale-og.png" # Image spécifique à l'article
     alt: "Architecture Hexagonale Java Quarkus" # Texte alternatif
     caption: "Structurer vos APIs Java avec l'architecture hexagonale"
     relative: false
@@ -44,8 +44,8 @@ schema:
   dateModified: "2025-10-13T10:00:00+02:00"
   author: "lostyzen"
   publisher: "DevOps Blog"
-# Open Graph / Facebook (temporairement désactivé)
-# images: ["/images/architecture-hexagonale-og.png"] # Image pour les réseaux sociaux
+# Open Graph / Facebook
+images: ["/images/architecture-hexagonale-og.png"] # Image pour les réseaux sociaux
 # Twitter Card (temporairement désactivé - réactiver quand comptes créés)
 # twitter:
 #   card: "summary_large_image"

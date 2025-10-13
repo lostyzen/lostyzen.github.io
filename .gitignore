@@ -3,6 +3,9 @@ public/
 .hugo_build.lock
 resources/
 
+# Development notes (private)
+.dev-notes/
+
 # OS files
 .DS_Store
 Thumbs.db

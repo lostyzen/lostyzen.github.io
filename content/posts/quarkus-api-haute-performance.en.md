@@ -26,7 +26,7 @@ ShowWordCount: true
 ShowRssButtonInSectionTermList: true
 UseHugoToc: true
 cover:
-    image: "/images/default-og.png" # Temporary image - replace with quarkus-performance-og.png
+    image: "/images/quarkus-performance-og.png" # Specific image for this article
     alt: "Quarkus Java Performance API"
     caption: "High-performance APIs with Quarkus"
     relative: false
@@ -42,8 +42,8 @@ schema:
   dateModified: "2025-10-13T09:00:00+02:00"
   author: "lostyzen"
   publisher: "DevOps Blog"
-# Open Graph / Facebook (temporarily disabled)
-# images: ["/images/quarkus-performance-og.png"]
+# Open Graph / Facebook
+images: ["/images/quarkus-performance-og.png"]
 # Twitter Card (temporarily disabled - reactivate when accounts created)
 # twitter:
 #   card: "summary_large_image"

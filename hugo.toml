@@ -33,6 +33,12 @@ defaultContentLanguageInSubdir = false
   # RSS Configuration
   ShowFullTextinRSS = false  # Afficher le résumé uniquement dans RSS
   
+  # Analytics Configuration
+  [params.analytics]
+    [params.analytics.google]
+      SiteVerificationTag = ""  # À remplir après création Google Search Console
+      # GoogleAnalytics = "G-XXXXXXXXXX"  # À remplir après création GA4
+  
   ShowReadingTime = true
   ShowShareButtons = false  # Désactivé temporairement - réseaux sociaux pas encore créés
   ShowPostNavLinks = true
@@ -56,6 +62,14 @@ defaultContentLanguageInSubdir = false
   [params.assets]
     disableHLJS = false
     disableFingerprinting = false
+    # Performance optimizations
+    favicon = "/favicon.ico"
+    
+  # Performance Configuration
+  [params.performance]
+    enableImageOptimization = true
+    enableLazyLoading = true
+    enableMinification = true
 
   [params.label]
     text = "DevOps Blog"
@@ -68,6 +82,12 @@ defaultContentLanguageInSubdir = false
       "https://github.com/lostyzen",
       "https://lostyzen.github.io"
     ]
+  
+  # SEO avancé
+  [params.seo]
+    enableBreadcrumbSchema = true
+    enableOrganizationSchema = true
+    enablePersonSchema = true
 
   # Menu principal
   [[params.socialIcons]]
