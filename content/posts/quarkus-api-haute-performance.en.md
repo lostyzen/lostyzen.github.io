@@ -1,5 +1,5 @@
 ---
-title: "High-Performance APIs with Quarkus & Java: A Modern Solution for Current Challenges"
+title: "High-Performance API with Quarkus & Java: A Modern Solution to Current Challenges"
 date: 2025-10-13T09:00:00+02:00
 lastmod: 2025-10-13T09:00:00+02:00
 draft: false

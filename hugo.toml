@@ -48,6 +48,9 @@ defaultContentLanguageInSubdir = false
   ShowRssButtonInSectionTermList = true
   UseHugoToc = true
   disableSpecial1stPost = false
+  
+  # Ordre de tri par défaut : weight, puis date (décroissant)
+  sortBy = "weight"
   disableScrollToTop = false
   comments = false
   hidemeta = false

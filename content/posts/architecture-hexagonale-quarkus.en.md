@@ -1,9 +1,9 @@
 ---
-title: "Hexagonal Architecture in Java: Structuring APIs for Maintainability"
-date: 2025-10-13T10:00:00+02:00
-lastmod: 2025-10-13T10:00:00+02:00
+title: "Hexagonal Architecture in Java: Structuring Your APIs for Maintainability"
+date: 2025-10-12T10:00:00+02:00
+lastmod: 2025-10-12T10:00:00+02:00
 draft: false
-weight: 1
+weight: 3
 tags: ["Java", "Quarkus", "Architecture", "Clean Architecture", "DDD", "API", "Ports and Adapters", "Software Design", "Best Practices"]
 categories: ["Architecture", "Java"]
 author: "lostyzen"
@@ -35,8 +35,8 @@ editPost:
 keywords: ["hexagonal architecture", "java", "quarkus", "ports and adapters", "clean architecture", "ddd", "domain driven design", "api design", "software architecture", "java best practices", "microservices", "spring boot alternative"]
 schema:
   type: "BlogPosting"
-  datePublished: "2025-10-13T10:00:00+02:00"
-  dateModified: "2025-10-13T10:00:00+02:00"
+  datePublished: "2025-10-12T10:00:00+02:00"
+  dateModified: "2025-10-12T10:00:00+02:00"
   author: "lostyzen"
   publisher: "DevOps Blog"
 # Open Graph / Facebook

@@ -1,9 +1,9 @@
 ---
 title: "Architecture Hexagonale en Java : Structurer vos APIs pour la maintenabilité"
-date: 2025-10-13T10:00:00+02:00
-lastmod: 2025-10-13T10:00:00+02:00
+date: 2025-10-12T10:00:00+02:00
+lastmod: 2025-10-12T10:00:00+02:00
 draft: false
-weight: 1
+weight: 3
 tags: ["Java", "Quarkus", "Architecture", "Clean Architecture", "DDD", "API", "Ports and Adapters", "Software Design", "Best Practices"]
 categories: ["Architecture", "Java"]
 author: "lostyzen"
@@ -37,8 +37,8 @@ keywords: ["architecture hexagonale", "java", "quarkus", "ports and adapters", "
 # Schema.org structured data
 schema:
   type: "BlogPosting"
-  datePublished: "2025-10-13T10:00:00+02:00"
-  dateModified: "2025-10-13T10:00:00+02:00"
+  datePublished: "2025-10-12T10:00:00+02:00"
+  dateModified: "2025-10-12T10:00:00+02:00"
   author: "lostyzen"
   publisher: "DevOps Blog"
 # Open Graph / Facebook

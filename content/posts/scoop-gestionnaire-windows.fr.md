@@ -1,9 +1,9 @@
 ---
 title: "Scoop : Le gestionnaire de packages Windows qui révolutionne l'installation d'outils"
-date: 2025-10-13T08:00:00+02:00
-lastmod: 2025-10-13T08:00:00+02:00
+date: 2025-10-14T08:00:00+02:00
+lastmod: 2025-10-14T08:00:00+02:00
 draft: false
-weight: 3
+weight: 1
 tags: ["Scoop", "Windows", "Package Manager", "DevOps", "PowerShell", "Tools", "CLI", "Automation", "Productivity"]
 categories: ["DevOps", "Tools"]
 author: "lostyzen"
@@ -23,7 +23,7 @@ ShowWordCount: true
 ShowRssButtonInSectionTermList: true
 UseHugoToc: true
 cover:
-    image: "/images/default-og.png" # Image temporaire - remplacer par scoop-windows-og.png
+    image: "/images/scoop-windows-og.png"
     alt: "Scoop Windows Package Manager"
     caption: "Gestionnaire de packages Windows sans privilèges administrateur"
     relative: false
@@ -35,12 +35,12 @@ editPost:
 keywords: ["scoop", "windows", "package manager", "devops", "powershell", "portable apps", "no admin rights", "developer tools", "windows terminal", "cli tools"]
 schema:
   type: "BlogPosting"
-  datePublished: "2025-10-13T08:00:00+02:00"
-  dateModified: "2025-10-13T08:00:00+02:00"
+  datePublished: "2025-10-14T08:00:00+02:00"
+  dateModified: "2025-10-14T08:00:00+02:00"
   author: "lostyzen"
   publisher: "DevOps Blog"
-# Open Graph / Facebook (temporairement désactivé)
-# images: ["/images/scoop-windows-og.png"]
+# Open Graph / Facebook
+images: ["/images/scoop-windows-og.png"]
 # Twitter Card (temporairement désactivé - réactiver quand comptes créés)
 # twitter:
 #   card: "summary_large_image"
