@@ -4,6 +4,10 @@ title = 'DevOps Tech Blog'
 theme = 'PaperMod'
 enableRobotsTXT = true
 
+# Google Analytics 4 Configuration
+# Uncomment and replace with your actual GA4 Measurement ID
+# googleAnalytics = "G-XXXXXXXXXX"
+
 # Multilingue
 defaultContentLanguage = "fr"
 defaultContentLanguageInSubdir = false
@@ -36,8 +40,8 @@ defaultContentLanguageInSubdir = false
   # Analytics Configuration
   [params.analytics]
     [params.analytics.google]
-      SiteVerificationTag = ""  # À remplir après création Google Search Console
-      # GoogleAnalytics = "G-XXXXXXXXXX"  # À remplir après création GA4
+      SiteVerificationTag = ""  # Fill after creating Google Search Console
+      # GoogleAnalytics = "G-XXXXXXXXXX"  # Fill after creating GA4 account
   
   ShowReadingTime = true
   ShowShareButtons = false  # Désactivé temporairement - réseaux sociaux pas encore créés

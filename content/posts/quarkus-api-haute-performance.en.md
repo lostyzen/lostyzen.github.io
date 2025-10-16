@@ -143,7 +143,7 @@ Instead of starting from scratch with a blank configuration, this template offer
 ## 🔗 **Project Access**
 
 The complete project is available on GitHub:  
-👉 **https://github.com/lostyzen/quarkus-demo-basic-api**
+👉 **https://github.com/lostyzen/quarkus-demo-basic-api/tree/1.0.0**
 
 **What you'll find in the repo**:
 - Source code with concrete REST API examples (not tutorial, real code)

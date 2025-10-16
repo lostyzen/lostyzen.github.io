@@ -143,7 +143,7 @@ Au lieu de partir de zéro avec une configuration vierge, ce template vous offre
 ## 🔗 **Accès au projet**
 
 Le projet complet est disponible sur GitHub :  
-👉 **https://github.com/lostyzen/quarkus-demo-basic-api**
+👉 **https://github.com/lostyzen/quarkus-demo-basic-api/tree/1.0.0**
 
 **Ce que vous trouverez dans le repo** :
 - Code source avec des exemples concrets d'API REST (pas du tutoriel, du vrai code)
