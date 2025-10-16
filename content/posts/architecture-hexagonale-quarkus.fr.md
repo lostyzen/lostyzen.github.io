@@ -297,6 +297,11 @@ Pas besoin de refactoriser tout d'un coup :
 - Isolez progressivement la logique métier existante
 - Refactorisez les parties les plus critiques
 
+### **💡 Exemple concret**
+Pour voir tous ces concepts en action, consultez le repository de démonstration qui implémente une API Quarkus complète avec l'architecture hexagonale :
+
+🔗 **[Repository GitHub - Quarkus Demo API](https://github.com/lostyzen/quarkus-demo-basic-api/tree/2.0.0)**
+
 ## 🔮 **Et après ?**
 
 ### **Domain Driven Design (DDD)**

@@ -295,6 +295,11 @@ No need to refactor everything at once:
 - Gradually isolate existing business logic
 - Refactor the most critical parts
 
+### **💡 Concrete Example**
+To see all these concepts in action, check out the demonstration repository that implements a complete Quarkus API with hexagonal architecture:
+
+🔗 **[GitHub Repository - Quarkus Demo API](https://github.com/lostyzen/quarkus-demo-basic-api/tree/2.0.0)**
+
 ## 🔮 **What's Next?**
 
 ### **Domain Driven Design (DDD)**
