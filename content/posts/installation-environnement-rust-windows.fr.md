@@ -23,7 +23,7 @@ ShowWordCount: true
 ShowRssButtonInSectionTermList: true
 UseHugoToc: true
 cover:
-    image: "/images/default-og.png" # Image par défaut du blog
+    image: "/images/rust-windows-og.png" # Image spécifique à l'article
     alt: "Installation Rust Windows" # Texte alternatif
     caption: "Configuration complète d'un environnement Rust sur Windows"
     relative: false
@@ -42,7 +42,7 @@ schema:
   author: "lostyzen"
   publisher: "DevOps Blog"
 # Open Graph / Facebook
-images: ["/images/default-og.png"] # Image pour les réseaux sociaux
+images: ["/images/rust-windows-og.png"] # Image pour les réseaux sociaux
 # Twitter Card (temporairement désactivé - réactiver quand comptes créés)
 # twitter:
 #   card: "summary_large_image"
