@@ -396,10 +396,9 @@ The project includes detailed documentation in French and English. While waiting
 
 ### **Exploratory features**
 - **Internal/External client distinction**: Differentiated management based on client type (not to be confused with Device Flow)
+- **JAR (JWT Secured Authorization Request - RFC 9101)**: Encapsulation of authorization parameters in a signed JWT (alternative/complement to PAR)
 - **mTLS (Mutual TLS)**: Mutual authentication at TLS level for highly secure clients
 - **Rich Authorization Requests (RAR - RFC 9396)**: Allows requesting fine-grained and structured authorizations beyond simple scopes. Example: instead of `scope=read`, request `{"type":"account","actions":["read","transfer"],"limits":{"max_amount":1000}}`. Very useful for banking APIs where authorizations are complex.
-
-**Note**: JAR (JWT Secured Authorization Request) is not in this list because it's already implemented via the FAPI flow with DPoP - authorization requests are secured via PAR with client signature validation.
 
 ## 🤝 **Need feedback from Access Management experts**
 
