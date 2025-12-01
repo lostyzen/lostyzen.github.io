@@ -340,17 +340,17 @@ Pour valider l'implémentation, j'ai développé **un client Python Flask unique
 
 ## 📚 **Documentation technique complète**
 
-Le projet inclut une documentation détaillée en français et anglais. En attendant l'ouverture du repository GitHub pour la v1.0 (courant S1 2026), les documentations techniques sont **hébergées directement sur ce blog** :
+Le projet inclut une documentation détaillée. En attendant l'ouverture du repository GitHub pour la v1.0 (courant S1 2026), les documentations techniques sont **hébergées directement sur ce blog** :
 
 ### **Architecture & Stack**
-📄 **[Documentation Technique (FR)](/docs/trusty/technical-fr/)** | **[Technical Documentation (EN)](/docs/trusty/technical-en/)**
+📄 **[Documentation Technique](/docs/trusty/technical-fr/)**
 - Structure DDD complète (Domain, Application, Infrastructure, Presentation)
 - Stack technologique avec justifications
 - Schémas de base de données SQLite
 - Configuration Docker et déploiement
 
 ### **Flux OIDC & FAPI 2.0**
-📄 **[Documentation des Flux (FR)](/docs/trusty/oidc-flow-fr/)** | **[OIDC Flow Documentation (EN)](/docs/trusty/oidc-flow-en/)**
+📄 **[Documentation des Flux](/docs/trusty/oidc-flow-fr/)**
 - Diagrammes Mermaid de tous les flux
 - Exemples de requêtes/réponses
 - Détails de validation DPoP et PAR
@@ -438,8 +438,8 @@ N'hésitez pas à :
 ### **Projet TRusTY**
 - 🧪 **[Démo DEV](https://trusty-client-dev.up.railway.app)** : Version développement avec logs
 - 🚀 **[Démo PROD](https://trusty-client-prd.up.railway.app)** : Version production stable
-- 📖 **[Documentation Technique (FR)](/docs/trusty/technical-fr/)** | **[(EN)](/docs/trusty/technical-en/)**
-- 📖 **[Documentation Flux OIDC (FR)](/docs/trusty/oidc-flow-fr/)** | **[(EN)](/docs/trusty/oidc-flow-en/)**
+- 📖 **[Documentation Technique](/docs/trusty/technical-fr/)**
+- 📖 **[Documentation Flux OIDC](/docs/trusty/oidc-flow-fr/)**
 - 🏠 **Repository GitHub** : Ouverture prévue avec la v1.0 (S1 2026)
 
 ## 🎉 **Conclusion**
