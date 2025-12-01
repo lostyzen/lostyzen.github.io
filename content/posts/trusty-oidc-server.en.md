@@ -1,8 +1,8 @@
 ---
-title: "TRusTY: Building a Rust OIDC Server with FAPI 2.0"
+title: "TRusTY: Building an OIDC Server in Rust with FAPI 2.0"
 date: 2025-11-30T10:00:00+02:00
 lastmod: 2025-11-30T10:00:00+02:00
-draft: true
+draft: false
 weight: 1
 tags: ["Rust", "OIDC", "OAuth2", "FAPI-2.0", "DPoP", "PAR", "Security", "Access Management", "Axum", "SQLite", "JWT"]
 categories: ["Security", "Rust", "Access Management"]
@@ -46,17 +46,23 @@ images: ["/images/trusty-oidc-og.png"]
 
 After exploring Rust for web development, I wanted to go further by tackling an ambitious technical challenge: **building a complete OpenID Connect (OIDC) provider**, compliant with the FAPI 2.0 security specifications. Not just an academic prototype - a real authentication server with the most demanding security standards from the financial sector.
 
-## 🎯 **Why build an OIDC server in Rust?**
+## 🎯 **Why Build an OIDC Server in Rust?**
 
-In the Access Management world, we typically use established solutions: **Keycloak**, **Auth0**, **Okta**, or **ForgeRock**. These tools do the job, but I've always been frustrated by certain aspects:
+### **The origin: a team challenge**
 
-• **Configuration complexity**: Hundreds of parameters, heavy interfaces, steep learning curve  
-• **Resource consumption**: 500 MB - 1 GB RAM for Keycloak, significant impact in cloud environments  
-• **Flow opacity**: Hard to understand what happens under the hood when a flow fails  
-• **Limited extensibility**: Customization via plugins/SPIs often complex and poorly documented  
-• **Vendor lock-in**: Difficult migration between proprietary solutions  
+It all started with a **challenge launched within my former DevOps team**, responsible for the SSO of a major French bank. Between two sprints, we asked ourselves: "What if we built our own OIDC server from scratch in Rust?" A stimulating technical challenge combining **technological exploration**, **infrastructure cost optimization**, and **complete stack mastery**.
 
-The idea behind TRusTY? **Take back control** by building a modern, performant, and understandable OIDC server. Rust offers exactly what's needed: memory safety, native performance, and a mature web ecosystem with **Axum**.
+### **Field observations**
+
+In the Access Management world, we typically use established solutions: **Keycloak**, **Auth0**, **Okta**, or **ForgeRock**. These tools are mature, battle-tested in production, and cover a wide spectrum of use cases. However, after several years operating them in production, a few **friction points** emerged:
+
+• **Configuration complexity**: Hundreds of parameters, rich but sometimes heavy interfaces - the learning curve can be significant  
+• **Resource consumption**: Some Java-based solutions can require 500 MB to 1 GB RAM per instance - a non-negligible cost in cloud environments multiplied by instances  
+• **Flow opacity**: Understanding what's happening under the hood during an authentication failure can require debug time  
+• **Extensibility**: Customization via plugins/SPIs is powerful but requires mastering internal APIs  
+• **Vendor lock-in**: Portability between solutions can prove complex depending on features used  
+
+The idea behind TRusTY? **Take back control** by building a modern, performant, and understandable OIDC server. A tool where every line of code is mastered, where flows are transparent. Rust provides exactly what's needed: memory safety, native performance, and a mature web ecosystem with **Axum**.
 
 ## 🚀 **Architecture: DDD + Clean Architecture**
 
@@ -95,9 +101,9 @@ Rather than piling code into monolithic controllers, I structured the project fo
 
 ### **Domain entities**
 
-The system core relies on well-defined business entities:
+The system's core relies on well-defined business entities:
 
-- **`User`**: Represents a user with credentials (bcrypt) and claims
+- **`User`**: Represents a user with their credentials (password hashed via bcrypt) and claims
 - **`Client`**: Registered client application (redirect_uris, JWKS, auth methods...)
 - **`Session`**: User session with configurable lifetime
 - **`AuthorizationCode`**: Ephemeral code (90s TTL) for Authorization Code Flow exchange
@@ -109,23 +115,25 @@ Each entity encapsulates **its own business logic** and **validation rules**. Fo
 - Binding to the correct client
 - PKCE code_verifier validation
 
-## 🔒 **FAPI 2.0: Financial-grade security**
+## 🔒 **FAPI 2.0: Financial-grade Security**
 
 ### **Why FAPI 2.0?**
 
-**FAPI** (Financial-grade API) is a security profile developed by the **OpenID Foundation** to meet banking and financial sector requirements. FAPI 2.0 (released 2023) goes even further with robust anti-theft and anti-replay mechanisms.
+**FAPI** (Financial-grade API) is a security profile developed by the **OpenID Foundation** to meet banking and financial sector requirements. FAPI 2.0 (released in 2023) goes even further with robust anti-theft and anti-replay mechanisms.
+
+📖 **Full specification**: [FAPI 2.0 Security Profile](https://openid.net/specs/fapi-security-profile-2_0.html)
 
 **Key implemented features**:
 
 | Feature | RFC/Spec | Purpose |
 |---------|----------|---------|
-| **PKCE (S256)** | RFC 7636 | Prevent authorization code interception |
-| **PAR** | RFC 9126 | Protect authorization parameters (server-side pre-registration) |
-| **private_key_jwt** | RFC 7523 | Asymmetric client authentication (no shared secrets) |
-| **DPoP** | RFC 9449 | Token binding to cryptographic key (anti-token theft) |
+| **PKCE (S256)** | [RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636) | Prevent authorization code interception |
+| **PAR** | [RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126) | Protect authorization parameters (server-side pre-registration) |
+| **private_key_jwt** | [RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523) | Asymmetric client authentication (no shared secrets) |
+| **DPoP** | [RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449) | Token binding to cryptographic key (anti-token theft) |
 | **RP-Initiated Logout** | OIDC Logout | Client-initiated logout |
-| **Token Revocation** | RFC 7009 | Explicit token revocation |
-| **Token Introspection** | RFC 7662 | Token validation by Resource Servers |
+| **Token Revocation** | [RFC 7009](https://datatracker.ietf.org/doc/html/rfc7009) | Explicit token revocation |
+| **Token Introspection** | [RFC 7662](https://datatracker.ietf.org/doc/html/rfc7662) | Token validation by Resource Servers |
 
 ### **DPoP in detail: the real innovation**
 

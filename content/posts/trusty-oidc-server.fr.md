@@ -2,7 +2,7 @@
 title: "TRusTY : Développer un serveur OIDC en Rust avec FAPI 2.0"
 date: 2025-11-30T10:00:00+02:00
 lastmod: 2025-11-30T10:00:00+02:00
-draft: true
+draft: false
 weight: 1
 tags: ["Rust", "OIDC", "OAuth2", "FAPI-2.0", "DPoP", "PAR", "Security", "Access Management", "Axum", "SQLite", "JWT"]
 categories: ["Security", "Rust", "Access Management"]
@@ -48,15 +48,21 @@ Après avoir exploré Rust pour le développement web, j'ai voulu aller plus loi
 
 ## 🎯 **Pourquoi développer un serveur OIDC en Rust ?**
 
-Dans le monde de l'Access Management, on utilise généralement des solutions établies : **Keycloak**, **Auth0**, **Okta**, ou encore **ForgeRock**. Ces outils font le job, mais j'ai toujours été frustré par certains aspects :
+### **L'origine : un challenge d'équipe**
 
-• **Complexité de configuration** : Des centaines de paramètres, des interfaces lourdes, une courbe d'apprentissage abrupte  
-• **Consommation de ressources** : 500 MB - 1 GB de RAM pour Keycloak, impact significatif en environnement cloud  
-• **Opacité des flux** : Difficile de comprendre ce qui se passe sous le capot quand un flux échoue  
-• **Extensibilité limitée** : Customisation via plugins/SPIs souvent complexe et mal documentée  
-• **Vendor lock-in** : Migration difficile entre solutions propriétaires  
+Tout a commencé par un **défi lancé au sein de mon ancienne équipe DevOps**, responsable du SSO d'une grande banque française. Entre deux sprints, on s'est posé la question : "Et si on construisait notre propre serveur OIDC from scratch en Rust ?" Un challenge technique stimulant alliant **exploration technologique**, **optimisation des coûts d'infrastructure** et **maîtrise totale de la stack**.
 
-L'idée de TRusTY ? **Reprendre le contrôle** en construisant un serveur OIDC moderne, performant et compréhensible. Rust offre exactement ce qu'il faut : sécurité mémoire, performance native, et un écosystème web mature avec **Axum**.
+### **Le constat terrain**
+
+Dans le monde de l'Access Management, on utilise généralement des solutions établies : **Keycloak**, **Auth0**, **Okta**, ou encore **ForgeRock**. Ces outils sont matures, éprouvés en production, et couvrent un large spectre de cas d'usage. Cependant, après plusieurs années à les opérer en production, quelques **points de friction** sont apparus :
+
+• **Complexité de configuration** : Des centaines de paramètres, des interfaces riches mais parfois lourdes - la courbe d'apprentissage peut être significative  
+• **Consommation de ressources** : Certaines solutions Java peuvent nécessiter 500 MB à 1 GB de RAM par instance - un coût non négligeable en environnement cloud multiplié par les instances  
+• **Opacité des flux** : Comprendre ce qui se passe sous le capot lors d'un échec d'authentification peut demander du temps de debug  
+• **Extensibilité** : La customisation via plugins/SPIs est puissante mais nécessite de bien maîtriser les APIs internes  
+• **Vendor lock-in** : La portabilité entre solutions peut s'avérer complexe selon les fonctionnalités utilisées  
+
+L'idée de TRusTY ? **Reprendre le contrôle** en construisant un serveur OIDC moderne, performant et compréhensible. Un outil où chaque ligne de code est maîtrisée, où les flux sont transparents. Rust offre exactement ce qu'il faut : sécurité mémoire, performance native, et un écosystème web mature avec **Axum**.
 
 ## 🚀 **L'architecture : DDD + Clean Architecture**
 
@@ -97,7 +103,7 @@ Plutôt que d'empiler du code dans des controllers monolithiques, j'ai structur�
 
 Le cœur du système repose sur des entités métier bien définies :
 
-- **`User`** : Représente un utilisateur avec ses identifiants (bcrypt) et claims
+- **`User`** : Représente un utilisateur avec ses credentials (mot de passe hashé via bcrypt) et claims
 - **`Client`** : Application cliente enregistrée (redirect_uris, JWKS, méthodes d'auth...)
 - **`Session`** : Session utilisateur avec durée de vie configurable
 - **`AuthorizationCode`** : Code éphémère (90s TTL) pour l'échange Authorization Code Flow
@@ -115,17 +121,19 @@ Chaque entité encapsule **sa propre logique métier** et **ses règles de valid
 
 **FAPI** (Financial-grade API) est un profil de sécurité développé par l'**OpenID Foundation** pour répondre aux exigences du secteur bancaire et financier. FAPI 2.0 (sorti en 2023) va encore plus loin avec des mécanismes anti-vol et anti-rejeu robustes.
 
+📖 **Spécification complète** : [FAPI 2.0 Security Profile](https://openid.net/specs/fapi-security-profile-2_0.html)
+
 **Les fonctionnalités clés implémentées** :
 
 | Fonctionnalité | RFC/Spec | Objectif |
 |----------------|----------|----------|
-| **PKCE (S256)** | RFC 7636 | Empêcher l'interception du code d'autorisation |
-| **PAR** | RFC 9126 | Protéger les paramètres d'autorisation (pré-enregistrement côté serveur) |
-| **private_key_jwt** | RFC 7523 | Authentification client asymétrique (pas de secrets partagés) |
-| **DPoP** | RFC 9449 | Liaison de token à une clé cryptographique (anti-vol de token) |
+| **PKCE (S256)** | [RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636) | Empêcher l'interception du code d'autorisation |
+| **PAR** | [RFC 9126](https://datatracker.ietf.org/doc/html/rfc9126) | Protéger les paramètres d'autorisation (pré-enregistrement côté serveur) |
+| **private_key_jwt** | [RFC 7523](https://datatracker.ietf.org/doc/html/rfc7523) | Authentification client asymétrique (pas de secrets partagés) |
+| **DPoP** | [RFC 9449](https://datatracker.ietf.org/doc/html/rfc9449) | Liaison de token à une clé cryptographique (anti-vol de token) |
 | **RP-Initiated Logout** | OIDC Logout | Déconnexion initiée par le client |
-| **Token Revocation** | RFC 7009 | Révocation explicite de tokens |
-| **Token Introspection** | RFC 7662 | Validation de tokens par des Resource Servers |
+| **Token Revocation** | [RFC 7009](https://datatracker.ietf.org/doc/html/rfc7009) | Révocation explicite de tokens |
+| **Token Introspection** | [RFC 7662](https://datatracker.ietf.org/doc/html/rfc7662) | Validation de tokens par des Resource Servers |
 
 ### **DPoP en détail : la vraie innovation**
 
