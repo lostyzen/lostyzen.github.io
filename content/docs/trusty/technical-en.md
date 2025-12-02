@@ -10,7 +10,7 @@ TocOpen: true
 # Technical Documentation - TRusTY
 
 > **Version**: 0.8.2-SNAPSHOT
-> **Last update**: 2025-11-30
+> **Last Updated**: 2025-12-01
 > **Architecture**: Domain-Driven Design (DDD) + Clean Architecture
 
 TRusTY is an OpenID Connect (OIDC) provider implementing FAPI 2.0 security standards, built with Rust and Python.
@@ -590,4 +590,4 @@ See [OIDC Flow Documentation](/docs/trusty/oidc-flow-en/) for detailed endpoint 
 
 **Document Version**: 2.0
 **Status**: Production-ready
-**Last Review**: 2025-11-30
+**Last Review**: 2025-12-01

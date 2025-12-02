@@ -137,6 +137,8 @@ defaultContentLanguageInSubdir = false
     style = 'github'
   [markup.goldmark]
     [markup.goldmark.renderer]
+      # unsafe = true required to render Mermaid diagrams embedded in markdown
+      # Safe here: site is static with only trusted, developer-authored content (no CMS, no user input)
       unsafe = true
 
 [outputs]

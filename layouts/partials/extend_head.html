@@ -4,13 +4,13 @@
   document.addEventListener('DOMContentLoaded', function() {
     // Initialize Mermaid with theme detection
     const isDark = document.body.className.includes('dark');
-    mermaid.initialize({ 
+    mermaid.initialize({
       startOnLoad: false,
       theme: isDark ? 'dark' : 'default',
+      // securityLevel: 'loose' required for proper rendering of sequence diagrams
+      // Safe here: all content is static and author-controlled (no user-generated content)
       securityLevel: 'loose',
-    });
-    
-    // Find all code blocks that might contain mermaid diagrams
+    });    // Find all code blocks that might contain mermaid diagrams
     document.querySelectorAll('pre code').forEach((block) => {
       const code = block.textContent.trim();
       // Check if it starts with mermaid diagram keywords

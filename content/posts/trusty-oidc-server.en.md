@@ -1,7 +1,7 @@
 ---
 title: "TRusTY: Building an OIDC Server in Rust with FAPI 2.0"
-date: 2025-11-30T10:00:00+02:00
-lastmod: 2025-11-30T10:00:00+02:00
+date: 2025-12-01T10:00:00+02:00
+lastmod: 2025-12-01T10:00:00+02:00
 draft: false
 weight: 1
 tags: ["Rust", "OIDC", "OAuth2", "FAPI-2.0", "DPoP", "PAR", "Security", "Access Management", "Axum", "SQLite", "JWT"]
