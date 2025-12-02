@@ -543,7 +543,7 @@ cargo tarpaulin --out Html
 
 ## Endpoints API
 
-Voir [OIDC_FLOW.fr.md](OIDC_FLOW.fr.md) pour la documentation détaillée des endpoints (à venir).
+Voir [Documentation Flux OIDC](/docs/trusty/oidc-flow-fr/) pour la documentation détaillée des endpoints.
 
 **Référence Rapide** :
 - `GET /.well-known/openid-configuration` - Discovery OIDC
@@ -584,9 +584,7 @@ Voir [OIDC_FLOW.fr.md](OIDC_FLOW.fr.md) pour la documentation détaillée des en
 
 ## Références
 
-- [Documentation Flux OIDC](OIDC_FLOW.fr.md)
-- [README Serveur](../server/README.md)
-- [README Client](../client/README.md)
+- [Documentation Flux OIDC](/docs/trusty/oidc-flow-fr/)
 
 ---
 

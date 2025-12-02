@@ -647,7 +647,7 @@ Location: https://client.example.com/callback?error=invalid_request&error_descri
 - [OIDC RP-Initiated Logout 1.0](https://openid.net/specs/openid-connect-rpinitiated-1_0.html) - Logout flow
 
 ### FAPI 2.0 Specifications
-- [FAPI 2.0 Security Profile](https://openid.bitbucket.io/fapi/fapi-2_0-security-profile.html) - Main specification
+- [FAPI 2.0 Security Profile](https://openid.net/specs/fapi-security-profile-2_0.html) - Main specification
 
 ### OAuth 2.0 RFCs
 - [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749) - OAuth 2.0 Framework

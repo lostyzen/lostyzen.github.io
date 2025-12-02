@@ -441,7 +441,7 @@ Feel free to:
 - [Pushed Authorization Requests (RFC 9126)](https://datatracker.ietf.org/doc/html/rfc9126)
 - [JWT Client Authentication (RFC 7523)](https://datatracker.ietf.org/doc/html/rfc7523)
 - [DPoP (RFC 9449)](https://datatracker.ietf.org/doc/html/rfc9449)
-- [FAPI 2.0 Security Profile](https://openid.net/specs/fapi-2_0-security-profile.html)
+- [FAPI 2.0 Security Profile](https://openid.net/specs/fapi-security-profile-2_0.html)
 
 ### **TRusTY Project**
 - 🧪 **[DEV Demo](https://trusty-client-dev.up.railway.app)**: Development version with logs
@@ -452,9 +452,9 @@ Feel free to:
 
 ## 🎉 **Conclusion**
 
-Building an OIDC server from scratch in Rust is a serious technical challenge. But it's also an opportunity to **learn modern security mechanisms in depth** and **take back control** of your application authentication.
+Building an OIDC server from scratch in Rust is a serious technical challenge. But TRusTY is above all the result of **nearly 10 years of experience in Access Management**, gained particularly in the **banking sector** where security and compliance requirements are especially high. This expertise, I now make available to my clients to support them with their authentication and authorization challenges.
 
-**TRusTY isn't production-ready yet** (it's an MVP!), but it already demonstrates that it's possible to build a performant, understandable OIDC server compliant with the most demanding standards.
+**TRusTY isn't production-ready yet** (it's an MVP!), but it already demonstrates that it's possible to build a performant, understandable OIDC server compliant with the most demanding standards, based on **deep knowledge of real-world challenges**.
 
 **What you can do right now**:
 - Test the demos (DEV/PROD) to see flows in action

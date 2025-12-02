@@ -135,6 +135,9 @@ defaultContentLanguageInSubdir = false
     guessSyntax = true
     lineNos = true
     style = 'github'
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
 
 [outputs]
   home = ["HTML", "RSS", "JSON"]

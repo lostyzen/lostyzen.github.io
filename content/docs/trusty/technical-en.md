@@ -543,7 +543,7 @@ cargo tarpaulin --out Html
 
 ## API Endpoints
 
-See [OIDC_FLOW.en.md](OIDC_FLOW.en.md) for detailed endpoint documentation.
+See [OIDC Flow Documentation](/docs/trusty/oidc-flow-en/) for detailed endpoint documentation.
 
 **Quick Reference**:
 - `GET /.well-known/openid-configuration` - OIDC Discovery
@@ -584,9 +584,7 @@ See [OIDC_FLOW.en.md](OIDC_FLOW.en.md) for detailed endpoint documentation.
 
 ## References
 
-- [OIDC Flow Documentation](OIDC_FLOW.en.md)
-- [Server README](../server/README.md)
-- [Client README](../client/README.md)
+- [OIDC Flow Documentation](/docs/trusty/oidc-flow-en/)
 
 ---
 
