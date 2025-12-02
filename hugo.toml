@@ -70,7 +70,9 @@ defaultContentLanguageInSubdir = false
     disableHLJS = false
     disableFingerprinting = false
     # Performance optimizations
-    favicon = "/favicon.ico"
+    favicon = "/favicon.svg"
+    favicon16x16 = "/favicon-16x16.png"
+    favicon32x32 = "/favicon-32x32.png"
     
   # Performance Configuration
   [params.performance]
@@ -133,6 +135,11 @@ defaultContentLanguageInSubdir = false
     guessSyntax = true
     lineNos = true
     style = 'github'
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      # unsafe = true required to render Mermaid diagrams embedded in markdown
+      # Safe here: site is static with only trusted, developer-authored content (no CMS, no user input)
+      unsafe = true
 
 [outputs]
   home = ["HTML", "RSS", "JSON"]
