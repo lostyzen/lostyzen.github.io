@@ -6,6 +6,9 @@ resources/
 # Development notes (private)
 .dev-notes/
 
+# Drafts and internal documents (not for publication)
+.drafts/
+
 # OS files
 .DS_Store
 Thumbs.db

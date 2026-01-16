@@ -1,0 +1,27 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background circle with gradient -->
+  <circle cx="256" cy="256" r="240" fill="url(#gradient)"/>
+
+  <!-- Letter M stylized -->
+  <g filter="url(#shadow)">
+    <path d="M 140 340 L 140 180 L 200 260 L 256 200 L 312 260 L 372 180 L 372 340 L 332 340 L 332 250 L 256 330 L 180 250 L 180 340 Z"
+          fill="white"
+          stroke="white"
+          stroke-width="4"
+          stroke-linejoin="round"/>
+  </g>
+
+  <!-- Small accent dot -->
+  <circle cx="256" cy="380" r="12" fill="white" opacity="0.9"/>
+</svg>
