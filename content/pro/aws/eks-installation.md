@@ -171,7 +171,7 @@ flowchart TB
 | Publics | 3 | Load Balancers, NAT Gateway |
 | Prives | 3 | Worker nodes EKS (statiques et Karpenter) |
 
-**Pourquoi 3 de chaque ?** Pour la haute disponibilite sur 3 zones de disponibilite (AZs).
+**Pourquoi 3 de chaque ?** Ce setup permet d'experimenter des use cases de haute disponibilite sur 3 zones de disponibilite (AZs). Meme s'il s'agit d'un cluster destine a la formation, l'experimentation ou des POC, cette configuration permet de tester des scenarios realistes de distribution multi-AZ.
 
 ### 3. NAT Gateway
 - Permet aux instances dans les subnets prives d'acceder a internet
