@@ -224,20 +224,6 @@ Ce compte AWS a des restrictions organisationnelles qui impactent la configurati
 
 ---
 
-## Coûts estimés (sandbox)
-
-| Ressource | Coût estimé/mois |
-|-----------|------------------|
-| EKS Control Plane | ~$73 |
-| 2x t3.medium (static nodes) | ~$60 |
-| NAT Gateway + data | ~$45 |
-| Karpenter nodes (variable) | ~$0-50 (selon usage) |
-| **Total** | **~$180-230/mois** |
-
-> **Important** : Pense à détruire l'infrastructure quand tu ne l'utilises pas avec `terraform destroy`. Les nodes Karpenter sont automatiquement supprimés quand ils sont vides.
-
----
-
 ## Prérequis
 
 - [x] AWS CLI installé et configuré
@@ -680,3 +666,7 @@ terraform destroy
 ## Prochaine étape
 
 Une fois le cluster EKS opérationnel, vous pouvez passer à l'[Installation de Karpenter](/pro/aws/karpenter-installation/).
+
+---
+
+> **Important** : Pense à détruire l'infrastructure quand tu ne l'utilises pas avec `terraform destroy` pour économiser les ressources. Les nodes Karpenter sont automatiquement supprimés quand ils sont vides.
