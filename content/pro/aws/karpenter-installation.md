@@ -44,9 +44,9 @@ Ce guide explique comment installer et configurer **Karpenter** sur un cluster E
 
 ## Architecture avec Karpenter
 
-```mermaid
+{{< mermaid >}}
 flowchart LR
-    subgraph Kubernetes["EKS Cluster"]
+    subgraph EKS["EKS Cluster"]
         Pod["Pod<br/>(Pending)"]
         Scheduler["kube-scheduler"]
         Karpenter["Karpenter<br/>Controller"]
@@ -56,7 +56,7 @@ flowchart LR
 
     subgraph AWS["AWS"]
         EC2["EC2 API"]
-        Instance["EC2 Instance<br/>(On-Demand)"]
+        Instance["EC2 Instance<br/>(Spot/On-Demand)"]
     end
 
     Pod -->|"1. Cannot schedule"| Scheduler
@@ -68,10 +68,13 @@ flowchart LR
     Instance -->|"6. Join cluster"| Scheduler
     Scheduler -->|"7. Schedule pod"| Pod
 
-    style Karpenter fill:#FF6B6B,stroke:#C92A2A
-    style NodePool fill:#2E7D32,stroke:#1B5E20,color:#FFFFFF
-    style EC2NodeClass fill:#2E7D32,stroke:#1B5E20,color:#FFFFFF
-```
+    style Karpenter fill:#f7768e,stroke:#c53030,color:#fff
+    style NodePool fill:#2E7D32,stroke:#1B5E20,color:#fff
+    style EC2NodeClass fill:#2E7D32,stroke:#1B5E20,color:#fff
+    style Instance fill:#ff9e64,stroke:#d67e3e,color:#1a1b26
+    style Pod fill:#bb9af7,stroke:#7c4dff,color:#1a1b26
+    style Scheduler fill:#7aa2f7,stroke:#3d59a1,color:#1a1b26
+{{< /mermaid >}}
 
 ### Composants à installer
 

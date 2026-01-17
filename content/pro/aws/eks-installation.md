@@ -92,7 +92,7 @@ Ce guide explique comment déployer un cluster **Amazon EKS** (Elastic Kubernete
 
 ### Vue en diagramme Mermaid
 
-```mermaid
+{{< mermaid >}}
 flowchart TB
     subgraph Internet["Internet"]
         User["Utilisateur / kubectl"]
@@ -152,8 +152,8 @@ flowchart TB
     Karpenter -.->|"assume"| IRSA_Karp
     InstProfile -.->|"attach"| KarpNode1
 
-    style KarpNode1 fill:#2E7D32,stroke:#1B5E20,color:#FFFFFF
-```
+    style KarpNode1 fill:#2E7D32,stroke:#1B5E20,color:#fff
+{{< /mermaid >}}
 
 ---
 

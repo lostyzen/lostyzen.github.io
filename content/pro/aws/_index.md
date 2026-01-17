@@ -31,7 +31,7 @@ Cette documentation couvre l'installation et la configuration d'un cluster EKS a
 
 ## Architecture cible
 
-```mermaid
+{{< mermaid >}}
 flowchart TB
     subgraph VPC["VPC (10.0.0.0/16)"]
         subgraph PublicSubnets["Subnets Publics"]
@@ -54,4 +54,4 @@ flowchart TB
 
     style KN fill:#2E7D32,stroke:#1B5E20,color:#fff
     style CP fill:#7aa2f7,stroke:#3d59a1,color:#1a1b26
-```
+{{< /mermaid >}}
