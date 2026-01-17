@@ -19,6 +19,8 @@ Cette documentation couvre l'installation et la configuration d'un cluster EKS a
 
 3. **[Tests de Karpenter](/pro/aws/karpenter-tests/)** - Validation et tests du comportement de Karpenter
 
+4. **[Glossaire AWS & Kubernetes](/pro/aws/glossaire/)** - Tous les termes et acronymes essentiels pour débuter
+
 ## Prérequis généraux
 
 - Compte AWS (compte de formation ou standard)
