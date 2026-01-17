@@ -52,6 +52,6 @@ flowchart TB
     NAT --> PrivateSubnets
     CP --> Nodes
 
-    style KN fill:#90EE90
-    style CP fill:#FFB6C1
+    style KN fill:#2E7D32,stroke:#1B5E20,color:#fff
+    style CP fill:#7aa2f7,stroke:#3d59a1,color:#1a1b26
 ```
