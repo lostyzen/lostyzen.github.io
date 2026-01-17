@@ -10,7 +10,7 @@ searchHidden: true
 
 # Installation d'un cluster EKS avec un compte de formation AWS
 
-Ce guide explique comment deployer un cluster **Amazon EKS** (Elastic Kubernetes Service) sur un compte de formation AWS qui possede des restrictions SCP (Service Control Policies).
+Ce guide explique comment déployer un cluster **Amazon EKS** (Elastic Kubernetes Service) sur un compte de formation AWS qui possède des restrictions SCP (Service Control Policies).
 
 ---
 
@@ -37,18 +37,18 @@ Ce guide explique comment deployer un cluster **Amazon EKS** (Elastic Kubernetes
 |    |         |                                              |    |
 |    |         |  +-------------------------------------+     |    |
 |    |         |  |  Application Load Balancer (ALB)    |     |    |
-|    |         |  |  (cree par AWS LB Controller)       |     |    |
+|    |         |  |  (créé par AWS LB Controller)       |     |    |
 |    |         |  +-------------------------------------+     |    |
 |    +---------+----------------------------------------------+    |
 |              |                                                   |
 |              v                                                   |
 |    +------------------+                                          |
-|    |   NAT Gateway    | <-- Permet aux nodes prives              |
-|    |  (Elastic IP)    |     d'acceder a internet                 |
+|    |   NAT Gateway    | <-- Permet aux nodes privés              |
+|    |  (Elastic IP)    |     d'accéder à internet                 |
 |    +--------+---------+                                          |
 |             |                                                    |
 |    +--------+----------------------------------------------+    |
-|    |        v        Subnets Prives (3 AZs)                |    |
+|    |        v        Subnets Privés (3 AZs)                |    |
 |    |  +--------------+ +--------------+ +--------------+   |    |
 |    |  | 10.0.0.0/20  | | 10.0.16.0/20 | | 10.0.32.0/20 |   |    |
 |    |  |  eu-west-1a  | |  eu-west-1b  | |  eu-west-1c  |   |    |
@@ -69,12 +69,12 @@ Ce guide explique comment deployer un cluster **Amazon EKS** (Elastic Kubernetes
 |                         |         |         |                    |
 |              +----------+---------+---------+----------+        |
 |              |         EKS Control Plane               |        |
-|              |      (Gere par AWS - invisible)         |        |
+|              |      (Géré par AWS - invisible)         |        |
 |              |                                         |        |
 |              |  - API Server    - Controller Manager   |        |
 |              |  - etcd          - Scheduler            |        |
 |              |                                         |        |
-|              |  Composants deployes :                  |        |
+|              |  Composants déployés :                  |        |
 |              |  - Karpenter (autoscaling)              |        |
 |              |  - AWS LB Controller                    |        |
 |              |  - CoreDNS, kube-proxy, vpc-cni         |        |
@@ -157,56 +157,56 @@ flowchart TB
 
 ---
 
-## Composants deployes
+## Composants déployés
 
 ### 1. VPC (Virtual Private Cloud)
 - **CIDR** : `10.0.0.0/16` (65,536 adresses IP)
-- **Region** : `eu-west-1` (Irlande)
-- **Isolation** : Reseau prive virtuel dedie au cluster
+- **Région** : `eu-west-1` (Irlande)
+- **Isolation** : Réseau privé virtuel dédié au cluster
 
 ### 2. Subnets
 
-| Type | Quantite | Usage |
+| Type | Quantité | Usage |
 |------|----------|-------|
 | Publics | 3 | Load Balancers, NAT Gateway |
-| Prives | 3 | Worker nodes EKS (statiques et Karpenter) |
+| Privés | 3 | Worker nodes EKS (statiques et Karpenter) |
 
-**Pourquoi 3 de chaque ?** Ce setup permet d'experimenter des use cases de haute disponibilite sur 3 zones de disponibilite (AZs). Meme s'il s'agit d'un cluster destine a la formation, l'experimentation ou des POC, cette configuration permet de tester des scenarios realistes de distribution multi-AZ.
+**Pourquoi 3 de chaque ?** Ce setup permet d'expérimenter des use cases de haute disponibilité sur 3 zones de disponibilité (AZs). Même s'il s'agit d'un cluster destiné à la formation, l'expérimentation ou des POC, cette configuration permet de tester des scénarios réalistes de distribution multi-AZ.
 
 ### 3. NAT Gateway
-- Permet aux instances dans les subnets prives d'acceder a internet
-- Necessaire pour que les nodes puissent telecharger les images Docker
-- **Mode single** : 1 seul NAT Gateway pour economiser (~45$/mois par NAT)
+- Permet aux instances dans les subnets privés d'accéder à internet
+- Nécessaire pour que les nodes puissent télécharger les images Docker
+- **Mode single** : 1 seul NAT Gateway pour économiser (~45$/mois par NAT)
 
 ### 4. EKS Cluster
-- **Control Plane** : Gere par AWS (tu ne le vois pas, tu ne paies que le service)
+- **Control Plane** : Géré par AWS (tu ne le vois pas, tu ne paies que le service)
 - **Version Kubernetes** : 1.33
 - **Endpoint public** : Accessible depuis ton poste via internet
 
 ### 5. Node Group (Statique)
 - **Type d'instances** : `t3.medium` (2 vCPU, 4 GB RAM)
 - **Scaling** : min=1, max=3, desired=2
-- **Placement** : Dans les subnets prives (securite)
+- **Placement** : Dans les subnets privés (sécurité)
 - **Usage** : Workloads critiques (Karpenter, CoreDNS, etc.)
 
 ### 6. Karpenter (Autoscaling dynamique)
-- **Role** : Cree automatiquement des nodes quand des pods sont en attente (Pending)
-- **Types d'instances** : t3, t3a, t2 (medium a 2xlarge)
-- **Capacity type** : On-Demand uniquement (Spot desactive a cause des SCP)
-- **Consolidation** : Supprime les nodes vides apres 1 minute
+- **Rôle** : Crée automatiquement des nodes quand des pods sont en attente (Pending)
+- **Types d'instances** : t3, t3a, t2 (medium à 2xlarge)
+- **Capacity type** : On-Demand uniquement (Spot désactivé à cause des SCP)
+- **Consolidation** : Supprime les nodes vides après 1 minute
 - **Temps de provisioning** : ~30-40 secondes
 
 ### 7. AWS Load Balancer Controller
-- **Role** : Cree automatiquement des ALB/NLB quand tu deploies un Ingress ou Service LoadBalancer
+- **Rôle** : Crée automatiquement des ALB/NLB quand tu déploies un Ingress ou Service LoadBalancer
 - **Authentification** : Via IRSA (IAM Roles for Service Accounts)
 
 ### 8. Add-ons EKS
 
 | Add-on | Description |
 |--------|-------------|
-| CoreDNS | Resolution DNS interne au cluster |
-| kube-proxy | Gestion des regles reseau (iptables) |
-| vpc-cni | Plugin reseau AWS (IP natives du VPC) |
+| CoreDNS | Résolution DNS interne au cluster |
+| kube-proxy | Gestion des règles réseau (iptables) |
+| vpc-cni | Plugin réseau AWS (IP natives du VPC) |
 | pod-identity-agent | Authentification IAM pour les pods |
 
 ---
@@ -217,16 +217,16 @@ Ce compte AWS a des restrictions organisationnelles qui impactent la configurati
 
 | Contrainte | Impact | Workaround |
 |------------|--------|------------|
-| KMS bloque | Pas de chiffrement EBS natif | `encrypted: false` dans EC2NodeClass |
-| SSM bloque | Pas de lookup automatique d'AMI | AMI ID defini en dur |
-| Spot SLR bloque | Pas d'instances Spot | On-Demand uniquement |
-| DescribeAZs bloque | Pas de decouverte dynamique | AZs definies en dur |
+| KMS bloqué | Pas de chiffrement EBS natif | `encrypted: false` dans EC2NodeClass |
+| SSM bloqué | Pas de lookup automatique d'AMI | AMI ID défini en dur |
+| Spot SLR bloqué | Pas d'instances Spot | On-Demand uniquement |
+| DescribeAZs bloqué | Pas de découverte dynamique | AZs définies en dur |
 
 ---
 
-## Couts estimes (sandbox)
+## Coûts estimés (sandbox)
 
-| Ressource | Cout estime/mois |
+| Ressource | Coût estimé/mois |
 |-----------|------------------|
 | EKS Control Plane | ~$73 |
 | 2x t3.medium (static nodes) | ~$60 |
@@ -234,24 +234,24 @@ Ce compte AWS a des restrictions organisationnelles qui impactent la configurati
 | Karpenter nodes (variable) | ~$0-50 (selon usage) |
 | **Total** | **~$180-230/mois** |
 
-> **Important** : Pense a detruire l'infrastructure quand tu ne l'utilises pas avec `terraform destroy`. Les nodes Karpenter sont automatiquement supprimes quand ils sont vides.
+> **Important** : Pense à détruire l'infrastructure quand tu ne l'utilises pas avec `terraform destroy`. Les nodes Karpenter sont automatiquement supprimés quand ils sont vides.
 
 ---
 
-## Prerequis
+## Prérequis
 
-- [x] AWS CLI installe et configure
-- [x] Terraform installe (`terraform version`)
-- [x] kubectl installe
+- [x] AWS CLI installé et configuré
+- [x] Terraform installé (`terraform version`)
+- [x] kubectl installé
 
-### Verifier la configuration AWS CLI
+### Vérifier la configuration AWS CLI
 
 ```bash
-# Verifie que la CLI est bien configuree avec ta cle d'API
+# Vérifie que la CLI est bien configurée avec ta clé d'API
 aws sts get-caller-identity
 ```
 
-**Resultat attendu :**
+**Résultat attendu :**
 ```json
 {
     "UserId": "AIDAXXXXXXXXXXXX",
@@ -260,13 +260,13 @@ aws sts get-caller-identity
 }
 ```
 
-### Installation de kubectl (si necessaire)
+### Installation de kubectl (si nécessaire)
 
 ```powershell
-# Via scoop (recommande sur Windows)
+# Via scoop (recommandé sur Windows)
 scoop install kubectl
 
-# Verification
+# Vérification
 kubectl version --client
 ```
 
@@ -280,7 +280,7 @@ kubectl version --client
 terraform/
 ├── versions.tf    # Contraintes de versions
 ├── providers.tf   # Configuration des providers (aws, kubernetes, helm, kubectl)
-├── variables.tf   # Variables d'entree
+├── variables.tf   # Variables d'entrée
 ├── main.tf        # Ressources principales (VPC, EKS, Karpenter, LB Controller)
 └── outputs.tf     # Valeurs de sortie
 ```
@@ -353,7 +353,7 @@ provider "kubectl" {
 }
 ```
 
-### variables.tf - Variables d'entree
+### variables.tf - Variables d'entrée
 
 ```hcl
 variable "aws_region" {
@@ -383,13 +383,13 @@ variable "environment" {
 
 ### main.tf - Ressources principales
 
-#### Locals - Variables calculees
+#### Locals - Variables calculées
 
 ```hcl
 locals {
   vpc_cidr = "10.0.0.0/16"
 
-  # AZs definies en dur car la SCP bloque DescribeAvailabilityZones
+  # AZs définies en dur car la SCP bloque DescribeAvailabilityZones
   azs = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
 
   tags = {
@@ -498,44 +498,44 @@ output "configure_kubectl" {
 
 ---
 
-## Guide de deploiement
+## Guide de déploiement
 
-### Etape 1 : Initialisation Terraform
+### Étape 1 : Initialisation Terraform
 
 ```bash
 cd terraform
 terraform init
 ```
 
-**Ce que ca fait :**
-- Telecharge le provider AWS (~100 MB)
-- Telecharge les providers Kubernetes, Helm, Kubectl
-- Telecharge les modules VPC, EKS et Karpenter depuis le registry Terraform
-- Cree le dossier `.terraform/` avec les plugins
-- Cree `.terraform.lock.hcl` pour verrouiller les versions
+**Ce que ça fait :**
+- Télécharge le provider AWS (~100 MB)
+- Télécharge les providers Kubernetes, Helm, Kubectl
+- Télécharge les modules VPC, EKS et Karpenter depuis le registry Terraform
+- Crée le dossier `.terraform/` avec les plugins
+- Crée `.terraform.lock.hcl` pour verrouiller les versions
 
-### Etape 2 : Planification
+### Étape 2 : Planification
 
 ```bash
 terraform plan
 ```
 
-**Resultat attendu :**
+**Résultat attendu :**
 ```
 Plan: 70+ to add, 0 to change, 0 to destroy.
 ```
 
-### Etape 3 : Deploiement
+### Étape 3 : Déploiement
 
 ```bash
 terraform apply
 ```
 
-**Duree estimee : 15-20 minutes**
+**Durée estimée : 15-20 minutes**
 
-Le plus long est la creation du cluster EKS lui-meme (~10 min).
+Le plus long est la création du cluster EKS lui-même (~10 min).
 
-**Resultat attendu :**
+**Résultat attendu :**
 ```
 Apply complete! Resources: 70+ added, 0 changed, 0 destroyed.
 
@@ -546,27 +546,27 @@ cluster_endpoint = "https://XXXXX.yl4.eu-west-1.eks.amazonaws.com"
 configure_kubectl = "aws eks update-kubeconfig --region eu-west-1 --name sandbox-eks"
 ```
 
-### Etape 4 : Configuration de kubectl
+### Étape 4 : Configuration de kubectl
 
-Copie-colle la commande affichee dans les outputs :
+Copie-colle la commande affichée dans les outputs :
 
 ```bash
 aws eks update-kubeconfig --region eu-west-1 --name sandbox-eks
 ```
 
-**Verification :**
+**Vérification :**
 ```bash
-# Verifie la connexion
+# Vérifie la connexion
 kubectl cluster-info
 
 # Liste les nodes
 kubectl get nodes
 
-# Liste les pods systeme
+# Liste les pods système
 kubectl get pods -A
 ```
 
-### Etape 5 : Verification de Karpenter
+### Étape 5 : Vérification de Karpenter
 
 ```bash
 # Pods Karpenter (2 replicas)
@@ -575,11 +575,11 @@ kubectl get pods -n kube-system -l app.kubernetes.io/name=karpenter
 # Ressources Karpenter
 kubectl get nodepools,ec2nodeclasses
 
-# Details du NodePool
+# Détails du NodePool
 kubectl describe nodepool default
 ```
 
-**Resultat attendu :**
+**Résultat attendu :**
 ```
 NAME                            NODECLASS   NODES   READY   AGE
 nodepool.karpenter.sh/default   default     0       True    5m
@@ -588,26 +588,26 @@ NAME                                     READY   AGE
 ec2nodeclass.karpenter.k8s.aws/default   True    5m
 ```
 
-> **Note** : `NODES: 0` est normal - Karpenter ne cree des nodes que quand des pods sont en attente.
+> **Note** : `NODES: 0` est normal - Karpenter ne crée des nodes que quand des pods sont en attente.
 
 ---
 
 ## Test du cluster
 
-### Deployer une application de test
+### Déployer une application de test
 
 ```bash
-# Cree un deploiement nginx
+# Crée un déploiement nginx
 kubectl create deployment nginx --image=nginx
 
-# Expose le deploiement
+# Expose le déploiement
 kubectl expose deployment nginx --port=80 --type=LoadBalancer
 
-# Attends que le LoadBalancer soit provisionne (2-3 min)
+# Attends que le LoadBalancer soit provisionné (2-3 min)
 kubectl get svc nginx -w
 ```
 
-Quand l'EXTERNAL-IP apparait, ouvre-la dans ton navigateur !
+Quand l'EXTERNAL-IP apparaît, ouvre-la dans ton navigateur !
 
 ### Nettoyage du test
 
@@ -620,13 +620,13 @@ kubectl delete svc nginx
 
 ## Destruction de l'infrastructure
 
-**Important** : Pour eviter les couts, detruis l'infrastructure quand tu ne l'utilises pas.
+**Important** : Pour éviter les coûts, détruis l'infrastructure quand tu ne l'utilises pas.
 
 ```bash
 terraform destroy
 ```
 
-**Duree estimee : 10-15 minutes**
+**Durée estimée : 10-15 minutes**
 
 ---
 
@@ -637,7 +637,7 @@ terraform destroy
 | Commande | Description |
 |----------|-------------|
 | `terraform init` | Initialise le projet |
-| `terraform plan` | Previsualise les changements |
+| `terraform plan` | Prévisualise les changements |
 | `terraform apply` | Applique les changements |
 | `terraform destroy` | Supprime tout |
 | `terraform output` | Affiche les outputs |
@@ -649,17 +649,17 @@ terraform destroy
 | `kubectl get nodes` | Liste les nodes |
 | `kubectl get pods -A` | Liste tous les pods |
 | `kubectl get svc -A` | Liste tous les services |
-| `kubectl describe node <name>` | Details d'un node |
+| `kubectl describe node <name>` | Détails d'un node |
 | `kubectl logs <pod> -n <ns>` | Logs d'un pod |
 
 ---
 
 ## Troubleshooting
 
-### Erreurs generales
+### Erreurs générales
 
 **"Error: No valid credential sources found"**
-→ Verifie que `aws configure` a bien ete fait
+→ Vérifie que `aws configure` a bien été fait
 
 **"Error: creating EKS Cluster: AccessDeniedException"**
 → L'utilisateur IAM n'a pas les permissions suffisantes
@@ -667,7 +667,7 @@ terraform destroy
 **"kubectl: Unable to connect to the server"**
 → Lance `aws eks update-kubeconfig --region eu-west-1 --name sandbox-eks`
 
-### Erreurs SCP (specifiques a ce compte)
+### Erreurs SCP (spécifiques à ce compte)
 
 **"Error: creating KMS Key: AccessDeniedException"**
 → Le module EKS doit avoir `create_kms_key = false`
@@ -677,6 +677,6 @@ terraform destroy
 
 ---
 
-## Prochaine etape
+## Prochaine étape
 
-Une fois le cluster EKS operationnel, vous pouvez passer a l'[Installation de Karpenter](/pro/aws/karpenter-installation/).
+Une fois le cluster EKS opérationnel, vous pouvez passer à l'[Installation de Karpenter](/pro/aws/karpenter-installation/).

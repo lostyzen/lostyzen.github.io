@@ -10,35 +10,35 @@ searchHidden: true
 
 # Installation de Karpenter sur un cluster EKS
 
-Ce guide explique comment installer et configurer **Karpenter** sur un cluster EKS, avec une attention particuliere aux contraintes des comptes de formation AWS (SCP).
+Ce guide explique comment installer et configurer **Karpenter** sur un cluster EKS, avec une attention particulière aux contraintes des comptes de formation AWS (SCP).
 
-> **Prerequis** : Avoir un cluster EKS operationnel. Voir [Installation d'un cluster EKS](/pro/aws/eks-installation/).
+> **Prérequis** : Avoir un cluster EKS opérationnel. Voir [Installation d'un cluster EKS](/pro/aws/eks-installation/).
 
 ---
 
 ## Qu'est-ce que Karpenter ?
 
-**Karpenter** est un autoscaler Kubernetes open-source developpe par AWS qui provisionne automatiquement des nodes en fonction des besoins reels de vos workloads.
+**Karpenter** est un autoscaler Kubernetes open-source développé par AWS qui provisionne automatiquement des nodes en fonction des besoins réels de vos workloads.
 
-### Fonctionnalites principales
+### Fonctionnalités principales
 
-| Fonctionnalite | Description |
+| Fonctionnalité | Description |
 |----------------|-------------|
 | **Autoscaling intelligent** | Provisionne automatiquement les nodes EC2 en fonction des pods en attente |
-| **Optimisation des couts** | Selectionne les types d'instances les plus economiques selon les contraintes |
-| **Rapidite** | Provisionne des nodes en ~40 secondes (vs 3-5 min avec Cluster Autoscaler) |
-| **Consolidation** | Remplace automatiquement plusieurs petits nodes par un seul plus gros pour reduire les couts |
-| **Flexibilite** | Peut utiliser n'importe quel type d'instance EC2 (Spot, On-Demand, ARM, x86) |
+| **Optimisation des coûts** | Sélectionne les types d'instances les plus économiques selon les contraintes |
+| **Rapidité** | Provisionne des nodes en ~40 secondes (vs 3-5 min avec Cluster Autoscaler) |
+| **Consolidation** | Remplace automatiquement plusieurs petits nodes par un seul plus gros pour réduire les coûts |
+| **Flexibilité** | Peut utiliser n'importe quel type d'instance EC2 (Spot, On-Demand, ARM, x86) |
 
 ### Karpenter vs Cluster Autoscaler
 
-| Critere | Cluster Autoscaler | Karpenter |
+| Critère | Cluster Autoscaler | Karpenter |
 |---------|-------------------|-----------|
 | Vitesse de provisioning | 3-5 minutes | ~40 secondes |
-| Configuration | Node Groups predefinis | Selection dynamique d'instances |
-| Optimisation des couts | Limitee | Avancee (bin-packing, Spot) |
-| Gestion du cycle de vie | Basique | Avancee (consolidation, expiration) |
-| Complexite | Simple | Moderee |
+| Configuration | Node Groups prédéfinis | Sélection dynamique d'instances |
+| Optimisation des coûts | Limitée | Avancée (bin-packing, Spot) |
+| Gestion du cycle de vie | Basique | Avancée (consolidation, expiration) |
+| Complexité | Simple | Modérée |
 
 ---
 
@@ -73,12 +73,12 @@ flowchart LR
     style EC2NodeClass fill:#2E7D32,stroke:#1B5E20,color:#FFFFFF
 ```
 
-### Composants a installer
+### Composants à installer
 
 | Composant | Type | Description |
 |-----------|------|-------------|
-| **Module Karpenter** | IAM Resources | Roles IAM, Instance Profile |
-| **Module IRSA** | IAM Resources | Role IRSA pour le controller |
+| **Module Karpenter** | IAM Resources | Rôles IAM, Instance Profile |
+| **Module IRSA** | IAM Resources | Rôle IRSA pour le controller |
 | **Helm Release** | Kubernetes | Deployment du controller Karpenter |
 | **NodePool** | CRD Kubernetes | Configuration des contraintes de nodes |
 | **EC2NodeClass** | CRD Kubernetes | Configuration EC2 (AMI, subnets, SG) |
@@ -88,9 +88,9 @@ flowchart LR
 
 ## Configuration Terraform pour compte de formation (SCP)
 
-### Restrictions SCP rencontrees
+### Restrictions SCP rencontrées
 
-| Service | Action bloquee | Impact sur Karpenter |
+| Service | Action bloquée | Impact sur Karpenter |
 |---------|---------------|---------------------|
 | **SQS** | `sqs:CreateQueue` | Pas de gestion des interruptions Spot |
 | **EventBridge** | `events:PutRule` | Pas de notifications |
@@ -103,23 +103,23 @@ flowchart LR
 
 ```hcl
 # Module Karpenter - Provisionne les ressources IAM pour Karpenter
-# Note: SQS, EventBridge et Pod Identity desactives - SCP du compte les bloque
+# Note: SQS, EventBridge et Pod Identity désactivés - SCP du compte les bloque
 module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
   version = "~> 20.0"
 
   cluster_name = module.eks.cluster_name
 
-  # Utiliser IRSA (Pod Identity bloque par SCP)
+  # Utiliser IRSA (Pod Identity bloqué par SCP)
   enable_irsa                     = true
   irsa_oidc_provider_arn          = module.eks.oidc_provider_arn
   irsa_namespace_service_accounts = ["kube-system:karpenter"]
 
-  # Desactiver Pod Identity (bloque par SCP)
+  # Désactiver Pod Identity (bloqué par SCP)
   enable_pod_identity             = false
   create_pod_identity_association = false
 
-  # Creer l'instance profile pour les nodes Karpenter
+  # Créer l'instance profile pour les nodes Karpenter
   node_iam_role_use_name_prefix = false
   node_iam_role_name            = "${var.cluster_name}-karpenter-node"
 
@@ -183,7 +183,7 @@ resource "kubectl_manifest" "karpenter_node_pool" {
           requirements:
             - key: "karpenter.sh/capacity-type"
               operator: In
-              values: ["on-demand"]  # Spot desactive (SCP bloque le SLR)
+              values: ["on-demand"]  # Spot désactivé (SCP bloque le SLR)
             - key: "kubernetes.io/arch"
               operator: In
               values: ["amd64"]
@@ -214,19 +214,19 @@ resource "kubectl_manifest" "karpenter_node_pool" {
 
 | Requirement | Valeurs | Signification |
 |-------------|---------|---------------|
-| `capacity-type` | on-demand | On-Demand uniquement (Spot bloque par SCP) |
+| `capacity-type` | on-demand | On-Demand uniquement (Spot bloqué par SCP) |
 | `arch` | amd64 | Architecture x86_64 (pas ARM) |
-| `instance-category` | t | Categorie T (burstable) |
-| `instance-family` | t3, t3a, t2 | Familles d'instances autorisees |
-| `instance-size` | medium a 2xlarge | Tailles d'instances (2 a 8 vCPUs) |
+| `instance-category` | t | Catégorie T (burstable) |
+| `instance-family` | t3, t3a, t2 | Familles d'instances autorisées |
+| `instance-size` | medium à 2xlarge | Tailles d'instances (2 à 8 vCPUs) |
 
 #### Explication de la disruption
 
-| Parametre | Valeur | Signification |
+| Paramètre | Valeur | Signification |
 |-----------|--------|---------------|
-| `consolidationPolicy` | WhenEmptyOrUnderutilized | Consolide les nodes vides OU sous-utilises |
+| `consolidationPolicy` | WhenEmptyOrUnderutilized | Consolide les nodes vides OU sous-utilisés |
 | `consolidateAfter` | 1m | Attend 1 minute avant de consolider |
-| `budgets` | 10% | Maximum 10% des nodes peuvent etre disruptes simultanement |
+| `budgets` | 10% | Maximum 10% des nodes peuvent être disruptés simultanément |
 
 ### EC2NodeClass
 
@@ -239,10 +239,10 @@ resource "kubectl_manifest" "karpenter_node_class" {
       name: default
     spec:
       amiFamily: AL2023
-      # AMI specifiee en dur car ssm:GetParameter est bloque par SCP
+      # AMI spécifiée en dur car ssm:GetParameter est bloqué par SCP
       amiSelectorTerms:
         - id: ami-05521d50f4e9c827d  # amazon-eks-node-al2023-x86_64-standard-1.33 eu-west-1
-      # instanceProfile au lieu de role car Karpenter ne peut pas creer d'instance profile
+      # instanceProfile au lieu de role car Karpenter ne peut pas créer d'instance profile
       instanceProfile: ${module.karpenter.instance_profile_name}
       subnetSelectorTerms:
         - tags:
@@ -260,7 +260,7 @@ resource "kubectl_manifest" "karpenter_node_class" {
           ebs:
             volumeSize: 20Gi
             volumeType: gp3
-            encrypted: false  # KMS bloque par SCP
+            encrypted: false  # KMS bloqué par SCP
             deleteOnTermination: true
   YAML
 
@@ -268,13 +268,13 @@ resource "kubectl_manifest" "karpenter_node_class" {
 }
 ```
 
-#### Points cles de la configuration
+#### Points clés de la configuration
 
-| Parametre | Valeur | Raison |
+| Paramètre | Valeur | Raison |
 |-----------|--------|--------|
-| `amiSelectorTerms.id` | AMI fixe | SSM bloque par SCP |
-| `instanceProfile` | Pre-cree | Karpenter ne peut pas creer d'instance profile |
-| `encrypted: false` | Pas de chiffrement | KMS bloque par SCP |
+| `amiSelectorTerms.id` | AMI fixe | SSM bloqué par SCP |
+| `instanceProfile` | Pré-créé | Karpenter ne peut pas créer d'instance profile |
+| `encrypted: false` | Pas de chiffrement | KMS bloqué par SCP |
 
 ### Tags sur les Security Groups
 
@@ -299,14 +299,14 @@ resource "aws_ec2_tag" "node_security_group_tag" {
 
 ## Guide d'installation
 
-### Etape 1 : Initialiser les providers
+### Étape 1 : Initialiser les providers
 
 ```bash
 cd terraform
 terraform init -upgrade
 ```
 
-### Etape 2 : Verifier les changements
+### Étape 2 : Vérifier les changements
 
 ```bash
 terraform plan
@@ -320,19 +320,19 @@ Vous devriez voir :
 - `aws_ec2_tag.cluster_security_group_tag`
 - `aws_ec2_tag.node_security_group_tag`
 
-### Etape 3 : Deployer
+### Étape 3 : Déployer
 
 ```bash
 terraform apply
 ```
 
-**Duree estimee : 3-5 minutes**
+**Durée estimée : 3-5 minutes**
 
 ---
 
-## Verification de l'installation
+## Vérification de l'installation
 
-### 1. Verifier les pods Karpenter
+### 1. Vérifier les pods Karpenter
 
 ```bash
 kubectl get pods -n kube-system -l app.kubernetes.io/name=karpenter
@@ -345,7 +345,7 @@ karpenter-5d7f8c9b4d-xxxxx   1/1     Running   0          2m
 karpenter-5d7f8c9b4d-yyyyy   1/1     Running   0          2m
 ```
 
-### 2. Verifier le NodePool
+### 2. Vérifier le NodePool
 
 ```bash
 kubectl get nodepool
@@ -357,7 +357,7 @@ NAME      NODECLASS   NODES   READY   AGE
 default   default     0       True    5m
 ```
 
-### 3. Verifier l'EC2NodeClass
+### 3. Vérifier l'EC2NodeClass
 
 ```bash
 kubectl get ec2nodeclass
@@ -369,7 +369,7 @@ NAME      READY   AGE
 default   True    5m
 ```
 
-### 4. Verifier les logs
+### 4. Vérifier les logs
 
 ```bash
 kubectl logs -n kube-system -l app.kubernetes.io/name=karpenter --tail=20
@@ -385,20 +385,20 @@ kubectl logs -n kube-system -l app.kubernetes.io/name=karpenter --tail=20
 |----------|-------------|
 | `kubectl get nodepools` | Liste les NodePools |
 | `kubectl get ec2nodeclasses` | Liste les EC2NodeClasses |
-| `kubectl get nodeclaims` | Liste les NodeClaims (nodes en cours/crees) |
-| `kubectl describe nodepool default` | Details du NodePool |
-| `kubectl logs -n kube-system -l app.kubernetes.io/name=karpenter -f` | Logs Karpenter en temps reel |
+| `kubectl get nodeclaims` | Liste les NodeClaims (nodes en cours/créés) |
+| `kubectl describe nodepool default` | Détails du NodePool |
+| `kubectl logs -n kube-system -l app.kubernetes.io/name=karpenter -f` | Logs Karpenter en temps réel |
 
 ### Gestion des nodes
 
 ```bash
-# Voir les nodes crees par Karpenter
+# Voir les nodes créés par Karpenter
 kubectl get nodes -l karpenter.sh/nodepool=default
 
 # Voir les NodeClaims
 kubectl get nodeclaims
 
-# Details du NodeClaim
+# Détails du NodeClaim
 kubectl describe nodeclaim
 ```
 
@@ -408,10 +408,10 @@ kubectl describe nodeclaim
 # Forcer la consolidation
 kubectl annotate nodepool default karpenter.sh/do-not-disrupt-
 
-# Desactiver temporairement Karpenter
+# Désactiver temporairement Karpenter
 kubectl scale deployment karpenter -n kube-system --replicas=0
 
-# Reactiver Karpenter
+# Réactiver Karpenter
 kubectl scale deployment karpenter -n kube-system --replicas=2
 ```
 
@@ -419,60 +419,60 @@ kubectl scale deployment karpenter -n kube-system --replicas=2
 
 ## Troubleshooting
 
-### Probleme : Pods Karpenter en CrashLoopBackOff
+### Problème : Pods Karpenter en CrashLoopBackOff
 
-**Cause probable :** Pod Identity bloque par SCP
+**Cause probable :** Pod Identity bloqué par SCP
 
 **Solution :** Utiliser IRSA au lieu de Pod Identity
 
 ```bash
-# Verifier les logs
+# Vérifier les logs
 kubectl logs -n kube-system -l app.kubernetes.io/name=karpenter
 
 # Si erreur "eks-auth:AssumeRoleForPodIdentity"
 # -> Configurer IRSA comme dans la section compte formation
 ```
 
-### Probleme : EC2NodeClass READY: False
+### Problème : EC2NodeClass READY: False
 
-**Cause probable :** AMI lookup echoue (SSM bloque)
+**Cause probable :** AMI lookup échoue (SSM bloqué)
 
-**Solution :** Specifier l'AMI ID en dur
+**Solution :** Spécifier l'AMI ID en dur
 
 ```yaml
 amiSelectorTerms:
-  - id: ami-05521d50f4e9c827d  # Remplacer par l'AMI de votre region
+  - id: ami-05521d50f4e9c827d  # Remplacer par l'AMI de votre région
 ```
 
-**Trouver l'AMI (depuis un compte avec acces SSM) :**
+**Trouver l'AMI (depuis un compte avec accès SSM) :**
 ```bash
 aws ssm get-parameter \
   --name /aws/service/eks/optimized-ami/1.33/amazon-linux-2023/x86_64/standard/recommended/image_id \
   --query "Parameter.Value" --output text
 ```
 
-### Probleme : Karpenter ne peut pas creer de nodes
+### Problème : Karpenter ne peut pas créer de nodes
 
-**Verifier les erreurs IAM :**
+**Vérifier les erreurs IAM :**
 ```bash
 kubectl logs -n kube-system -l app.kubernetes.io/name=karpenter | grep -i error
 ```
 
 **Causes possibles :**
 - Instance Profile manquant → Utiliser `instanceProfile:` au lieu de `role:`
-- Permissions EC2 manquantes → Verifier la policy IRSA
-- Security groups non trouves → Ajouter les tags `karpenter.sh/discovery`
+- Permissions EC2 manquantes → Vérifier la policy IRSA
+- Security groups non trouvés → Ajouter les tags `karpenter.sh/discovery`
 
-### Probleme : "SecurityGroupSelector did not match any SecurityGroups"
+### Problème : "SecurityGroupSelector did not match any SecurityGroups"
 
-**Solution :** Verifier et ajouter les tags sur les security groups
+**Solution :** Vérifier et ajouter les tags sur les security groups
 
 ```bash
-# Verifier les tags existants
+# Vérifier les tags existants
 aws ec2 describe-security-groups --filters "Name=tag:Name,Values=*sandbox-eks-node*" \
   --query "SecurityGroups[*].Tags"
 
-# Si le tag manque, reappliquer avec Terraform
+# Si le tag manque, réappliquer avec Terraform
 terraform apply -target=aws_ec2_tag.node_security_group_tag
 ```
 
@@ -484,16 +484,16 @@ Avec un compte formation, vous verrez ces warnings dans les logs Karpenter :
 ERROR pricing.GetProducts, failed to get products ... AccessDeniedException
 ```
 
-Ce warning n'empeche pas Karpenter de fonctionner. Karpenter utilisera des valeurs par defaut pour le pricing.
+Ce warning n'empêche pas Karpenter de fonctionner. Karpenter utilisera des valeurs par défaut pour le pricing.
 
 ---
 
 ## Bonnes pratiques
 
-1. **Toujours definir des limites** : Evitez les couts imprevus
-2. **Diversifiez les types d'instances** : Augmentez la disponibilite
+1. **Toujours définir des limites** : Évitez les coûts imprévus
+2. **Diversifiez les types d'instances** : Augmentez la disponibilité
 3. **Activez la consolidation** : Optimisez l'utilisation
-4. **Monitorez activement** : Suivez les metriques et les couts
+4. **Monitorez activement** : Suivez les métriques et les coûts
 5. **Testez en sandbox** : Validez la configuration avant production
 
 ---
@@ -507,6 +507,6 @@ Ce warning n'empeche pas Karpenter de fonctionner. Karpenter utilisera des valeu
 
 ---
 
-## Prochaine etape
+## Prochaine étape
 
-Une fois Karpenter installe et operationnel, vous pouvez passer aux [Tests de Karpenter](/pro/aws/karpenter-tests/).
+Une fois Karpenter installé et opérationnel, vous pouvez passer aux [Tests de Karpenter](/pro/aws/karpenter-tests/).
