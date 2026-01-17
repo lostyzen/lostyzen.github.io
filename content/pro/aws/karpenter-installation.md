@@ -444,11 +444,23 @@ amiSelectorTerms:
   - id: ami-05521d50f4e9c827d  # Remplacer par l'AMI de votre région
 ```
 
-**Trouver l'AMI (depuis un compte avec accès SSM) :**
+**Trouver l'AMI (via EC2 describe-images) :**
 ```bash
-aws ssm get-parameter \
-  --name /aws/service/eks/optimized-ami/1.33/amazon-linux-2023/x86_64/standard/recommended/image_id \
-  --query "Parameter.Value" --output text
+# Lister les AMI EKS disponibles pour K8s 1.33 en eu-west-1
+aws ec2 describe-images \
+  --owners amazon \
+  --filters "Name=name,Values=amazon-eks-node-al2023-x86_64-standard-1.33*" \
+  --query "Images[*].[ImageId,Description]" \
+  --output table \
+  --region eu-west-1
+
+# Récupérer uniquement la plus récente
+aws ec2 describe-images \
+  --owners amazon \
+  --filters "Name=name,Values=amazon-eks-node-al2023-x86_64-standard-1.33*" \
+  --query "Images | sort_by(@, &CreationDate) | [-1].[ImageId,Name]" \
+  --output text \
+  --region eu-west-1
 ```
 
 ### Problème : Karpenter ne peut pas créer de nodes
