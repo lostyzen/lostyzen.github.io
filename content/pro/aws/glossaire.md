@@ -109,6 +109,60 @@ searchHidden: true
   color: var(--tn-red);
 }
 
+/* Category filters */
+.category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--tn-bg-dark);
+  border-radius: 8px;
+}
+
+.category-filter {
+  padding: 0.5rem 1rem;
+  background: var(--tn-bg-highlight);
+  border: 2px solid transparent;
+  border-radius: 6px;
+  color: var(--tn-fg);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.category-filter:hover {
+  transform: translateY(-2px);
+}
+
+.category-filter.active {
+  border-color: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.category-filter.all { color: var(--tn-fg); }
+.category-filter.all.active { background: var(--tn-purple); color: var(--tn-bg); border-color: var(--tn-purple); }
+
+.category-filter.aws { color: var(--tn-orange); }
+.category-filter.aws.active { background: var(--tn-orange); color: var(--tn-bg); border-color: var(--tn-orange); }
+
+.category-filter.k8s { color: var(--tn-blue); }
+.category-filter.k8s.active { background: var(--tn-blue); color: var(--tn-bg); border-color: var(--tn-blue); }
+
+.category-filter.network { color: var(--tn-green); }
+.category-filter.network.active { background: var(--tn-green); color: var(--tn-bg); border-color: var(--tn-green); }
+
+.category-filter.security { color: var(--tn-red); }
+.category-filter.security.active { background: var(--tn-red); color: var(--tn-bg); border-color: var(--tn-red); }
+
+.category-filter.general { color: var(--tn-purple); }
+.category-filter.general.active { background: var(--tn-purple); color: var(--tn-bg); border-color: var(--tn-purple); }
+
 /* Results count */
 .results-count {
   text-align: center;
@@ -228,6 +282,12 @@ searchHidden: true
   border-radius: 3px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.term-category:hover {
+  transform: scale(1.05);
 }
 
 .term-category.aws { background: rgba(255, 158, 100, 0.2); color: var(--tn-orange); }
@@ -357,19 +417,49 @@ searchHidden: true
   .term-name {
     flex-wrap: wrap;
   }
+  
+  .category-filters {
+    gap: 0.5rem;
+  }
+  
+  .category-filter {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
 }
 </style>
 
 <div class="glossary-container">
   <div class="glossary-header">
     <h1>📚 Glossaire AWS & Kubernetes</h1>
-    <p>Tous les termes et acronymes essentiels pour débuter</p>
+    <p>Tous les termes et acronymes essentiels</p>
   </div>
 
   <div class="search-container">
     <span class="search-icon">🔍</span>
     <input type="text" class="search-input" id="glossarySearch" placeholder="Rechercher un terme, acronyme ou mot-clé..." autocomplete="off">
     <button class="search-clear" id="clearSearch">✕</button>
+  </div>
+
+  <div class="category-filters" id="categoryFilters">
+    <div class="category-filter all active" data-category="all">
+      ⚡ Tous
+    </div>
+    <div class="category-filter aws" data-category="aws">
+      ☁️ AWS
+    </div>
+    <div class="category-filter k8s" data-category="k8s">
+      ☸️ Kubernetes
+    </div>
+    <div class="category-filter network" data-category="network">
+      🌐 Réseau
+    </div>
+    <div class="category-filter security" data-category="security">
+      🔒 Sécurité
+    </div>
+    <div class="category-filter general" data-category="general">
+      📦 Général
+    </div>
   </div>
 
   <div class="results-count" id="resultsCount"></div>
@@ -456,6 +546,18 @@ searchHidden: true
         <div class="term-description">
           Identifiant unique pour toute ressource AWS. Il suit le format <code>arn:aws:service:region:account-id:resource</code>. Les ARN sont utilisés dans les policies IAM pour spécifier précisément quelles ressources sont concernées par une autorisation.
           <div class="term-example"><code>arn:aws:eks:eu-west-1:123456789012:cluster/my-cluster</code> identifie un cluster EKS spécifique.</div>
+        </div>
+      </div>
+
+      <div class="term-card aws" data-term="ASG" data-search="asg auto scaling group groupe instances ec2 scaling automatique">
+        <div class="term-name">
+          <h3>ASG</h3>
+          <span class="term-acronym">Auto Scaling Group</span>
+          <span class="term-category aws">AWS</span>
+        </div>
+        <div class="term-description">
+          Groupe d'instances EC2 qui scale automatiquement en fonction de la charge ou de règles définies. L'ASG maintient le nombre désiré d'instances en cours d'exécution, remplace les instances défaillantes et peut ajuster la capacité selon des métriques CloudWatch. Les Managed Node Groups EKS utilisent des ASG en interne.
+          <div class="term-example">Un ASG peut automatiquement augmenter de 2 à 10 instances quand la charge CPU dépasse 70%.</div>
         </div>
       </div>
 
@@ -598,6 +700,40 @@ searchHidden: true
         </div>
       </div>
 
+      <div class="term-card k8s" data-term="CNI" data-search="cni container network interface plugin réseau conteneur networking">
+        <div class="term-name">
+          <h3>CNI</h3>
+          <span class="term-acronym">Container Network Interface</span>
+          <span class="term-category k8s">Kubernetes</span>
+        </div>
+        <div class="term-description">
+          Spécification et ensemble de bibliothèques pour configurer le réseau des conteneurs. Dans Kubernetes, le plugin CNI attribue des adresses IP aux pods et configure le routage réseau. Différents plugins offrent différentes fonctionnalités : VPC CNI (AWS), Calico, Cilium, etc.
+          <div class="term-example">Le VPC CNI d'AWS implémente l'interface CNI pour donner aux pods des IPs natives du VPC.</div>
+        </div>
+      </div>
+
+      <div class="term-card aws" data-term="CloudFormation" data-search="cloudformation iac infrastructure as code stack template yaml json aws">
+        <div class="term-name">
+          <h3>CloudFormation</h3>
+          <span class="term-category aws">AWS</span>
+        </div>
+        <div class="term-description">
+          Service d'Infrastructure as Code d'AWS permettant de définir et provisionner des ressources via des templates YAML ou JSON. CloudFormation crée des <strong>stacks</strong> qui regroupent les ressources et gèrent leur cycle de vie. Alternative native AWS à Terraform, avec intégration profonde des services AWS.
+          <div class="term-example">eksctl utilise CloudFormation en arrière-plan pour créer les clusters EKS et leurs ressources associées.</div>
+        </div>
+      </div>
+
+      <div class="term-card aws" data-term="CloudWatch" data-search="cloudwatch monitoring logs métriques surveillance alarmes aws">
+        <div class="term-name">
+          <h3>CloudWatch</h3>
+          <span class="term-category aws">AWS</span>
+        </div>
+        <div class="term-description">
+          Service de monitoring et d'observabilité d'AWS. CloudWatch collecte et surveille les métriques, les logs et les événements des ressources AWS et applications. Il permet de créer des alarmes, des dashboards, et d'automatiser des actions basées sur des métriques.
+          <div class="term-example">CloudWatch Logs collecte les logs des pods EKS via Fluent Bit pour centraliser l'observabilité.</div>
+        </div>
+      </div>
+
       <div class="term-card k8s" data-term="CRD" data-search="crd custom resource definition ressource personnalisée extension api kubernetes">
         <div class="term-name">
           <h3>CRD</h3>
@@ -607,6 +743,18 @@ searchHidden: true
         <div class="term-description">
           Mécanisme permettant d'étendre l'API Kubernetes avec vos propres types de ressources. Les CRDs permettent de définir des objets personnalisés (comme <code>NodePool</code> pour Karpenter) qui sont ensuite gérés par des controllers dédiés, exactement comme les ressources natives.
           <div class="term-example">Karpenter définit les CRDs <code>NodePool</code> et <code>EC2NodeClass</code> pour configurer l'autoscaling.</div>
+        </div>
+      </div>
+
+      <div class="term-card k8s" data-term="CSI" data-search="csi container storage interface stockage plugin volume driver">
+        <div class="term-name">
+          <h3>CSI</h3>
+          <span class="term-acronym">Container Storage Interface</span>
+          <span class="term-category k8s">Kubernetes</span>
+        </div>
+        <div class="term-description">
+          Standard pour exposer les systèmes de stockage aux workloads conteneurisés. Les drivers CSI permettent à Kubernetes d'utiliser différents backends de stockage (EBS, EFS, etc.) de manière uniforme. Le CSI remplace les anciens plugins de volume intégrés à Kubernetes.
+          <div class="term-example">Le driver EBS CSI permet de provisionner dynamiquement des volumes EBS pour les PersistentVolumeClaims.</div>
         </div>
       </div>
     </div>
@@ -1459,6 +1607,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const allTerms = document.querySelectorAll('.term-card');
   const allSections = document.querySelectorAll('.letter-section');
+  const categoryFilters = document.querySelectorAll('.category-filter');
+  
+  let activeCategory = 'all';
+  let searchQuery = '';
 
   function normalizeText(text) {
     return text.toLowerCase()
@@ -1504,37 +1656,38 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  function search(query) {
+  function filterTerms() {
     removeHighlights();
 
-    if (!query.trim()) {
-      allTerms.forEach(term => term.style.display = '');
-      allSections.forEach(section => section.style.display = '');
-      noResults.style.display = 'none';
-      glossaryContent.style.display = '';
-      quickNav.style.display = '';
-      resultsCount.innerHTML = '';
-      clearButton.style.display = 'none';
-      return;
-    }
-
-    clearButton.style.display = 'block';
-    quickNav.style.display = 'none';
-
-    const searchTerms = normalizeText(query).split(/\s+/).filter(t => t.length > 0);
+    const searchTerms = searchQuery ? normalizeText(searchQuery).split(/\s+/).filter(t => t.length > 0) : [];
     let matchCount = 0;
 
     allTerms.forEach(term => {
-      const searchData = normalizeText(term.dataset.search || '');
-      const termName = normalizeText(term.dataset.term || '');
-      const allSearchable = searchData + ' ' + termName;
+      let matches = true;
 
-      const matches = searchTerms.every(st => allSearchable.includes(st));
+      // Filter by category
+      if (activeCategory !== 'all') {
+        const termCategory = term.classList.contains(activeCategory);
+        if (!termCategory) {
+          term.style.display = 'none';
+          return;
+        }
+      }
+
+      // Filter by search query
+      if (searchTerms.length > 0) {
+        const searchData = normalizeText(term.dataset.search || '');
+        const termName = normalizeText(term.dataset.term || '');
+        const allSearchable = searchData + ' ' + termName;
+        matches = searchTerms.every(st => allSearchable.includes(st));
+      }
 
       if (matches) {
         term.style.display = '';
         matchCount++;
-        highlightText(term, searchTerms);
+        if (searchTerms.length > 0) {
+          highlightText(term, searchTerms);
+        }
       } else {
         term.style.display = 'none';
       }
@@ -1542,32 +1695,91 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Hide empty sections
     allSections.forEach(section => {
-      const visibleTerms = section.querySelectorAll('.term-card[style=""], .term-card:not([style])');
       const hasVisible = Array.from(section.querySelectorAll('.term-card')).some(t => t.style.display !== 'none');
       section.style.display = hasVisible ? '' : 'none';
     });
 
+    // Update UI
     if (matchCount === 0) {
       glossaryContent.style.display = 'none';
       noResults.style.display = '';
-      searchTermSpan.textContent = query;
       resultsCount.innerHTML = '';
     } else {
       glossaryContent.style.display = '';
       noResults.style.display = 'none';
-      resultsCount.innerHTML = `<span>${matchCount}</span> terme${matchCount > 1 ? 's' : ''} trouvé${matchCount > 1 ? 's' : ''}`;
+      
+      if (searchQuery || activeCategory !== 'all') {
+        resultsCount.innerHTML = `<span>${matchCount}</span> terme${matchCount > 1 ? 's' : ''} trouvé${matchCount > 1 ? 's' : ''}`;
+      } else {
+        resultsCount.innerHTML = '';
+      }
     }
+
+    // Show/hide clear button
+    clearButton.style.display = searchQuery ? 'block' : 'none';
+    
+    // Show/hide quick nav
+    quickNav.style.display = (searchQuery || activeCategory !== 'all') ? 'none' : '';
   }
 
+  // Category filter click handlers
+  categoryFilters.forEach(filter => {
+    filter.addEventListener('click', function() {
+      // Update active state
+      categoryFilters.forEach(f => f.classList.remove('active'));
+      this.classList.add('active');
+      
+      // Update active category
+      activeCategory = this.dataset.category;
+      
+      // Apply filters
+      filterTerms();
+    });
+  });
+
+  // Click on term category badge to filter
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('term-category')) {
+      const category = e.target.textContent.toLowerCase().trim();
+      const categoryMap = {
+        'aws': 'aws',
+        'kubernetes': 'k8s',
+        'réseau': 'network',
+        'sécurité': 'security',
+        'général': 'general'
+      };
+      
+      const filterCategory = categoryMap[category];
+      if (filterCategory) {
+        // Activate the corresponding filter
+        categoryFilters.forEach(f => {
+          f.classList.remove('active');
+          if (f.dataset.category === filterCategory) {
+            f.classList.add('active');
+          }
+        });
+        activeCategory = filterCategory;
+        filterTerms();
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  });
+
+  // Search input handler
   let debounceTimer;
   searchInput.addEventListener('input', function() {
     clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => search(this.value), 150);
+    searchQuery = this.value;
+    debounceTimer = setTimeout(() => filterTerms(), 150);
   });
 
+  // Clear button handler
   clearButton.addEventListener('click', function() {
     searchInput.value = '';
-    search('');
+    searchQuery = '';
+    filterTerms();
     searchInput.focus();
   });
 
@@ -1575,7 +1787,8 @@ document.addEventListener('DOMContentLoaded', function() {
   searchInput.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       this.value = '';
-      search('');
+      searchQuery = '';
+      filterTerms();
     }
   });
 });
