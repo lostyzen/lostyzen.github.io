@@ -242,7 +242,7 @@ resource "kubectl_manifest" "karpenter_node_class" {
       # AMI spécifiée en dur car ssm:GetParameter est bloqué par SCP
       amiSelectorTerms:
         - id: ami-05521d50f4e9c827d  # amazon-eks-node-al2023-x86_64-standard-1.33 eu-west-1
-      # instanceProfile au lieu de role car Karpenter ne peut pas créer d'instance profile
+      # instanceProfile pré-créé par Terraform car les SCP du compte de formation bloquent la création d'instance profiles par Karpenter
       instanceProfile: ${module.karpenter.instance_profile_name}
       subnetSelectorTerms:
         - tags:
@@ -260,7 +260,7 @@ resource "kubectl_manifest" "karpenter_node_class" {
           ebs:
             volumeSize: 20Gi
             volumeType: gp3
-            encrypted: false  # KMS bloqué par SCP
+            encrypted: false  # KMS bloqué par SCP (en production, activer le chiffrement EBS)
             deleteOnTermination: true
   YAML
 
@@ -273,8 +273,8 @@ resource "kubectl_manifest" "karpenter_node_class" {
 | Paramètre | Valeur | Raison |
 |-----------|--------|--------|
 | `amiSelectorTerms.id` | AMI fixe | SSM bloqué par SCP |
-| `instanceProfile` | Pré-créé | Karpenter ne peut pas créer d'instance profile |
-| `encrypted: false` | Pas de chiffrement | KMS bloqué par SCP |
+| `instanceProfile` | Pré-créé | SCP bloque la création par Karpenter |
+| `encrypted: false` | Pas de chiffrement | KMS bloqué par SCP (activer en production) |
 
 ### Tags sur les Security Groups
 
