@@ -7,7 +7,7 @@ searchHidden: true
 
 # Documentation Professionnelle
 
-Cette section contient de la documentation technique destinée à être partagée avec des collègues.
+Cette section contient de la documentation technique sur AWS et EKS suite aux expérimentations d'installation d'un cluster EKS et de Karpenter.
 
 ## Sections disponibles
 

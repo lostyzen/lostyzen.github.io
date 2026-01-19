@@ -31,27 +31,4 @@ Cette documentation couvre l'installation et la configuration d'un cluster EKS a
 
 ## Architecture cible
 
-{{< mermaid >}}
-flowchart TB
-    subgraph VPC["VPC (10.0.0.0/16)"]
-        subgraph PublicSubnets["Subnets Publics"]
-            NAT[NAT Gateway]
-        end
-        subgraph PrivateSubnets["Subnets Privés"]
-            subgraph EKS["Cluster EKS"]
-                CP[Control Plane]
-                subgraph Nodes["Node Groups"]
-                    NG[Node Group Initial]
-                    KN[Karpenter Nodes]
-                end
-            end
-        end
-    end
-
-    Internet((Internet)) --> NAT
-    NAT --> PrivateSubnets
-    CP --> Nodes
-
-    style KN fill:#2E7D32,stroke:#1B5E20,color:#fff
-    style CP fill:#7aa2f7,stroke:#3d59a1,color:#1a1b26
-{{< /mermaid >}}
+![Architecture EKS avec Karpenter](/images/aws/architecture-eks-karpenter.png)

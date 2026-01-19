@@ -90,70 +90,9 @@ Ce guide explique comment déployer un cluster **Amazon EKS** (Elastic Kubernete
                         +--------------+
 ```
 
-### Vue en diagramme Mermaid
+### Vue en diagramme
 
-{{< mermaid >}}
-flowchart TB
-    subgraph Internet["Internet"]
-        User["Utilisateur / kubectl"]
-        DockerHub["Docker Hub / ECR"]
-    end
-
-    subgraph AWS["AWS Cloud (eu-west-1)"]
-        subgraph IAM["IAM (Global Service)"]
-            IRSA_ALBC["IRSA Role<br/>LB Controller"]
-            IRSA_Karp["IRSA Role<br/>Karpenter"]
-            InstProfile["Instance Profile<br/>Karpenter Nodes"]
-        end
-
-        IGW["Internet Gateway"]
-
-        subgraph VPC["VPC: sandbox-eks-vpc (10.0.0.0/16)"]
-            subgraph PublicSubnets["Public Subnets"]
-                NAT["NAT Gateway"]
-                ALB["Application<br/>Load Balancer"]
-            end
-
-            subgraph PrivateSubnets["Private Subnets (3 AZs)"]
-                Node1["Static Node 1<br/>t3.medium"]
-                Node2["Static Node 2<br/>t3.medium"]
-                KarpNode1["Karpenter Node<br/>On-Demand/Dynamic"]
-            end
-
-            subgraph EKS["EKS Cluster: sandbox-eks"]
-                CP["Control Plane K8s 1.33"]
-
-                subgraph Workloads["Workloads"]
-                    ALBC["AWS LB Controller"]
-                    Karpenter["Karpenter"]
-                    Addons["Add-ons:<br/>CoreDNS, kube-proxy,<br/>vpc-cni, pod-identity"]
-                end
-            end
-        end
-    end
-
-    User -->|"kubectl"| IGW
-    IGW -->|"API"| CP
-
-    CP -.->|"schedule"| Node1
-    CP -.->|"schedule"| Node2
-    CP -.->|"schedule"| KarpNode1
-
-    Karpenter -->|"EC2 API"| KarpNode1
-
-    ALBC -->|"create"| ALB
-
-    Node1 --> NAT
-    Node2 --> NAT
-    NAT --> IGW
-    IGW -->|"pull"| DockerHub
-
-    ALBC -.->|"assume"| IRSA_ALBC
-    Karpenter -.->|"assume"| IRSA_Karp
-    InstProfile -.->|"attach"| KarpNode1
-
-    style KarpNode1 fill:#2E7D32,stroke:#1B5E20,color:#fff
-{{< /mermaid >}}
+![Architecture détaillée EKS](/images/aws/eks-installation-architecture.png)
 
 ---
 
