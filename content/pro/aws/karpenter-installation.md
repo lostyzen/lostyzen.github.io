@@ -44,34 +44,7 @@ Ce guide explique comment installer et configurer **Karpenter** sur un cluster E
 
 ## Architecture avec Karpenter
 
-```mermaid
-flowchart LR
-    subgraph Kubernetes["EKS Cluster"]
-        Pod["Pod<br/>(Pending)"]
-        Scheduler["kube-scheduler"]
-        Karpenter["Karpenter<br/>Controller"]
-        NodePool["NodePool<br/>(CRD)"]
-        EC2NodeClass["EC2NodeClass<br/>(CRD)"]
-    end
-
-    subgraph AWS["AWS"]
-        EC2["EC2 API"]
-        Instance["EC2 Instance<br/>(On-Demand)"]
-    end
-
-    Pod -->|"1. Cannot schedule"| Scheduler
-    Scheduler -->|"2. Pod pending"| Karpenter
-    Karpenter -->|"3. Read config"| NodePool
-    Karpenter -->|"3. Read config"| EC2NodeClass
-    Karpenter -->|"4. RunInstances"| EC2
-    EC2 -->|"5. Create"| Instance
-    Instance -->|"6. Join cluster"| Scheduler
-    Scheduler -->|"7. Schedule pod"| Pod
-
-    style Karpenter fill:#FF6B6B,stroke:#C92A2A
-    style NodePool fill:#2E7D32,stroke:#1B5E20,color:#FFFFFF
-    style EC2NodeClass fill:#2E7D32,stroke:#1B5E20,color:#FFFFFF
-```
+![Workflow Karpenter](/images/aws/karpenter-workflow.png)
 
 ### Composants à installer
 
