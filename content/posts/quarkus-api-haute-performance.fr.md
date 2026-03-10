@@ -1,5 +1,5 @@
 ---
-title: "API haute performance avec Quarkus & Java : Une solution moderne pour les défis actuels"
+title: "API Haute Performance avec Quarkus et Java"
 date: 2025-10-13T09:00:00+02:00
 lastmod: 2025-10-13T09:00:00+02:00
 draft: false
@@ -11,7 +11,7 @@ showToc: true
 TocOpen: false
 hidemeta: false
 comments: true
-description: "Découvrez comment Quarkus révolutionne le développement Java avec des performances exceptionnelles : démarrage ultra-rapide, faible consommation mémoire et optimisation cloud-native."
+description: "Quarkus révolutionne le développement Java : démarrage ultra-rapide, faible consommation mémoire et optimisation cloud-native."
 canonicalURL: "https://lostyzen.github.io/posts/quarkus-api-haute-performance/"
 disableHLJS: false
 disableShare: false
@@ -119,7 +119,7 @@ L'innovation de Quarkus ? Analyser et optimiser le code lors de la compilation, 
 
 ## 💡 **Une démo pour démarrer rapidement**
 
-La démo proposée peut servir de starter kit facilitant le lancement du développement d'une API. C'est pas juste un exemple basique - c'est un projet structuré que vous pouvez fork et adapter directement.
+La démo proposée peut servir de starter kit facilitant le lancement du développement d'une API. C'est pas juste un exemple basique - c'est un projet structuré selon [l'architecture hexagonale](/posts/architecture-hexagonale-quarkus/) que vous pouvez fork et adapter directement.
 
 ### **Structure prête pour la production**
 - **Architecture Maven optimisée** : Configuration Quarkus pré-réglée, plus besoin de se prendre la tête avec les dépendances

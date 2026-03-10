@@ -11,7 +11,7 @@ showToc: true
 TocOpen: false
 hidemeta: false
 comments: true
-description: "Experience report on building a FAPI 2.0-compliant OpenID Connect server in Rust: DDD architecture, secure flow implementation, and comprehensive technical documentation."
+description: "Building a FAPI 2.0-compliant OIDC server in Rust: DDD architecture, secure flow implementation and technical documentation."
 canonicalURL: "https://lostyzen.github.io/en/posts/trusty-oidc-server/"
 disableHLJS: false
 disableShare: false
@@ -44,7 +44,7 @@ images: ["/images/trusty-oidc-og.png"]
 
 🔐 **TRusTY: Building a Rust OIDC Server with FAPI 2.0**
 
-After exploring Rust for web development, I wanted to go further by tackling an ambitious technical challenge: **building a complete OpenID Connect (OIDC) provider**, compliant with the FAPI 2.0 security specifications. Not just an academic prototype - a real authentication server with the most demanding security standards from the financial sector.
+After exploring Rust for web development (see the [Rust setup guide on Windows](/en/posts/installation-environnement-rust-windows/)), I wanted to go further by tackling an ambitious technical challenge: **building a complete OpenID Connect (OIDC) provider**, compliant with the FAPI 2.0 security specifications. Not just an academic prototype - a real authentication server with the most demanding security standards from the financial sector.
 
 ## 🎯 **Why Build an OIDC Server in Rust?**
 

@@ -1,5 +1,5 @@
 ---
-title: "Scoop : Le gestionnaire de packages Windows qui révolutionne l'installation d'outils"
+title: "Scoop : le gestionnaire de packages Windows sans admin"
 date: 2025-10-14T08:00:00+02:00
 lastmod: 2025-10-14T08:00:00+02:00
 draft: false
@@ -128,7 +128,7 @@ Parfait pour configurer rapidement un environnement de développement complet :
 
 ### Script d'installation automatisé
 
-Le script ci-dessous installe Scoop et configure un environnement complet pour un profil DevOps/Intégrateur :
+Le script ci-dessous installe Scoop et configure un environnement complet pour un profil DevOps/Intégrateur. C'est d'ailleurs cette approche que nous utilisons pour [installer un environnement Rust sur Windows](/posts/installation-environnement-rust-windows/) :
 
 ```powershell
 # =============================================================================

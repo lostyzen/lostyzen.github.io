@@ -1,5 +1,5 @@
 ---
-title: "Istio Service Mesh sur EKS : Retour d'expérience sur la mise en place du mTLS et du Zero Trust"
+title: "Istio sur EKS : mTLS et Zero Trust en production"
 date: 2026-03-08T10:00:00+02:00
 lastmod: 2026-03-08T10:00:00+02:00
 draft: false
@@ -11,7 +11,7 @@ showToc: true
 TocOpen: false
 hidemeta: false
 comments: true
-description: "Retour d'expérience complet sur le déploiement d'Istio Service Mesh sur Amazon EKS : architecture mTLS triple couche, Zero Trust avec AuthorizationPolicy, difficultés rencontrées et plan de migration progressif sans impact."
+description: "Déploiement d'Istio sur EKS : architecture mTLS triple couche, Zero Trust, difficultés rencontrées et migration progressive."
 canonicalURL: "https://lostyzen.github.io/posts/istio-service-mesh-eks/"
 disableHLJS: false
 disableShare: false
@@ -46,7 +46,7 @@ images: ["/images/istio-service-mesh-eks-og.png"]
 
 Nouvelle mission, nouveau contexte, nouveaux défis.
 
-Si vous suivez ce blog, vous savez que mon parcours est plutôt orienté **Access Management** — des années passées à implémenter des flux OIDC, du SAML, à opérer des plateformes d'authentification en production dans le secteur bancaire, le tout avec une composante dev Java assez forte et une sensibilité Ops qui grandit au fil des missions. C'est d'ailleurs ce qui m'a poussé à écrire les articles précédents sur Quarkus, l'architecture hexagonale, ou encore TRusTY.
+Si vous suivez ce blog, vous savez que mon parcours est plutôt orienté **Access Management** — des années passées à implémenter des flux OIDC, du SAML, à opérer des plateformes d'authentification en production dans le secteur bancaire, le tout avec une composante dev Java assez forte et une sensibilité Ops qui grandit au fil des missions. C'est d'ailleurs ce qui m'a poussé à écrire les articles précédents sur [Quarkus](/posts/quarkus-api-haute-performance/), [l'architecture hexagonale](/posts/architecture-hexagonale-quarkus/), ou encore [TRusTY](/posts/trusty-oidc-server/).
 
 Et puis il y a eu cette nouvelle mission. Un environnement **AWS**, des clusters **EKS**, du **FluxCD** pour le GitOps, et une recommandation d'audit de sécurité claire : **activer le chiffrement mTLS sur les communications inter-services** via un service mesh. Le sujet ? **Istio**. Le challenge ? Continuer l'implémentation non terminée du mesh Istio, alors que tout ceci est totalement nouveau pour moi.
 

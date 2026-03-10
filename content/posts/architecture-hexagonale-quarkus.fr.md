@@ -1,5 +1,5 @@
 ---
-title: "Architecture Hexagonale en Java : Structurer vos APIs pour la maintenabilité"
+title: "Architecture Hexagonale en Java avec Quarkus"
 date: 2025-10-12T10:00:00+02:00
 lastmod: 2025-10-12T10:00:00+02:00
 draft: false
@@ -52,7 +52,7 @@ images: ["/images/architecture-hexagonale-og.png"] # Image pour les réseaux soc
 
 🏗️ **Architecture Hexagonale en Java : Structurer vos APIs pour la maintenabilité**
 
-Après avoir exploré les performances de Quarkus, parlons d'un aspect tout aussi crucial : comment bien structurer votre code d'API. L'architecture hexagonale (ou "Ports & Adapters") n'est pas qu'un concept théorique - c'est une approche pragmatique qui transforme la maintenabilité de vos projets Java.
+Après avoir exploré [les performances de Quarkus](/posts/quarkus-api-haute-performance/), parlons d'un aspect tout aussi crucial : comment bien structurer votre code d'API. L'architecture hexagonale (ou "Ports & Adapters") n'est pas qu'un concept théorique - c'est une approche pragmatique qui transforme la maintenabilité de vos projets Java.
 
 ## 🎯 **Le problème des architectures traditionnelles**
 
