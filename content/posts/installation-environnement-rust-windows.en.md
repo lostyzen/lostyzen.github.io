@@ -12,7 +12,7 @@ TocOpen: false
 hidemeta: false
 comments: true
 description: "Install Rust on Windows without admin rights: Scoop + GNU toolchain approach, with troubleshooting and practical examples."
-canonicalURL: "https://lostyzen.github.io/posts/installation-environnement-rust-windows/"
+canonicalURL: "https://lostyzen.github.io/en/posts/installation-environnement-rust-windows/"
 disableHLJS: false
 disableShare: false
 searchHidden: false
@@ -30,7 +30,7 @@ cover:
     hidden: false
 editPost:
     URL: "https://github.com/lostyzen/lostyzen.github.io/tree/main/content"
-    Text: "Suggérer des changements"
+    Text: "Suggest changes"
     appendFilePath: true
 # SEO Keywords (pour le contenu)
 keywords: ["rust", "installation", "windows", "scoop", "mingw", "toolchain", "cargo", "development", "environment", "configuration", "no admin", "user rights", "user install", "no admin rights"]
