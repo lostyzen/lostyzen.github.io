@@ -11,7 +11,7 @@ showToc: true
 TocOpen: false
 hidemeta: false
 comments: true
-description: "Complete guide to install and configure a Rust development environment on Windows WITHOUT administrator rights: Scoop + GNU toolchain approach, with troubleshooting and practical examples."
+description: "Install Rust on Windows without admin rights: Scoop + GNU toolchain approach, with troubleshooting and practical examples."
 canonicalURL: "https://lostyzen.github.io/posts/installation-environnement-rust-windows/"
 disableHLJS: false
 disableShare: false

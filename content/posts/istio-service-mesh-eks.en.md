@@ -1,5 +1,5 @@
 ---
-title: "Istio Service Mesh on EKS: A Field Report on mTLS and Zero Trust Implementation"
+title: "Istio on EKS: mTLS and Zero Trust in Production"
 date: 2026-03-08T10:00:00+02:00
 lastmod: 2026-03-08T10:00:00+02:00
 draft: false
@@ -11,7 +11,7 @@ showToc: true
 TocOpen: false
 hidemeta: false
 comments: true
-description: "A complete field report on deploying Istio Service Mesh on Amazon EKS: triple-layer mTLS architecture, Zero Trust with AuthorizationPolicy, challenges encountered, and a progressive migration plan with zero downtime."
+description: "Deploying Istio on EKS: triple-layer mTLS architecture, Zero Trust with AuthorizationPolicy, challenges and progressive migration plan."
 canonicalURL: "https://lostyzen.github.io/en/posts/istio-service-mesh-eks/"
 disableHLJS: false
 disableShare: false
@@ -46,7 +46,7 @@ images: ["/images/istio-service-mesh-eks-og.png"]
 
 New assignment, new context, new challenges.
 
-If you follow this blog, you know my background leans heavily toward **Access Management** — years spent implementing OIDC flows, SAML, operating authentication platforms in production within the banking sector, all with a strong Java development component and a growing Ops sensibility. That's what led me to write the previous articles on Quarkus, hexagonal architecture, and TRusTY.
+If you follow this blog, you know my background leans heavily toward **Access Management** — years spent implementing OIDC flows, SAML, operating authentication platforms in production within the banking sector, all with a strong Java development component and a growing Ops sensibility. That's what led me to write the previous articles on [Quarkus](/en/posts/quarkus-api-haute-performance/), [hexagonal architecture](/en/posts/architecture-hexagonale-quarkus/), and [TRusTY](/en/posts/trusty-oidc-server/).
 
 And then came this new assignment. An **AWS** environment, **EKS** clusters, **FluxCD** for GitOps, and a clear security audit recommendation: **enable mTLS encryption on inter-service communications** through a service mesh. The subject? **Istio**. The challenge? Picking up the unfinished Istio mesh implementation, when all of this was completely new to me.
 

@@ -1,5 +1,5 @@
 ---
-title: "High-Performance API with Quarkus & Java: A Modern Solution to Current Challenges"
+title: "High-Performance API with Quarkus and Java"
 date: 2025-10-13T09:00:00+02:00
 lastmod: 2025-10-13T09:00:00+02:00
 draft: false
@@ -119,7 +119,7 @@ Quarkus' innovation? Analyzing and optimizing code during compilation, eliminati
 
 ## 💡 **A Demo to Get Started Quickly**
 
-The proposed demo can serve as a starter kit facilitating API development launch. It's not just a basic example - it's a structured project you can fork and adapt directly.
+The proposed demo can serve as a starter kit facilitating API development launch. It's not just a basic example - it's a project structured following [hexagonal architecture](/en/posts/architecture-hexagonale-quarkus/) that you can fork and adapt directly.
 
 ### **Production-Ready Structure**
 - **Optimized Maven architecture**: Pre-configured Quarkus setup, no more headaches with dependencies

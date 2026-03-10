@@ -1,5 +1,5 @@
 ---
-title: "Scoop: The Windows Package Manager That Revolutionizes Tool Installation"
+title: "Scoop: the Windows Package Manager Without Admin Rights"
 date: 2025-10-14T08:00:00+02:00
 lastmod: 2025-10-14T08:00:00+02:00
 draft: false
@@ -128,7 +128,7 @@ Perfect for quickly configuring a complete development environment:
 
 ### Automated Installation Script
 
-The script below installs Scoop and configures a complete environment for a DevOps/Integrator profile:
+The script below installs Scoop and configures a complete environment for a DevOps/Integrator profile. This is the approach we use to [set up a Rust environment on Windows](/en/posts/installation-environnement-rust-windows/):
 
 ```powershell
 # =============================================================================
