@@ -63,7 +63,7 @@ Rust is a modern systems programming language that combines performance, memory 
 Before starting, make sure you have:
 
 - **Windows 10/11** (recent versions recommended)
-- **Scoop installed** (if not done yet, check [our Scoop article](https://lostyzen.github.io/posts/scoop-gestionnaire-windows/))
+- **Scoop installed** (if not done yet, check [our Scoop article](https://lostyzen.github.io/en/posts/scoop-gestionnaire-windows/))
 - **A terminal** (PowerShell, Windows Terminal, or Git Bash)
 - **❌ NO administrator rights required!** Everything installs in your user directory
 
