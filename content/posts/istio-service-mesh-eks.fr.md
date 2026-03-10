@@ -48,7 +48,7 @@ Nouvelle mission, nouveau contexte, nouveaux défis.
 
 Si vous suivez ce blog, vous savez que mon parcours est plutôt orienté **Access Management** — des années passées à implémenter des flux OIDC, du SAML, à opérer des plateformes d'authentification en production dans le secteur bancaire, le tout avec une composante dev Java assez forte et une sensibilité Ops qui grandit au fil des missions. C'est d'ailleurs ce qui m'a poussé à écrire les articles précédents sur Quarkus, l'architecture hexagonale, ou encore TRusTY.
 
-Et puis il y a eu cette nouvelle mission. Un environnement **AWS**, des clusters **EKS**, du **FluxCD** pour le GitOps, et une recommandation d'audit de sécurité claire : **activer le chiffrement mTLS sur les communications inter-services** via un service mesh. Le sujet ? **Istio**. Le challenge ? Continuer l'implémentation non terminé du mesh Istio, alors que tout ceci est totalement nouveau pour moi.
+Et puis il y a eu cette nouvelle mission. Un environnement **AWS**, des clusters **EKS**, du **FluxCD** pour le GitOps, et une recommandation d'audit de sécurité claire : **activer le chiffrement mTLS sur les communications inter-services** via un service mesh. Le sujet ? **Istio**. Le challenge ? Continuer l'implémentation non terminée du mesh Istio, alors que tout ceci est totalement nouveau pour moi.
 
 ### **Le contexte : quand la sécu rencontre l'infra**
 
