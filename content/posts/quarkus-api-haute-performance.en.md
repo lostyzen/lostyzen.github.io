@@ -11,7 +11,7 @@ showToc: true
 TocOpen: false
 hidemeta: false
 comments: true
-description: "Discover how Quarkus revolutionizes Java development with exceptional performance: ultra-fast startup, low memory consumption, and cloud-native optimization."
+description: "Quarkus revolutionizes Java: ultra-fast startup, low memory consumption, and cloud-native optimization."
 canonicalURL: "https://lostyzen.github.io/en/posts/quarkus-api-haute-performance/"
 disableHLJS: false
 disableShare: false
