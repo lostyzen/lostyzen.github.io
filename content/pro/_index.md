@@ -12,3 +12,4 @@ Cette section contient de la documentation technique sur AWS et EKS suite aux ex
 ## Sections disponibles
 
 - [AWS - EKS & Karpenter](/pro/aws/)
+- [Monica — Audit technique & SEO](/pro/monica/)
