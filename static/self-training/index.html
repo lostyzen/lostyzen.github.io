@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Self-trainings</title>
+<style>
+  :root {
+    --bg: #f6f7fb; --surface: #ffffff; --surface-2: #eef1f8; --text: #1b1f2a; --muted: #5a6275;
+    --border: #d9deea; --accent: #1496ff; --ok: #1a8f4c; --ok-soft: #e2f6ea;
+    --shadow: 0 1px 3px rgba(20, 30, 60, .08), 0 6px 20px rgba(20, 30, 60, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141c; --surface: #1a1e29; --surface-2: #232838; --text: #e7eaf2; --muted: #9aa3b8;
+      --border: #2e3446; --accent: #4aaeff; --ok: #4cc583; --ok-soft: #133524; --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141c; --surface: #1a1e29; --surface-2: #232838; --text: #e7eaf2; --muted: #9aa3b8;
+    --border: #2e3446; --accent: #4aaeff; --ok: #4cc583; --ok-soft: #133524; --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text); line-height: 1.6; font-size: 16px;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  main { max-width: 1040px; margin: 0 auto; padding: 40px 16px 80px; }
+  h1 { font-size: 2rem; margin: 0 0 8px; }
+  .lead { color: var(--muted); font-size: 1.1rem; margin: 0 0 32px; }
+  .topics { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .topic {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px;
+    box-shadow: var(--shadow); border-top: 5px solid var(--c);
+  }
+  .topic h2 { margin: 0 0 4px; font-size: 1.3rem; }
+  .topic > p { margin: 0 0 14px; color: var(--muted); font-size: .95rem; }
+  .parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .parts a {
+    display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid var(--border); text-decoration: none; color: var(--text); background: var(--surface);
+  }
+  .parts a:hover { border-color: var(--c); background: var(--surface-2); }
+  .num {
+    flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+    font-weight: 700; font-size: .85rem; color: #fff; background: var(--c);
+  }
+  .parts .label { flex: 1; }
+  .parts .label small { display: block; color: var(--muted); font-size: .82rem; }
+  .status { font-size: .78rem; font-weight: 700; color: var(--ok); background: var(--ok-soft); padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+  .status:empty { display: none; }
+  footer { margin-top: 40px; color: var(--muted); font-size: .88rem; }
+  .theme { position: fixed; top: 14px; right: 16px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+</style>
+</head>
+<body>
+<button class="theme" id="themeBtn" aria-label="Changer de thème" title="Changer de thème">◐</button>
+<main>
+  <h1>Self-trainings</h1>
+  <p class="lead">Des formations autonomes, à suivre à votre rythme. Chaque partie se termine par un quiz de validation (seuil de réussite : 80 %).</p>
+
+  <div class="topics" id="topics"></div>
+
+  <footer>Votre progression et vos résultats sont conservés uniquement dans ce navigateur.</footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var TOPICS = [
+    { name: "Dynatrace", color: "#1496ff", dir: "dynatrace",
+      desc: "Observabilité, analyse, surveillance synthétique et administration de la plateforme Dynatrace.",
+      parts: [
+        { file: "1-fondamentaux.html", title: "Fondamentaux", sub: "Observabilité, architecture et plateforme", key: "formation-dynatrace-v1" },
+        { file: "2-analyse-visualisation.html", title: "Analyse et visualisation", sub: "Smartscape, DQL avancé, Notebooks, Dashboards", key: "self-training-dt2-v1" },
+        { file: "3-synthetic.html", title: "Surveillance synthétique", sub: "Moniteurs HTTP, navigateur, réseau", key: "self-training-dt3-v1" },
+        { file: "4-administration-automatisation.html", title: "Administration et automatisation", sub: "IAM et RBAC, Workflows, Terraform et Monaco", key: "self-training-dt4-v1" }
+      ] },
+    { name: "Kubernetes & EKS", color: "#d97706", dir: "kubernetes",
+      desc: "De l'architecture de Kubernetes à l'exploitation d'Amazon EKS en production.",
+      parts: [
+        { file: "1-fondamentaux.html", title: "Fondamentaux", sub: "Architecture, pods, services, kubectl", key: "self-training-k8s1-v1" },
+        { file: "2-production.html", title: "Kubernetes en production", sub: "Ressources, réseau, sécurité, autoscaling, GitOps", key: "self-training-k8s2-v1" },
+        { file: "3-eks.html", title: "Amazon EKS", sub: "Calcul, réseau VPC, IAM, stockage, mises à jour", key: "self-training-k8s3-v1" }
+      ] },
+    { name: "Terraform", color: "#7b42bc", dir: "terraform",
+      desc: "L'Infrastructure as Code avec Terraform.",
+      parts: [
+        { file: "1-fondamentaux.html", title: "Fondamentaux", sub: "HCL, state, modules, CI/CD", key: "formation-terraform-v1" }
+      ] },
+    { name: "Ansible", color: "#0f7c8c", dir: "ansible",
+      desc: "La gestion de configuration et l'automatisation avec Ansible.",
+      parts: [
+        { file: "1-fondamentaux.html", title: "Fondamentaux", sub: "Inventaire, playbooks, rôles, Vault", key: "formation-ansible-v1" }
+      ] }
+  ];
+
+  function load(key) {
+    try { return JSON.parse(localStorage.getItem(key)) || {}; } catch (e) { return {}; }
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  document.getElementById("topics").innerHTML = TOPICS.map(function (t) {
+    return '<section class="topic" style="--c:' + t.color + '"><h2>' + esc(t.name) + '</h2><p>' + esc(t.desc) + '</p><ol class="parts">' +
+      t.parts.map(function (p, i) {
+        var s = load(p.key);
+        var status = s.passed ? "✓ validé" : (s.done && Object.keys(s.done).length ? "en cours" : "");
+        return '<li><a href="' + t.dir + '/' + p.file + '"><span class="num">' + (i + 1) + '</span>' +
+          '<span class="label">' + esc(p.title) + '<small>' + esc(p.sub) + '</small></span>' +
+          '<span class="status">' + status + '</span></a></li>';
+      }).join("") + '</ol></section>';
+  }).join("");
+
+  var root = document.documentElement, pref = null;
+  try { pref = localStorage.getItem("self-training-theme"); } catch (e) {}
+  if (pref) root.setAttribute("data-theme", pref);
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme")
+      ? root.getAttribute("data-theme") === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("self-training-theme", next); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>

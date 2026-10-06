@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynatrace 2 : analyse et visualisation</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface-2: #eef1f8;
+    --text: #1b1f2a;
+    --muted: #5a6275;
+    --border: #d9deea;
+    --accent: #1496ff;
+    --accent-2: #6f2da8;
+    --accent-soft: #e3f1ff;
+    --ok: #1a8f4c;
+    --ok-soft: #e2f6ea;
+    --ko: #c62f3a;
+    --ko-soft: #fbe5e7;
+    --warn: #b56a00;
+    --warn-soft: #fff1d9;
+    --code-bg: #1e2230;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(20, 30, 60, .08), 0 6px 20px rgba(20, 30, 60, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141c;
+      --surface: #1a1e29;
+      --surface-2: #232838;
+      --text: #e7eaf2;
+      --muted: #9aa3b8;
+      --border: #2e3446;
+      --accent: #4aaeff;
+      --accent-2: #b07fe0;
+      --accent-soft: #16304a;
+      --ok: #4cc583;
+      --ok-soft: #133524;
+      --ko: #ff6b76;
+      --ko-soft: #3d1a1e;
+      --warn: #f0b04c;
+      --warn-soft: #3a2c12;
+      --code-bg: #0b0d13;
+      --code-text: #e6e9f2;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141c;
+    --surface: #1a1e29;
+    --surface-2: #232838;
+    --text: #e7eaf2;
+    --muted: #9aa3b8;
+    --border: #2e3446;
+    --accent: #4aaeff;
+    --accent-2: #b07fe0;
+    --accent-soft: #16304a;
+    --ok: #4cc583;
+    --ok-soft: #133524;
+    --ko: #ff6b76;
+    --ko-soft: #3d1a1e;
+    --warn: #f0b04c;
+    --warn-soft: #3a2c12;
+    --code-bg: #0b0d13;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+  code, pre { font-family: "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace; font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+  code { background: var(--surface-2); padding: .1em .35em; border-radius: 4px; font-size: .9em; }
+  pre {
+    background: var(--code-bg); color: var(--code-text);
+    padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: .88em; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  .kw { color: #ff9e64; } .fn { color: #7aa2f7; } .str { color: #9ece6a; } .cm { color: #7a8299; font-style: italic; }
+
+  /* ---------- Layout ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; color: #fff; font-size: .9rem;
+  }
+  .progress-wrap { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .progress { flex: 1; height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; max-width: 360px; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s; }
+  .progress-label { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+  .icon-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: .9rem;
+  }
+  .icon-btn:hover { background: var(--surface-2); }
+  #menuBtn { display: none; }
+
+  .layout { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100vh - 53px); }
+  nav.side {
+    border-right: 1px solid var(--border); background: var(--surface);
+    padding: 18px 12px; position: sticky; top: 53px; height: calc(100vh - 53px); overflow-y: auto;
+  }
+  .back-link { display: block; margin: 0 10px 14px; font-size: .88rem; color: var(--muted); text-decoration: none; }
+  .back-link:hover { color: var(--accent); }
+  nav.side h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 6px 10px 10px; }
+  nav.side ol { list-style: none; margin: 0; padding: 0; }
+  nav.side li a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px; text-decoration: none; color: var(--text); font-size: .93rem;
+  }
+  nav.side li a:hover { background: var(--surface-2); }
+  nav.side li a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .num {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center; font-size: .75rem; font-weight: 700;
+    background: var(--surface-2); color: var(--muted);
+  }
+  a.done .num { background: var(--ok); color: #fff; }
+  a.active .num { background: var(--accent); color: #fff; }
+
+  main { padding: 32px 40px 80px; max-width: 980px; width: 100%; }
+  section.module { display: none; animation: fade .25s ease; scroll-margin-top: 70px; }
+  section.module.visible { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .eyebrow { color: var(--accent); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 6px 0 12px; }
+  h2.h { font-size: 1.6rem; margin: 4px 0 16px; line-height: 1.25; }
+  h3 { font-size: 1.15rem; margin: 28px 0 10px; }
+  .lead { font-size: 1.1rem; color: var(--muted); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 16px 0; }
+  .grid .card h4 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+  .grid .card p { margin: 0; color: var(--muted); font-size: .93rem; }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap;
+    background: var(--accent-soft); color: var(--accent);
+  }
+
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .callout strong:first-child { display: block; margin-bottom: 2px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .93rem; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 600; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .table-wrap table { margin: 0; }
+
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 10px 0; }
+  details summary { cursor: pointer; font-weight: 600; }
+
+  .diagram { width: 100%; height: auto; margin: 10px 0; }
+  .diagram text { fill: var(--text); font-family: inherit; }
+  .diagram .muted { fill: var(--muted); }
+  .diagram .box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  .diagram .box-a { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .diagram .line { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .diagram .bar1 { fill: var(--accent); } .diagram .bar2 { fill: var(--accent-2); } .diagram .bar3 { fill: var(--ok); } .diagram .bar4 { fill: var(--warn); }
+
+  .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .btn {
+    border: 0; border-radius: 9px; padding: 10px 18px; font-weight: 600; cursor: pointer; font-size: .95rem;
+    background: var(--accent); color: #fff;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .keypoints { background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; padding: 14px 20px; margin-top: 26px; }
+  .keypoints h4 { margin: 0 0 6px; color: var(--accent); }
+  .keypoints ul { margin: 0; padding-left: 20px; }
+
+  /* ---------- Quiz ---------- */
+  .quiz-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; color: var(--muted); font-size: .9rem; }
+  .qcard { padding: 24px; }
+  .qcard h3 { margin-top: 0; font-size: 1.2rem; }
+  .options { display: grid; gap: 10px; margin: 16px 0; }
+  .opt {
+    display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%;
+    padding: 12px 14px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 10px; cursor: pointer; font-size: .97rem; font-family: inherit; line-height: 1.45;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt .letter {
+    flex: none; width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center;
+    background: var(--surface-2); font-weight: 700; font-size: .82rem;
+  }
+  .opt.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .opt.correct { border-color: var(--ok); background: var(--ok-soft); }
+  .opt.correct .letter { background: var(--ok); color: #fff; }
+  .opt.wrong { border-color: var(--ko); background: var(--ko-soft); }
+  .opt.wrong .letter { background: var(--ko); color: #fff; }
+  .opt:disabled { cursor: default; }
+  .feedback { display: none; padding: 12px 16px; border-radius: 10px; margin-top: 4px; }
+  .feedback.show { display: block; }
+  .feedback.good { background: var(--ok-soft); border-left: 4px solid var(--ok); }
+  .feedback.bad { background: var(--ko-soft); border-left: 4px solid var(--ko); }
+  .quiz-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+  .score-ring { width: 160px; height: 160px; margin: 0 auto 10px; display: block; }
+  .result { text-align: center; }
+  .result .verdict { font-size: 1.4rem; font-weight: 700; margin: 6px 0; }
+  .themes { text-align: left; margin-top: 24px; }
+  .theme-row { display: grid; grid-template-columns: minmax(140px, 1fr) 2fr 60px; gap: 12px; align-items: center; margin: 8px 0; font-size: .93rem; }
+  .theme-bar { height: 10px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .theme-bar > div { height: 100%; border-radius: 99px; }
+  .review-item { text-align: left; border-bottom: 1px solid var(--border); padding: 12px 0; }
+  .review-item:last-child { border: 0; }
+  .review-item .ans { font-size: .9rem; color: var(--muted); }
+  .badge-ok { color: var(--ok); font-weight: 700; } .badge-ko { color: var(--ko); font-weight: 700; }
+
+  @media (max-width: 860px) {
+    #menuBtn { display: inline-block; }
+    .layout { grid-template-columns: 1fr; }
+    nav.side {
+      position: fixed; top: 53px; left: 0; width: 290px; max-width: 85vw; z-index: 30;
+      transform: translateX(-100%); transition: transform .25s; box-shadow: var(--shadow);
+    }
+    nav.side.open { transform: none; }
+    main { padding: 22px 16px 60px; }
+    h1 { font-size: 1.6rem; }
+    .brand span.full { display: none; }
+    .progress-label { display: none; }
+    .theme-row { grid-template-columns: 1fr 1.4fr 48px; }
+  }
+  @media print {
+    header.top, nav.side, .pager, .quiz-actions { display: none !important; }
+    .layout { display: block; }
+    section.module { display: block !important; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="icon-btn" id="menuBtn" aria-label="Ouvrir le menu">☰</button>
+  <div class="brand"><div class="brand-mark">◆</div><span class="full">Dynatrace · Partie 2 : analyse et visualisation</span></div>
+  <div class="progress-wrap">
+    <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+    <span class="progress-label" id="progressLabel">0 / 9 modules</span>
+  </div>
+  <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Changer de thème">◐</button>
+</header>
+
+<div class="layout">
+  <nav class="side" id="sidebar" aria-label="Sommaire">
+    <a class="back-link" href="../index.html">← Toutes les self-trainings</a>
+    <h2>Parcours</h2>
+    <ol id="navList"></ol>
+  </nav>
+
+  <main id="main">
+
+<!-- ===================================================== MODULE 0 -->
+<section class="module" id="m0" data-title="Introduction">
+  <div class="eyebrow">Partie 2 sur 4 · Bienvenue</div>
+  <h1>Dynatrace : analyse et visualisation</h1>
+  <p class="lead">Cette deuxième partie vous apprend à exploiter les données collectées par Dynatrace : comprendre en profondeur le modèle de topologie Smartscape, écrire des requêtes DQL avancées, les mettre au point dans les Notebooks, puis construire des dashboards utiles. Elle se termine par un quiz de validation.</p>
+
+  <div class="grid">
+    <div class="card"><h4>⏱️ Durée</h4><p>Environ 1 h 15 de lecture, plus 15 minutes de quiz.</p></div>
+    <div class="card"><h4>🎯 Prérequis</h4><p>Avoir suivi la <a href="1-fondamentaux.html">partie 1 : fondamentaux</a>, en particulier les modules 6 et 7.</p></div>
+    <div class="card"><h4>✅ Validation</h4><p>Un quiz de 15 questions. Seuil de réussite : <strong>80 %</strong>.</p></div>
+  </div>
+
+  <h3>Le parcours Dynatrace</h3>
+  <div class="grid">
+    <div class="card"><h4><span class="tag">Partie 1</span> <a href="1-fondamentaux.html">Fondamentaux</a></h4><p>Concepts de l'observabilité, architecture et plateforme Dynatrace.</p></div>
+    <div class="card"><h4><span class="tag">Partie 2</span> Analyse et visualisation</h4><p><strong>Vous êtes ici.</strong> Smartscape, DQL avancé, Notebooks, Dashboards.</p></div>
+    <div class="card"><h4><span class="tag">Partie 3</span> <a href="3-synthetic.html">Surveillance synthétique</a></h4><p>Moniteurs HTTP, navigateur et réseau, emplacements, alertes.</p></div>
+    <div class="card"><h4><span class="tag">Partie 4</span> <a href="4-administration-automatisation.html">Administration et automatisation</a></h4><p>IAM et RBAC, Workflows, configuration as code avec Terraform.</p></div>
+  </div>
+
+  <h3>Objectifs pédagogiques</h3>
+  <ul>
+    <li>décrire le <strong>modèle d'entités</strong> de Dynatrace et les <strong>relations</strong> de Smartscape ;</li>
+    <li>maîtriser la <strong>détection et le nommage</strong> des entités, ainsi que le <strong>tagging</strong> ;</li>
+    <li>écrire des requêtes <strong>DQL avancées</strong> : parsing, séries temporelles, jointures, entités ;</li>
+    <li>utiliser les <strong>Notebooks</strong> pour explorer et tester des requêtes Grail ;</li>
+    <li>concevoir des <strong>dashboards</strong> clairs, paramétrables et économes.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Un produit qui évolue vite</strong>
+    Dynatrace publie de nouvelles versions de sa plateforme très régulièrement. Les noms d'applications, de commandes et de menus cités ici sont valables à la date de rédaction : vérifiez-les dans la documentation de votre environnement.
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 1 -->
+<section class="module" id="m1" data-title="Smartscape : le modèle d'entités">
+  <div class="eyebrow">Module 1</div>
+  <h2 class="h">Smartscape en profondeur : le modèle d'entités</h2>
+  <p>Dans la partie 1, Smartscape a été présenté comme la carte de topologie en temps réel. Cette carte repose sur un <strong>modèle d'entités</strong> : chaque composant surveillé est une entité typée, avec un identifiant, des propriétés et des <strong>relations</strong> avec d'autres entités. C'est ce modèle qui permet à Davis de remonter une chaîne de causes, et à vous de filtrer, regrouper et attribuer les données.</p>
+
+  <h3>Les principaux types d'entités</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Couche</th><th>Type d'entité</th><th>Identifiant / type DQL</th></tr></thead>
+    <tbody>
+      <tr><td>Expérience utilisateur</td><td>Application web, application mobile, moniteur synthétique</td><td><code>dt.entity.application</code>, <code>dt.entity.mobile_application</code>, <code>dt.entity.synthetic_test</code>, <code>dt.entity.http_check</code></td></tr>
+      <tr><td>Services</td><td>Service (API web, base de données, file de messages…)</td><td><code>dt.entity.service</code></td></tr>
+      <tr><td>Processus</td><td>Groupe de processus (ensemble logique), instance de processus (sur un hôte)</td><td><code>dt.entity.process_group</code>, <code>dt.entity.process_group_instance</code></td></tr>
+      <tr><td>Infrastructure</td><td>Hôte, disque, interface réseau</td><td><code>dt.entity.host</code>, <code>dt.entity.disk</code>…</td></tr>
+      <tr><td>Conteneurs et cloud</td><td>Cluster et namespace Kubernetes, workload, pod ; ressources cloud</td><td><code>dt.entity.kubernetes_cluster</code>, <code>dt.entity.cloud_application</code>…</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Chaque entité possède un <strong>identifiant unique</strong> stable (par exemple <code>SERVICE-1A2B3C4D5E6F7A8B</code>), un <strong>nom</strong> affiché, des <strong>propriétés</strong> (technologie, version, système d'exploitation…) et des <strong>tags</strong>.</p>
+
+  <h3>Groupe de processus et instance de processus</h3>
+  <p>C'est la notion la plus souvent mal comprise. Un <strong>groupe de processus</strong> (<em>process group</em>) rassemble les processus qui font <strong>le même travail</strong>, sur un ou plusieurs hôtes : par exemple les 6 instances Tomcat de l'application « commandes ». Chaque processus réel est une <strong>instance de groupe de processus</strong> (<em>process group instance</em>, PGI).</p>
+  <p>Les <strong>services</strong> sont détectés à partir des groupes de processus. Si OneAgent regroupe mal les processus (deux applications différentes dans le même groupe, ou une même application éclatée en plusieurs groupes), les services, les problèmes et les tableaux de bord en héritent. On corrige ce regroupement avec des <strong>règles de détection des groupes de processus</strong>, souvent à partir de variables d'environnement comme <code>DT_CLUSTER_ID</code> ou les métadonnées Kubernetes.</p>
+
+  <h3>Les relations</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Direction</th><th>Relation</th><th>Exemple</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Verticale</strong> (pile technique)</td><td><code>runs_on</code> / <code>runs</code>, <code>instance_of</code>, <code>belongs_to</code>, <code>contains</code></td><td>Le service <em>checkout</em> tourne sur le groupe de processus <em>checkout-jvm</em>, dont les instances tournent sur les hôtes <em>web-01</em> et <em>web-02</em></td></tr>
+      <tr><td><strong>Horizontale</strong> (appels)</td><td><code>calls</code> / <code>called_by</code></td><td>Le service <em>frontend</em> appelle <em>checkout</em>, qui appelle <em>payment</em> et la base <em>orders-db</em></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Les relations <strong>horizontales</strong> sont découvertes à partir des traces PurePath réellement observées : si deux services ne se sont jamais appelés pendant la période, ils n'apparaissent pas reliés. Les relations <strong>verticales</strong> viennent de ce que OneAgent voit sur l'hôte (processus, conteneurs, ports).</p>
+
+  <h3>Comment Davis s'en sert</h3>
+  <ol>
+    <li>Davis détecte une anomalie sur le service <em>frontend</em> (hausse du temps de réponse).</li>
+    <li>Il suit les relations <code>calls</code> vers les services appelés et constate que <em>payment</em> est aussi anormal.</li>
+    <li>Il descend la pile verticale de <em>payment</em> : groupe de processus, instances, hôtes, et y trouve une saturation CPU sur un hôte.</li>
+    <li>Il regroupe le tout dans <strong>un seul problème</strong>, avec l'hôte en cause racine et <em>frontend</em> parmi les impacts.</li>
+  </ol>
+  <div class="callout warn">
+    <strong>Les angles morts de la topologie</strong>
+    Davis ne peut relier que ce qu'il voit. Un composant non instrumenté (base de données sans OneAgent, appel vers un service externe, file de messages non prise en charge) apparaît au mieux comme une boîte noire. Pour une analyse causale fiable, visez une couverture OneAgent complète sur les chemins critiques, et complétez avec OpenTelemetry là où OneAgent n'est pas possible.
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Smartscape repose sur des entités typées, avec un identifiant stable, des propriétés, des tags et des relations.</li>
+      <li>Groupe de processus = processus qui font le même travail ; instance = un processus réel.</li>
+      <li>Relations verticales (runs_on, belongs_to…) et horizontales (calls / called_by).</li>
+      <li>La qualité de la topologie conditionne la qualité de l'analyse causale de Davis.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 2 -->
+<section class="module" id="m2" data-title="Smartscape : organiser et interroger">
+  <div class="eyebrow">Module 2</div>
+  <h2 class="h">Smartscape : organiser et interroger la topologie</h2>
+
+  <h3>Nommer et regrouper</h3>
+  <ul>
+    <li><strong>Host groups</strong> : un paramètre passé à OneAgent à l'installation (<code>--set-host-group=prod-web</code>) qui regroupe les hôtes. Il influence la détection des groupes de processus : deux hôtes de host groups différents n'ont jamais leurs processus dans le même groupe. C'est le moyen le plus simple de séparer prod et recette sur une même technologie.</li>
+    <li><strong>Règles de nommage</strong> : pour obtenir des noms lisibles (<code>checkout [prod]</code>) à partir de propriétés détectées.</li>
+    <li><strong>Règles de détection des services</strong> : pour fusionner ou séparer des services (par exemple séparer les points d'entrée d'une même application selon l'URL).</li>
+  </ul>
+
+  <h3>Le tagging</h3>
+  <p>Les tags servent partout : filtres, droits d'accès, profils d'alerte, coûts, dashboards. Trois façons de les poser :</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Méthode</th><th>Principe</th><th>Recommandation</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Tags importés</strong></td><td>Repris automatiquement des tags cloud (AWS, Azure), des labels et annotations Kubernetes, ou de variables d'environnement (<code>DT_TAGS</code>)</td><td>À privilégier : la source de vérité reste au plus près de l'infrastructure</td></tr>
+      <tr><td><strong>Règles d'auto-tagging</strong></td><td>Règles qui posent un tag selon des conditions (nom, technologie, host group…) et le <strong>propagent</strong> dans la topologie (de l'hôte vers ses processus et services, par exemple)</td><td>Très utile pour couvrir des couches entières de manière cohérente</td></tr>
+      <tr><td><strong>Tags manuels</strong></td><td>Ajoutés à la main dans l'interface</td><td>À éviter : non reproductibles et vite oubliés</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout">
+    <strong>Une convention de tags minimale</strong>
+    <code>environment</code> (prod, recette, dev), <code>application</code>, <code>owner</code> (équipe responsable), <code>criticality</code>. Définissez-la une fois pour toutes et faites-la respecter dans vos pipelines de déploiement et vos modules Terraform.
+  </div>
+
+  <h3>Interroger les entités en DQL</h3>
+  <p>Les entités sont accessibles dans Grail comme n'importe quelle autre donnée :</p>
+<pre><code><span class="cm">// Lister les hôtes Linux avec leur nom et leur host group</span>
+<span class="kw">fetch</span> dt.entity.host
+| <span class="kw">filter</span> osType == <span class="str">"LINUX"</span>
+| <span class="kw">fields</span> id, entity.name, hostGroupName
+
+<span class="cm">// Enrichir des logs avec le nom lisible de l'hôte</span>
+<span class="kw">fetch</span> logs
+| <span class="kw">filter</span> loglevel == <span class="str">"ERROR"</span>
+| <span class="kw">fieldsAdd</span> host = <span class="fn">entityName</span>(dt.entity.host)
+| <span class="kw">summarize</span> erreurs = <span class="fn">count</span>(), by: { host }
+
+<span class="cm">// Réutiliser un sélecteur d'entités « classique » (tags, types…)</span>
+<span class="kw">fetch</span> logs
+| <span class="kw">filter</span> <span class="fn">in</span>(dt.entity.host, <span class="fn">classicEntitySelector</span>(<span class="str">"type(HOST),tag(environment:prod)"</span>))</code></pre>
+  <p>Les relations sont aussi interrogeables (par exemple les services appelés par un service donné). La syntaxe dédiée évolue avec le nouveau Smartscape stocké dans Grail : consultez la documentation DQL de votre environnement pour la forme exacte.</p>
+
+  <h3>Étendre la topologie</h3>
+  <p>Pour des composants que OneAgent ne voit pas (équipements réseau, applications métier, appareils IoT), on peut définir une <strong>topologie personnalisée</strong> (<em>generic topology</em>) : des règles créent des entités et des relations à partir des métriques, logs ou événements ingérés. Ces entités se comportent ensuite comme les autres : tags, problèmes, dashboards.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Host groups, règles de nommage et de détection pour une topologie propre.</li>
+      <li>Tags importés et auto-tagging plutôt que tags manuels ; une convention minimale partagée.</li>
+      <li>Entités interrogeables en DQL (<code>fetch dt.entity.*</code>, <code>entityName()</code>, <code>classicEntitySelector()</code>).</li>
+      <li>La topologie personnalisée intègre des composants non instrumentés.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 3 -->
+<section class="module" id="m3" data-title="DQL avancé">
+  <div class="eyebrow">Module 3</div>
+  <h2 class="h">DQL avancé</h2>
+  <p>La partie 1 a présenté les commandes de base (<code>fetch</code>, <code>filter</code>, <code>summarize</code>, <code>sort</code>, <code>limit</code>). Voici les techniques qui permettent de répondre à des questions plus riches.</p>
+
+  <h3>Délimiter les données lues</h3>
+<pre><code><span class="kw">fetch</span> logs, from: <span class="fn">now</span>() - 24h, to: <span class="fn">now</span>() - 1h, scanLimitGBytes: 50
+| <span class="kw">filter</span> k8s.namespace.name == <span class="str">"boutique"</span></code></pre>
+  <p>Avec Grail, les requêtes sont facturées selon le <strong>volume de données lues</strong>. Limiter la période, filtrer tôt (juste après <code>fetch</code>) et éviter les <code>contains()</code> sur de gros volumes rend les requêtes plus rapides et moins coûteuses. <code>samplingRatio</code> lit un échantillon des données pour une estimation rapide.</p>
+
+  <h3>Extraire des champs : parse et DPL</h3>
+  <p><code>parse</code> extrait des champs structurés d'un texte avec le <strong>DPL</strong> (<em>Dynatrace Pattern Language</em>) :</p>
+<pre><code><span class="cm">// Ligne : "Payment refused order=8812 amount=129.90 reason=PSP_TIMEOUT"</span>
+<span class="kw">fetch</span> logs
+| <span class="kw">filter</span> <span class="fn">matchesPhrase</span>(content, <span class="str">"Payment refused"</span>)
+| <span class="kw">parse</span> content, <span class="str">"LD 'order=' INT:order ' amount=' DOUBLE:amount ' reason=' WORD:reason"</span>
+| <span class="kw">summarize</span> total = <span class="fn">sum</span>(amount), nb = <span class="fn">count</span>(), by: { reason }</code></pre>
+  <div class="callout">
+    <strong>Parser à la requête ou à l'ingestion ?</strong>
+    <code>parse</code> en DQL est idéal pour explorer. Pour un champ utilisé tous les jours (dashboards, alertes), faites l'extraction une fois pour toutes à l'ingestion avec <strong>OpenPipeline</strong> : les requêtes deviennent plus simples et plus rapides.
+  </div>
+
+  <h3>Séries temporelles</h3>
+<pre><code><span class="cm">// À partir de métriques</span>
+<span class="kw">timeseries</span> p95 = <span class="fn">percentile</span>(dt.service.request.response_time, 95),
+           by: { dt.entity.service }, interval: 5m
+
+<span class="cm">// À partir d'enregistrements (logs, spans, événements) : makeTimeseries</span>
+<span class="kw">fetch</span> logs
+| <span class="kw">filter</span> loglevel == <span class="str">"ERROR"</span>
+| <span class="kw">makeTimeseries</span> erreurs = <span class="fn">count</span>(), by: { k8s.namespace.name }, interval: 10m</code></pre>
+  <p>Les noms exacts des métriques varient selon les versions : la liste se consulte dans le navigateur de métriques ou avec l'autocomplétion des Notebooks.</p>
+
+  <h3>Combiner des sources</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Commande</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><code>lookup</code></td><td>Ajouter des champs venant d'une autre requête, par correspondance de clé (enrichissement)</td></tr>
+      <tr><td><code>join</code></td><td>Jointure entre deux jeux de données (inner, left outer…)</td></tr>
+      <tr><td><code>append</code></td><td>Ajouter à la suite les résultats d'une autre requête</td></tr>
+      <tr><td><code>dedup</code></td><td>Ne garder qu'un enregistrement par valeur de clé</td></tr>
+      <tr><td><code>expand</code></td><td>Transformer un tableau en plusieurs enregistrements</td></tr>
+      <tr><td><code>fieldsAdd</code> / <code>fieldsRemove</code> / <code>fieldsRename</code></td><td>Calculer, retirer, renommer des champs</td></tr>
+    </tbody>
+  </table>
+  </div>
+<pre><code><span class="cm">// Enrichir les erreurs de logs avec le propriétaire du service</span>
+<span class="kw">fetch</span> logs
+| <span class="kw">filter</span> loglevel == <span class="str">"ERROR"</span> <span class="kw">and</span> <span class="fn">isNotNull</span>(dt.entity.service)
+| <span class="kw">summarize</span> erreurs = <span class="fn">count</span>(), by: { dt.entity.service }
+| <span class="kw">lookup</span> [ <span class="kw">fetch</span> dt.entity.service | <span class="kw">fields</span> id, entity.name, tags ],
+         sourceField: dt.entity.service, lookupField: id, prefix: <span class="str">"svc."</span>
+| <span class="kw">sort</span> erreurs desc</code></pre>
+
+  <h3>Les données métier</h3>
+<pre><code><span class="cm">// Chiffre d'affaires par heure à partir des business events</span>
+<span class="kw">fetch</span> bizevents
+| <span class="kw">filter</span> event.type == <span class="str">"com.acme.order.completed"</span>
+| <span class="kw">makeTimeseries</span> ca = <span class="fn">sum</span>(amount), interval: 1h</code></pre>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Coût et performance : période courte, filtres tôt, <code>scanLimitGBytes</code>.</li>
+      <li><code>parse</code> + DPL pour explorer ; OpenPipeline pour les extractions permanentes.</li>
+      <li><code>timeseries</code> pour les métriques, <code>makeTimeseries</code> pour les enregistrements.</li>
+      <li><code>lookup</code>, <code>join</code>, <code>append</code> pour combiner les sources.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 4 -->
+<section class="module" id="m4" data-title="Notebooks">
+  <div class="eyebrow">Module 4</div>
+  <h2 class="h">Les Notebooks : explorer et tester</h2>
+  <p>Un <strong>Notebook</strong> Dynatrace est un document interactif, comparable à un notebook Jupyter, qui mélange <strong>requêtes DQL</strong>, <strong>visualisations</strong>, <strong>texte</strong> et <strong>code</strong>. C'est l'espace de travail idéal pour explorer les données de Grail et <strong>mettre au point des requêtes</strong> avant de les utiliser ailleurs.</p>
+
+  <h3>Les types de sections</h3>
+  <div class="grid">
+    <div class="card"><h4>🔎 Requête DQL</h4><p>Une requête, son résultat (tableau, graphique…) et sa période. Chaque section s'exécute indépendamment.</p></div>
+    <div class="card"><h4>📝 Markdown</h4><p>Texte, titres, liens : pour expliquer une analyse ou documenter une procédure.</p></div>
+    <div class="card"><h4>💻 Code</h4><p>Du JavaScript exécuté dans la plateforme : appeler des API Dynatrace ou externes, transformer des données.</p></div>
+    <div class="card"><h4>📊 Données de l'interface</h4><p>Des sections préconfigurées pour explorer logs, métriques ou événements sans écrire de DQL.</p></div>
+  </div>
+
+  <h3>Mettre au point une requête : la démarche</h3>
+  <ol>
+    <li><strong>Partir petit</strong> : une période courte (15 minutes ou 1 heure) et un <code>limit 20</code> pour voir la forme des données et le nom exact des champs.</li>
+    <li><strong>Ajouter les filtres</strong> un par un, en vérifiant à chaque étape que le résultat reste cohérent.</li>
+    <li><strong>Agréger et visualiser</strong> : <code>summarize</code> ou <code>makeTimeseries</code>, puis choisir la visualisation.</li>
+    <li><strong>Vérifier le coût</strong> : le volume scanné s'affiche après l'exécution. Si une requête lit des centaines de Go, resserrez la période ou les filtres.</li>
+    <li><strong>Élargir la période</strong> à celle voulue pour l'usage final.</li>
+    <li><strong>Réutiliser</strong> : copier la requête dans une tuile de dashboard, une tâche de workflow, un objectif SLO ou une alerte.</li>
+  </ol>
+  <div class="callout ok">
+    <strong>Astuce</strong>
+    Gardez un Notebook « bac à sable » par équipe avec vos requêtes de référence commentées : il devient une documentation vivante de la façon d'interroger vos données. L'assistant d'IA générative (Davis CoPilot) peut aussi proposer une requête DQL à partir d'une question en langage naturel, à vérifier avant usage.
+  </div>
+
+  <h3>Usages typiques</h3>
+  <ul>
+    <li><strong>Investigation</strong> d'un incident : rassembler dans un même document les requêtes, graphiques et constats, puis le partager avec l'équipe.</li>
+    <li><strong>Prototypage</strong> de dashboards et d'alertes.</li>
+    <li><strong>Tests de pipeline</strong> : vérifier qu'une règle OpenPipeline produit bien les champs attendus, ou qu'un nouveau flux de logs arrive.</li>
+    <li><strong>Analyses ponctuelles</strong> : capacité, coûts d'ingestion par source, tendances sur plusieurs semaines.</li>
+  </ul>
+
+  <h3>Partage et droits</h3>
+  <p>Un Notebook est privé par défaut. On peut le partager avec des utilisateurs ou des groupes, en lecture ou en écriture. Les personnes qui l'ouvrent ne voient que les données auxquelles leurs propres droits donnent accès (voir la partie 4) : partager un Notebook ne donne pas accès à des données supplémentaires.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Notebook = requêtes DQL, visualisations, Markdown et code dans un même document.</li>
+      <li>Démarche : partir petit, filtrer, agréger, vérifier le volume scanné, puis élargir.</li>
+      <li>Usages : investigation, prototypage, tests de pipelines, analyses ponctuelles.</li>
+      <li>Le partage respecte les droits d'accès aux données de chacun.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 5 -->
+<section class="module" id="m5" data-title="Dashboards">
+  <div class="eyebrow">Module 5</div>
+  <h2 class="h">Créer des dashboards</h2>
+
+  <h3>Les éléments d'un dashboard</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Élément</th><th>Rôle</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Tuile de données</strong></td><td>Une requête DQL et sa visualisation</td></tr>
+      <tr><td><strong>Tuile Markdown</strong></td><td>Titres, explications, liens vers les runbooks</td></tr>
+      <tr><td><strong>Tuile de code</strong></td><td>Données calculées en JavaScript (appel d'API, calcul personnalisé)</td></tr>
+      <tr><td><strong>Variables</strong></td><td>Listes déroulantes en haut du dashboard (environnement, namespace, service…) réutilisées dans les requêtes</td></tr>
+      <tr><td><strong>Période et segments</strong></td><td>La période globale et les filtres appliqués à toutes les tuiles</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Choisir la visualisation</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Question</th><th>Visualisation</th></tr></thead>
+    <tbody>
+      <tr><td>Quelle est la valeur actuelle d'un indicateur ?</td><td><strong>Valeur unique</strong> (single value), avec seuils de couleur</td></tr>
+      <tr><td>Comment évolue-t-il dans le temps ?</td><td><strong>Courbe</strong> ou <strong>aire</strong></td></tr>
+      <tr><td>Comment se comparent plusieurs éléments ?</td><td><strong>Barres</strong>, triées</td></tr>
+      <tr><td>Quel est l'état d'un grand nombre d'éléments ?</td><td><strong>Honeycomb</strong> (alvéoles colorées)</td></tr>
+      <tr><td>Quel est le détail ?</td><td><strong>Tableau</strong> ou liste d'enregistrements</td></tr>
+      <tr><td>Quelle est la répartition d'une distribution ?</td><td><strong>Heatmap</strong> ou histogramme</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Évitez les camemberts pour plus de quatre ou cinq catégories : les barres triées se lisent beaucoup mieux.</p>
+
+  <h3>Les variables</h3>
+  <p>Une variable peut être une liste fixe ou le résultat d'une requête. Elle s'utilise ensuite dans les requêtes des tuiles avec le préfixe <code>$</code> :</p>
+<pre><code><span class="cm">// Variable "Namespace", alimentée par une requête</span>
+<span class="kw">fetch</span> dt.entity.cloud_application_namespace
+| <span class="kw">fields</span> entity.name
+| <span class="kw">sort</span> entity.name
+
+<span class="cm">// Tuile qui utilise la variable</span>
+<span class="kw">fetch</span> logs
+| <span class="kw">filter</span> k8s.namespace.name == $Namespace <span class="kw">and</span> loglevel == <span class="str">"ERROR"</span>
+| <span class="kw">makeTimeseries</span> erreurs = <span class="fn">count</span>(), interval: 5m</code></pre>
+  <p>Un seul dashboard paramétrable remplace ainsi une dizaine de dashboards copiés-collés, un par namespace ou par application.</p>
+
+  <h3>Concevoir un bon dashboard</h3>
+  <ol>
+    <li><strong>Un public, une question</strong> : un dashboard d'astreinte (« tout va-t-il bien ? ») n'est pas un dashboard de direction (« quel impact métier ? ») ni un dashboard d'analyse de capacité.</li>
+    <li><strong>Du général au détail</strong> : indicateurs clés et état des SLO en haut, tendances au milieu, détail en bas.</li>
+    <li><strong>Des seuils explicites</strong> : vert, orange, rouge, cohérents avec vos SLO et alertes.</li>
+    <li><strong>Des liens</strong> vers les Notebooks d'investigation, les runbooks et les problèmes Davis.</li>
+    <li><strong>Peu de tuiles</strong> : au-delà d'une quinzaine, le dashboard n'est plus lu.</li>
+  </ol>
+
+  <h3>Performance et coût</h3>
+  <ul>
+    <li>Chaque tuile exécute sa requête à l'ouverture et à chaque rafraîchissement : un dashboard de 20 tuiles affiché en continu sur un écran avec un rafraîchissement d'une minute lit beaucoup de données.</li>
+    <li>Préférez les <strong>métriques</strong> (<code>timeseries</code>), y compris celles extraites des logs par OpenPipeline, aux agrégations de logs bruts sur de longues périodes.</li>
+    <li>Réglez un intervalle de rafraîchissement adapté à l'usage.</li>
+  </ul>
+
+  <h3>Partage et gestion</h3>
+  <p>Comme les Notebooks, les dashboards sont privés par défaut et se partagent avec des utilisateurs ou des groupes. Dynatrace fournit aussi des <strong>dashboards prêts à l'emploi</strong> (Kubernetes, hôtes, AWS…), utiles comme point de départ. Les dashboards se versionnent et se déploient par le code, avec Terraform ou Monaco (voir la <a href="4-administration-automatisation.html">partie 4</a>).</p>
+  <div class="callout">
+    <strong>Dashboards classiques</strong>
+    Les environnements plus anciens contiennent des dashboards « classiques », construits avec d'autres tuiles et un autre langage de sélection de métriques. Ils coexistent avec la nouvelle application Dashboards, basée sur DQL, vers laquelle il est recommandé de migrer progressivement.
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Tuiles DQL, Markdown et code ; variables <code>$Nom</code> pour un dashboard paramétrable.</li>
+      <li>Visualisation choisie selon la question ; seuils cohérents avec les SLO.</li>
+      <li>Un public et une question par dashboard ; peu de tuiles, du général au détail.</li>
+      <li>Surveillez le volume scanné ; préférez les métriques ; versionnez par le code.</li>
+    </ul>
+  </div>
+
+  <div class="callout ok">
+    <strong>Prêt pour le quiz ?</strong>
+    Le module suivant contient 15 questions sur cette deuxième partie. Il faut 80 % de bonnes réponses pour la valider. Ensuite, direction la <a href="3-synthetic.html">partie 3 : surveillance synthétique</a>.
+  </div>
+</section>
+
+<!-- ===================================================== QUIZ -->
+<section class="module" id="quiz" data-title="Quiz de validation">
+  <div class="eyebrow">Évaluation finale</div>
+  <h2 class="h">Quiz de validation des connaissances</h2>
+  <div id="quizRoot"></div>
+</section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Stockage local (tolérant aux erreurs) ---------------- */
+  var STORE_KEY = "self-training-dt2-v1";
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save(s) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* ignoré */ }
+  }
+  var state = load();
+  state.done = state.done || {};
+
+  /* ---------------- Thème ---------------- */
+  var root = document.documentElement;
+  if (state.theme) root.setAttribute("data-theme", state.theme);
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme")
+      ? root.getAttribute("data-theme") === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    state.theme = dark ? "light" : "dark";
+    root.setAttribute("data-theme", state.theme);
+    save(state);
+  });
+
+  /* ---------------- Navigation ---------------- */
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section.module"));
+  var navList = document.getElementById("navList");
+  var learningIds = sections.filter(function (s) { return /^m[1-9]$/.test(s.id); }).map(function (s) { return s.id; });
+
+  sections.forEach(function (s, i) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#" + s.id;
+    a.dataset.id = s.id;
+    var label = s.id === "m0" ? "i" : (s.id === "quiz" ? "?" : s.id.slice(1));
+    a.innerHTML = '<span class="num">' + label + "</span><span></span>";
+    a.lastChild.textContent = s.dataset.title;
+    li.appendChild(a);
+    navList.appendChild(li);
+
+    // Pager
+    var pager = document.createElement("div");
+    pager.className = "pager";
+    var prev = sections[i - 1], next = sections[i + 1];
+    pager.innerHTML =
+      (prev ? '<a class="btn ghost" href="#' + prev.id + '">← ' + escapeHtml(prev.dataset.title) + "</a>" : "<span></span>") +
+      (next ? '<a class="btn" data-complete="' + s.id + '" href="#' + next.id + '">' + escapeHtml(next.dataset.title) + " →</a>" : "");
+    if (s.id !== "quiz") s.appendChild(pager);
+  });
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-complete]");
+    if (t) {
+      var id = t.getAttribute("data-complete");
+      if (learningIds.indexOf(id) !== -1) { state.done[id] = true; save(state); }
+    }
+  });
+
+  function show() {
+    var id = (location.hash || "#m0").slice(1);
+    if (!document.getElementById(id)) id = "m0";
+    sections.forEach(function (s) { s.classList.toggle("visible", s.id === id); });
+    navList.querySelectorAll("a").forEach(function (a) {
+      a.classList.toggle("active", a.dataset.id === id);
+      a.classList.toggle("done", !!state.done[a.dataset.id] || (a.dataset.id === "quiz" && state.passed));
+    });
+    updateProgress();
+    document.getElementById("sidebar").classList.remove("open");
+    window.scrollTo(0, 0);
+  }
+  function updateProgress() {
+    var n = learningIds.filter(function (id) { return state.done[id]; }).length;
+    document.getElementById("progressBar").style.width = (n / learningIds.length * 100) + "%";
+    document.getElementById("progressLabel").textContent = n + " / " + learningIds.length + " modules lus";
+  }
+  window.addEventListener("hashchange", show);
+  document.getElementById("menuBtn").addEventListener("click", function () {
+    document.getElementById("sidebar").classList.toggle("open");
+  });
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------------- Quiz ---------------- */
+  var PASS = 0.8;
+  var QUESTIONS = [
+    { t: "Smartscape", q: "Qu'est-ce qu'un groupe de processus (process group) dans Dynatrace ?",
+      o: ["Un processus unique sur un hôte", "Un ensemble de processus qui font le même travail, sur un ou plusieurs hôtes", "Un groupe d'utilisateurs", "Un type de dashboard"],
+      a: 1, e: "Chaque processus réel est une instance de groupe de processus (PGI). Les services sont détectés à partir des groupes de processus." },
+    { t: "Smartscape", q: "D'où viennent les relations horizontales (calls / called_by) entre services ?",
+      o: ["Elles sont saisies à la main", "Des traces PurePath réellement observées entre les services", "Du fichier de configuration de OneAgent", "Des tags cloud"],
+      a: 1, e: "Deux services qui ne se sont jamais appelés pendant la période observée n'apparaissent pas reliés." },
+    { t: "Smartscape", q: "Pourquoi la qualité de la topologie Smartscape est-elle importante pour Davis ?",
+      o: ["Elle n'a aucun impact sur Davis", "Davis suit les relations de la topologie pour remonter jusqu'à la cause racine : un composant non vu crée un angle mort", "Elle détermine uniquement les couleurs des dashboards", "Elle sert seulement à la facturation"],
+      a: 1, e: "L'analyse causale de Davis repose sur les dépendances réelles. Un composant non instrumenté reste une boîte noire." },
+    { t: "Smartscape", q: "Quel est le moyen le plus simple de garantir que les processus de production et de recette d'une même technologie ne se retrouvent pas dans le même groupe de processus ?",
+      o: ["Des tags manuels", "Des host groups différents, définis à l'installation de OneAgent", "Des dashboards séparés", "Un Notebook par environnement"],
+      a: 1, e: "Deux hôtes de host groups différents n'ont jamais leurs processus dans le même groupe de processus." },
+    { t: "Smartscape", q: "Quelle méthode de tagging est à éviter ?",
+      o: ["Les tags importés des tags cloud et labels Kubernetes", "Les règles d'auto-tagging", "Les tags manuels posés dans l'interface", "Les tags passés par la variable DT_TAGS"],
+      a: 2, e: "Les tags manuels ne sont ni reproductibles ni maintenus. Privilégiez les tags importés et les règles d'auto-tagging." },
+    { t: "Smartscape", q: "Que permet la fonction DQL classicEntitySelector() ?",
+      o: ["Supprimer des entités", "Réutiliser la syntaxe classique de sélection d'entités (type, tags…) dans une requête DQL", "Créer un dashboard", "Renommer un service"],
+      a: 1, e: "Exemple : filter in(dt.entity.host, classicEntitySelector(\"type(HOST),tag(environment:prod)\"))." },
+    { t: "DQL", q: "Pourquoi filtrer le plus tôt possible et limiter la période dans une requête DQL ?",
+      o: ["Pour respecter la syntaxe", "Parce que les requêtes Grail sont facturées et ralenties selon le volume de données lues", "Parce que filter doit toujours être la dernière commande", "Ce n'est pas nécessaire"],
+      a: 1, e: "Moins de données scannées = requête plus rapide et moins coûteuse. scanLimitGBytes plafonne le volume lu." },
+    { t: "DQL", q: "Quelle commande DQL extrait des champs structurés d'un texte de log avec le Dynatrace Pattern Language ?",
+      o: ["summarize", "parse", "lookup", "expand"],
+      a: 1, e: "parse applique un motif DPL (LD, INT, DOUBLE, WORD…) pour créer des champs typés." },
+    { t: "DQL", q: "Vous extrayez chaque jour le même champ de vos logs pour plusieurs dashboards et alertes. Quelle est la meilleure approche ?",
+      o: ["Garder parse dans chaque requête", "Faire l'extraction une fois pour toutes à l'ingestion avec OpenPipeline", "Copier les logs dans un tableur", "Utiliser des tags manuels"],
+      a: 1, e: "parse en DQL est idéal pour explorer ; pour un usage permanent, l'extraction à l'ingestion simplifie et accélère les requêtes." },
+    { t: "DQL", q: "Quelle commande construit une série temporelle à partir d'enregistrements comme des logs ou des spans ?",
+      o: ["timeseries", "makeTimeseries", "fetch", "dedup"],
+      a: 1, e: "timeseries s'applique aux métriques ; makeTimeseries transforme des enregistrements en séries temporelles." },
+    { t: "DQL", q: "Quelle commande ajoute à des résultats des champs venant d'une autre requête, par correspondance de clé ?",
+      o: ["append", "lookup", "limit", "sort"],
+      a: 1, e: "lookup enrichit les résultats (par exemple avec le nom et les tags d'une entité). append ajoute des enregistrements à la suite." },
+    { t: "Notebooks", q: "Qu'est-ce qu'un Notebook Dynatrace ?",
+      o: ["Un journal d'audit", "Un document interactif qui combine requêtes DQL, visualisations, Markdown et code", "Un ordinateur portable fourni par Dynatrace", "Un type de moniteur synthétique"],
+      a: 1, e: "C'est l'espace de travail idéal pour explorer Grail et mettre au point des requêtes avant de les réutiliser." },
+    { t: "Notebooks", q: "Quelle démarche est recommandée pour mettre au point une requête dans un Notebook ?",
+      o: ["Lancer directement la requête sur 30 jours", "Partir d'une période courte avec un limit, ajouter les filtres un par un, vérifier le volume scanné, puis élargir", "Copier une requête trouvée sur Internet sans la tester", "Écrire la requête directement dans un workflow de production"],
+      a: 1, e: "On valide la forme des données et le coût sur un petit périmètre avant d'élargir." },
+    { t: "Notebooks", q: "Vous partagez un Notebook avec un collègue. Que verra-t-il ?",
+      o: ["Toutes les données que vous voyez, quels que soient ses droits", "Uniquement les données auxquelles ses propres droits lui donnent accès", "Rien, les Notebooks ne se partagent pas", "Uniquement le texte Markdown"],
+      a: 1, e: "Le partage d'un document ne donne pas accès à des données supplémentaires : les droits de chacun s'appliquent." },
+    { t: "Dashboards", q: "Comment éviter de dupliquer un dashboard pour chaque namespace Kubernetes ?",
+      o: ["Créer un dashboard par namespace", "Utiliser une variable (par exemple $Namespace) alimentée par une requête et réutilisée dans les tuiles", "Utiliser uniquement des tuiles Markdown", "Ce n'est pas possible"],
+      a: 1, e: "Les variables rendent un dashboard paramétrable : un seul dashboard remplace des copies difficiles à maintenir." },
+    { t: "Dashboards", q: "Quelle visualisation convient le mieux pour montrer l'état de 200 services à la fois ?",
+      o: ["Un camembert", "Un honeycomb (alvéoles colorées)", "Une valeur unique", "Une tuile Markdown"],
+      a: 1, e: "Le honeycomb donne une vue d'ensemble de nombreux éléments, avec une couleur par état." },
+    { t: "Dashboards", q: "Un dashboard affiché en continu sur un écran devient lent et coûteux. Quelle action est la plus efficace ?",
+      o: ["Ajouter des tuiles", "Préférer les métriques (timeseries) aux agrégations de logs bruts, réduire le nombre de tuiles et adapter l'intervalle de rafraîchissement", "Passer la période à 90 jours", "Supprimer les variables"],
+      a: 1, e: "Chaque tuile exécute sa requête à chaque rafraîchissement : le volume scanné s'additionne." },
+    { t: "Dashboards", q: "Quel principe de conception est recommandé pour un dashboard ?",
+      o: ["Mettre toutes les métriques disponibles", "Un public et une question par dashboard, du général au détail, avec des seuils cohérents avec les SLO", "Toujours utiliser des camemberts", "Ne jamais ajouter de texte"],
+      a: 1, e: "Un dashboard d'astreinte, un dashboard métier et un dashboard de capacité répondent à des questions différentes." },
+    { t: "Dashboards", q: "Comment versionner et déployer des dashboards de façon reproductible ?",
+      o: ["En les recréant à la main dans chaque environnement", "En les gérant par le code, avec Terraform ou Monaco", "En faisant des captures d'écran", "En les exportant en PDF"],
+      a: 1, e: "Les dashboards, comme le reste de la configuration, se gèrent comme du code (voir la partie 4)." },
+    { t: "Smartscape", q: "À quoi sert la topologie personnalisée (generic topology) ?",
+      o: ["À modifier les relations détectées par OneAgent", "À créer des entités et des relations pour des composants que OneAgent ne voit pas, à partir des données ingérées", "À supprimer des hôtes", "À changer la couleur de Smartscape"],
+      a: 1, e: "Équipements réseau, applications métier ou objets connectés deviennent des entités à part entière : tags, problèmes, dashboards." }
+  ];
+  var QUIZ_SIZE = 15;
+
+  var quizRoot = document.getElementById("quizRoot");
+  var quiz = null;
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function renderIntro() {
+    var unread = learningIds.length - learningIds.filter(function (id) { return state.done[id]; }).length;
+    var best = state.best != null ? '<p>Votre meilleur score : <strong>' + state.best + ' %</strong>' + (state.passed ? ' ✅ quiz validé' : '') + '</p>' : '';
+    quizRoot.innerHTML =
+      '<div class="card qcard">' +
+        '<p class="lead" style="margin-top:0">' + QUIZ_SIZE + ' questions tirées au hasard parmi ' + QUESTIONS.length + ', ordre des réponses mélangé. Une explication s\'affiche après chaque réponse.</p>' +
+        '<ul><li>Seuil de réussite : <strong>' + Math.round(PASS * 100) + ' %</strong> (' + Math.ceil(PASS * QUIZ_SIZE) + ' bonnes réponses sur ' + QUIZ_SIZE + ')</li>' +
+        '<li>Vous pouvez recommencer autant de fois que vous le souhaitez.</li></ul>' +
+        (unread > 0 ? '<div class="callout warn"><strong>Conseil</strong>Il vous reste ' + unread + ' module(s) non lu(s). Vous pouvez quand même commencer le quiz.</div>' : '') +
+        best +
+        '<div class="quiz-actions"><button class="btn" id="startQuiz">Commencer le quiz</button></div>' +
+      '</div>';
+    document.getElementById("startQuiz").onclick = startQuiz;
+  }
+
+  function startQuiz() {
+    var picked = shuffle(QUESTIONS).slice(0, QUIZ_SIZE).map(function (q) {
+      var order = shuffle(q.o.map(function (_, i) { return i; }));
+      return { t: q.t, q: q.q, e: q.e, o: order.map(function (i) { return q.o[i]; }), a: order.indexOf(q.a) };
+    });
+    quiz = { items: picked, idx: 0, answers: [] };
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    var item = quiz.items[quiz.idx];
+    var letters = "ABCD";
+    var html =
+      '<div class="quiz-head"><span>Question ' + (quiz.idx + 1) + ' / ' + quiz.items.length + '</span><span class="tag">' + escapeHtml(item.t) + '</span></div>' +
+      '<div class="progress" style="max-width:none;margin-bottom:16px"><div style="width:' + (quiz.idx / quiz.items.length * 100) + '%"></div></div>' +
+      '<div class="card qcard"><h3>' + escapeHtml(item.q).replace(/\n/g, '<br><code>').replace(/(<code>.*)$/, '$1</code>') + '</h3>' +
+      '<div class="options">' +
+      item.o.map(function (opt, i) {
+        return '<button class="opt" data-i="' + i + '"><span class="letter">' + letters[i] + '</span><span>' + escapeHtml(opt) + '</span></button>';
+      }).join("") +
+      '</div><div class="feedback" id="fb"></div>' +
+      '<div class="quiz-actions"><button class="btn" id="validate" disabled>Valider</button></div></div>';
+    quizRoot.innerHTML = html;
+
+    var selected = null;
+    var opts = quizRoot.querySelectorAll(".opt");
+    var btn = document.getElementById("validate");
+    opts.forEach(function (b) {
+      b.onclick = function () {
+        opts.forEach(function (x) { x.classList.remove("selected"); });
+        b.classList.add("selected");
+        selected = +b.dataset.i;
+        btn.disabled = false;
+      };
+    });
+    btn.onclick = function () {
+      if (btn.dataset.next) { next(); return; }
+      var ok = selected === item.a;
+      quiz.answers.push(selected);
+      opts.forEach(function (x, i) {
+        x.disabled = true;
+        x.classList.remove("selected");
+        if (i === item.a) x.classList.add("correct");
+        else if (i === selected) x.classList.add("wrong");
+      });
+      var fb = document.getElementById("fb");
+      fb.className = "feedback show " + (ok ? "good" : "bad");
+      fb.innerHTML = "<strong>" + (ok ? "✅ Bonne réponse" : "❌ Mauvaise réponse") + "</strong><br>" + escapeHtml(item.e);
+      btn.textContent = quiz.idx + 1 < quiz.items.length ? "Question suivante →" : "Voir mes résultats";
+      btn.dataset.next = "1";
+      btn.focus();
+    };
+  }
+
+  function next() {
+    quiz.idx++;
+    if (quiz.idx < quiz.items.length) renderQuestion(); else renderResult();
+    window.scrollTo(0, 0);
+  }
+
+  function renderResult() {
+    var total = quiz.items.length;
+    var good = quiz.items.filter(function (it, i) { return quiz.answers[i] === it.a; }).length;
+    var pct = Math.round(good / total * 100);
+    var passed = good / total >= PASS;
+    state.best = Math.max(state.best || 0, pct);
+    if (passed) state.passed = true;
+    save(state);
+    show();
+
+    var themes = {};
+    quiz.items.forEach(function (it, i) {
+      themes[it.t] = themes[it.t] || { g: 0, n: 0 };
+      themes[it.t].n++;
+      if (quiz.answers[i] === it.a) themes[it.t].g++;
+    });
+
+    var r = 64, c = 2 * Math.PI * r;
+    var color = passed ? "var(--ok)" : "var(--ko)";
+    var html =
+      '<div class="card qcard result">' +
+      '<svg class="score-ring" viewBox="0 0 160 160"><circle cx="80" cy="80" r="' + r + '" fill="none" stroke="var(--surface-2)" stroke-width="14"/>' +
+      '<circle cx="80" cy="80" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + (c * pct / 100) + ' ' + c + '" transform="rotate(-90 80 80)"/>' +
+      '<text x="80" y="88" text-anchor="middle" font-size="30" font-weight="700" fill="var(--text)">' + pct + '%</text></svg>' +
+      '<div class="verdict" style="color:' + color + '">' + (passed ? "🎉 Formation validée !" : "Pas encore validée") + '</div>' +
+      '<p>' + good + ' bonnes réponses sur ' + total + '. ' +
+      (passed ? "Vous savez exploiter la topologie, DQL, les Notebooks et les Dashboards. Prochaine étape : la partie 3, surveillance synthétique."
+              : "Il faut au moins " + Math.round(PASS * 100) + " %. Revoyez les thèmes les plus faibles ci-dessous puis réessayez.") + '</p>' +
+      '<div class="themes"><h3>Résultats par thème</h3>' +
+      Object.keys(themes).map(function (k) {
+        var p = Math.round(themes[k].g / themes[k].n * 100);
+        var col = p >= 80 ? "var(--ok)" : p >= 50 ? "var(--warn)" : "var(--ko)";
+        return '<div class="theme-row"><span>' + escapeHtml(k) + '</span><div class="theme-bar"><div style="width:' + p + '%;background:' + col + '"></div></div><span>' + themes[k].g + '/' + themes[k].n + '</span></div>';
+      }).join("") + '</div>' +
+      '<div class="quiz-actions" style="justify-content:center;flex-wrap:wrap">' +
+      '<button class="btn ghost" id="toggleReview">Voir la correction détaillée</button>' +
+      '<button class="btn" id="retry">Recommencer le quiz</button></div>' +
+      '<div id="review" style="display:none;margin-top:20px"></div></div>';
+    quizRoot.innerHTML = html;
+
+    document.getElementById("retry").onclick = startQuiz;
+    document.getElementById("toggleReview").onclick = function () {
+      var rv = document.getElementById("review");
+      rv.style.display = rv.style.display === "none" ? "block" : "none";
+    };
+    document.getElementById("review").innerHTML = quiz.items.map(function (it, i) {
+      var ok = quiz.answers[i] === it.a;
+      return '<div class="review-item"><div><span class="' + (ok ? "badge-ok" : "badge-ko") + '">' + (ok ? "✓" : "✗") + '</span> <strong>' + (i + 1) + '. ' + escapeHtml(it.q) + '</strong></div>' +
+        (ok ? "" : '<div class="ans">Votre réponse : ' + escapeHtml(it.o[quiz.answers[i]]) + '</div>') +
+        '<div class="ans">Bonne réponse : <strong>' + escapeHtml(it.o[it.a]) + '</strong></div>' +
+        '<div class="ans">' + escapeHtml(it.e) + '</div></div>';
+    }).join("");
+  }
+
+  renderIntro();
+  window.addEventListener("hashchange", function () { if (location.hash === "#quiz" && !quiz) renderIntro(); });
+  show();
+})();
+</script>
+</body>
+</html>

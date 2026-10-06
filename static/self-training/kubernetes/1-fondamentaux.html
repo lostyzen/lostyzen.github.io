@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kubernetes 1 : fondamentaux</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface-2: #eef1f8;
+    --text: #1b1f2a;
+    --muted: #5a6275;
+    --border: #d9deea;
+    --accent: #b45309;
+    --accent-2: #7c2d12;
+    --accent-soft: #fdf0e1;
+    --ok: #1a8f4c;
+    --ok-soft: #e2f6ea;
+    --ko: #c62f3a;
+    --ko-soft: #fbe5e7;
+    --warn: #b56a00;
+    --warn-soft: #fff1d9;
+    --code-bg: #1e2230;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(20, 30, 60, .08), 0 6px 20px rgba(20, 30, 60, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141c;
+      --surface: #1a1e29;
+      --surface-2: #232838;
+      --text: #e7eaf2;
+      --muted: #9aa3b8;
+      --border: #2e3446;
+      --accent: #f5a524;
+      --accent-2: #fbbf6b;
+      --accent-soft: #3a2710;
+      --ok: #4cc583;
+      --ok-soft: #133524;
+      --ko: #ff6b76;
+      --ko-soft: #3d1a1e;
+      --warn: #f0b04c;
+      --warn-soft: #3a2c12;
+      --code-bg: #0b0d13;
+      --code-text: #e6e9f2;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141c;
+    --surface: #1a1e29;
+    --surface-2: #232838;
+    --text: #e7eaf2;
+    --muted: #9aa3b8;
+    --border: #2e3446;
+    --accent: #f5a524;
+    --accent-2: #fbbf6b;
+    --accent-soft: #3a2710;
+    --ok: #4cc583;
+    --ok-soft: #133524;
+    --ko: #ff6b76;
+    --ko-soft: #3d1a1e;
+    --warn: #f0b04c;
+    --warn-soft: #3a2c12;
+    --code-bg: #0b0d13;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+  code, pre { font-family: "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace; font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+  code { background: var(--surface-2); padding: .1em .35em; border-radius: 4px; font-size: .9em; }
+  pre {
+    background: var(--code-bg); color: var(--code-text);
+    padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: .88em; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  .kw { color: #ff9e64; } .fn { color: #7aa2f7; } .str { color: #9ece6a; } .cm { color: #7a8299; font-style: italic; }
+
+  /* ---------- Layout ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; color: #fff; font-size: .9rem;
+  }
+  .progress-wrap { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .progress { flex: 1; height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; max-width: 360px; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s; }
+  .progress-label { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+  .icon-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: .9rem;
+  }
+  .icon-btn:hover { background: var(--surface-2); }
+  #menuBtn { display: none; }
+
+  .layout { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100vh - 53px); }
+  nav.side {
+    border-right: 1px solid var(--border); background: var(--surface);
+    padding: 18px 12px; position: sticky; top: 53px; height: calc(100vh - 53px); overflow-y: auto;
+  }
+  .back-link { display: block; margin: 0 10px 14px; font-size: .88rem; color: var(--muted); text-decoration: none; }
+  .back-link:hover { color: var(--accent); }
+  nav.side h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 6px 10px 10px; }
+  nav.side ol { list-style: none; margin: 0; padding: 0; }
+  nav.side li a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px; text-decoration: none; color: var(--text); font-size: .93rem;
+  }
+  nav.side li a:hover { background: var(--surface-2); }
+  nav.side li a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .num {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center; font-size: .75rem; font-weight: 700;
+    background: var(--surface-2); color: var(--muted);
+  }
+  a.done .num { background: var(--ok); color: #fff; }
+  a.active .num { background: var(--accent); color: #fff; }
+
+  main { padding: 32px 40px 80px; max-width: 980px; width: 100%; }
+  section.module { display: none; animation: fade .25s ease; scroll-margin-top: 70px; }
+  section.module.visible { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .eyebrow { color: var(--accent); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 6px 0 12px; }
+  h2.h { font-size: 1.6rem; margin: 4px 0 16px; line-height: 1.25; }
+  h3 { font-size: 1.15rem; margin: 28px 0 10px; }
+  .lead { font-size: 1.1rem; color: var(--muted); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 16px 0; }
+  .grid .card h4 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+  .grid .card p { margin: 0; color: var(--muted); font-size: .93rem; }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap;
+    background: var(--accent-soft); color: var(--accent);
+  }
+
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .callout strong:first-child { display: block; margin-bottom: 2px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .93rem; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 600; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .table-wrap table { margin: 0; }
+
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 10px 0; }
+  details summary { cursor: pointer; font-weight: 600; }
+
+  .diagram { width: 100%; height: auto; margin: 10px 0; }
+  .diagram text { fill: var(--text); font-family: inherit; }
+  .diagram .muted { fill: var(--muted); }
+  .diagram .box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  .diagram .box-a { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .diagram .line { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .diagram .bar1 { fill: var(--accent); } .diagram .bar2 { fill: var(--accent-2); } .diagram .bar3 { fill: var(--ok); } .diagram .bar4 { fill: var(--warn); }
+
+  .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .btn {
+    border: 0; border-radius: 9px; padding: 10px 18px; font-weight: 600; cursor: pointer; font-size: .95rem;
+    background: var(--accent); color: #fff;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .keypoints { background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; padding: 14px 20px; margin-top: 26px; }
+  .keypoints h4 { margin: 0 0 6px; color: var(--accent); }
+  .keypoints ul { margin: 0; padding-left: 20px; }
+
+  /* ---------- Quiz ---------- */
+  .quiz-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; color: var(--muted); font-size: .9rem; }
+  .qcard { padding: 24px; }
+  .qcard h3 { margin-top: 0; font-size: 1.2rem; }
+  .options { display: grid; gap: 10px; margin: 16px 0; }
+  .opt {
+    display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%;
+    padding: 12px 14px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 10px; cursor: pointer; font-size: .97rem; font-family: inherit; line-height: 1.45;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt .letter {
+    flex: none; width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center;
+    background: var(--surface-2); font-weight: 700; font-size: .82rem;
+  }
+  .opt.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .opt.correct { border-color: var(--ok); background: var(--ok-soft); }
+  .opt.correct .letter { background: var(--ok); color: #fff; }
+  .opt.wrong { border-color: var(--ko); background: var(--ko-soft); }
+  .opt.wrong .letter { background: var(--ko); color: #fff; }
+  .opt:disabled { cursor: default; }
+  .feedback { display: none; padding: 12px 16px; border-radius: 10px; margin-top: 4px; }
+  .feedback.show { display: block; }
+  .feedback.good { background: var(--ok-soft); border-left: 4px solid var(--ok); }
+  .feedback.bad { background: var(--ko-soft); border-left: 4px solid var(--ko); }
+  .quiz-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+  .score-ring { width: 160px; height: 160px; margin: 0 auto 10px; display: block; }
+  .result { text-align: center; }
+  .result .verdict { font-size: 1.4rem; font-weight: 700; margin: 6px 0; }
+  .themes { text-align: left; margin-top: 24px; }
+  .theme-row { display: grid; grid-template-columns: minmax(140px, 1fr) 2fr 60px; gap: 12px; align-items: center; margin: 8px 0; font-size: .93rem; }
+  .theme-bar { height: 10px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .theme-bar > div { height: 100%; border-radius: 99px; }
+  .review-item { text-align: left; border-bottom: 1px solid var(--border); padding: 12px 0; }
+  .review-item:last-child { border: 0; }
+  .review-item .ans { font-size: .9rem; color: var(--muted); }
+  .badge-ok { color: var(--ok); font-weight: 700; } .badge-ko { color: var(--ko); font-weight: 700; }
+
+  @media (max-width: 860px) {
+    #menuBtn { display: inline-block; }
+    .layout { grid-template-columns: 1fr; }
+    nav.side {
+      position: fixed; top: 53px; left: 0; width: 290px; max-width: 85vw; z-index: 30;
+      transform: translateX(-100%); transition: transform .25s; box-shadow: var(--shadow);
+    }
+    nav.side.open { transform: none; }
+    main { padding: 22px 16px 60px; }
+    h1 { font-size: 1.6rem; }
+    .brand span.full { display: none; }
+    .progress-label { display: none; }
+    .theme-row { grid-template-columns: 1fr 1.4fr 48px; }
+  }
+  @media print {
+    header.top, nav.side, .pager, .quiz-actions { display: none !important; }
+    .layout { display: block; }
+    section.module { display: block !important; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="icon-btn" id="menuBtn" aria-label="Ouvrir le menu">☰</button>
+  <div class="brand"><div class="brand-mark">◆</div><span class="full">Kubernetes &amp; EKS · Partie 1 : fondamentaux</span></div>
+  <div class="progress-wrap">
+    <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+    <span class="progress-label" id="progressLabel">0 / 9 modules</span>
+  </div>
+  <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Changer de thème">◐</button>
+</header>
+
+<div class="layout">
+  <nav class="side" id="sidebar" aria-label="Sommaire">
+    <a class="back-link" href="../index.html">← Toutes les self-trainings</a>
+    <h2>Parcours</h2>
+    <ol id="navList"></ol>
+  </nav>
+
+  <main id="main">
+
+<!-- ===================================================== MODULE 0 -->
+<section class="module" id="m0" data-title="Introduction">
+  <div class="eyebrow">Partie 1 sur 3 · Bienvenue</div>
+  <h1>Kubernetes : les fondamentaux</h1>
+  <p class="lead">Cette première partie présente les concepts de base de Kubernetes : pourquoi l'utiliser, comment un cluster est organisé, et les objets indispensables pour déployer et exposer une application. Elle se termine par un quiz de validation.</p>
+
+  <div class="grid">
+    <div class="card"><h4>⏱️ Durée</h4><p>Environ 1 h de lecture, plus 15 minutes de quiz.</p></div>
+    <div class="card"><h4>🎯 Public</h4><p>Développeurs, ops, SRE qui découvrent Kubernetes ou veulent consolider leurs bases.</p></div>
+    <div class="card"><h4>✅ Validation</h4><p>Un quiz de 15 questions. Seuil de réussite : <strong>80 %</strong>.</p></div>
+  </div>
+
+  <h3>Le parcours Kubernetes &amp; EKS</h3>
+  <div class="grid">
+    <div class="card"><h4><span class="tag">Partie 1</span> Fondamentaux</h4><p><strong>Vous êtes ici.</strong> Architecture, pods, workloads, services, configuration, kubectl.</p></div>
+    <div class="card"><h4><span class="tag">Partie 2</span> <a href="2-production.html">En production</a></h4><p>Ressources, ordonnancement, réseau, stockage, sécurité, autoscaling, GitOps, dépannage.</p></div>
+    <div class="card"><h4><span class="tag">Partie 3</span> <a href="3-eks.html">Amazon EKS</a></h4><p>Kubernetes managé sur AWS : calcul, réseau VPC, IAM, stockage, mises à jour, coûts.</p></div>
+  </div>
+
+  <h3>Objectifs pédagogiques</h3>
+  <p>À l'issue de cette partie, vous saurez :</p>
+  <ul>
+    <li>expliquer ce qu'est un <strong>conteneur</strong> et pourquoi un <strong>orchestrateur</strong> est nécessaire ;</li>
+    <li>décrire l'<strong>architecture</strong> d'un cluster : plan de contrôle et nœuds ;</li>
+    <li>utiliser les objets de base : <strong>Pod, Deployment, StatefulSet, DaemonSet, Job</strong> ;</li>
+    <li>exposer une application avec un <strong>Service</strong> ;</li>
+    <li>injecter de la configuration avec <strong>ConfigMap</strong> et <strong>Secret</strong>, et isoler avec les <strong>namespaces</strong> ;</li>
+    <li>écrire un manifeste YAML et utiliser les commandes <strong>kubectl</strong> essentielles.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Comment utiliser cette page</strong>
+    Naviguez avec le sommaire ou les boutons en bas de chaque module. Un module est marqué comme lu quand vous passez au suivant. Votre progression est conservée dans ce navigateur. La page fonctionne entièrement hors ligne.
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 1 -->
+<section class="module" id="m1" data-title="Conteneurs & orchestration">
+  <div class="eyebrow">Module 1</div>
+  <h2 class="h">Des conteneurs à l'orchestration</h2>
+
+  <h3>Le conteneur</h3>
+  <p>Un <strong>conteneur</strong> embarque une application avec tout ce dont elle a besoin pour tourner (bibliothèques, runtime, configuration par défaut), et l'exécute de façon isolée sur un système hôte. Contrairement à une machine virtuelle, il <strong>partage le noyau</strong> du système hôte : il démarre en quelques secondes et consomme beaucoup moins de ressources.</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>Machine virtuelle</th><th>Conteneur</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Isolation</strong></td><td>Système d'exploitation complet, hyperviseur</td><td>Processus isolés (namespaces et cgroups Linux), noyau partagé</td></tr>
+      <tr><td><strong>Taille</strong></td><td>Plusieurs Go</td><td>Quelques dizaines à centaines de Mo</td></tr>
+      <tr><td><strong>Démarrage</strong></td><td>Minutes</td><td>Secondes</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <ul>
+    <li>Une <strong>image</strong> est le modèle immuable à partir duquel on lance des conteneurs. Elle est construite (par exemple avec un <code>Dockerfile</code>) et versionnée par un <strong>tag</strong> (<code>monapp:2.3.1</code>).</li>
+    <li>Les images sont stockées dans un <strong>registre</strong> : Docker Hub, GitHub Container Registry, Amazon ECR, Harbor…</li>
+    <li>Le format des images et des runtimes est standardisé par l'<strong>OCI</strong> (Open Container Initiative) : une image construite avec Docker tourne avec containerd ou CRI-O.</li>
+  </ul>
+
+  <h3>Pourquoi un orchestrateur ?</h3>
+  <p>Lancer un conteneur sur une machine est simple. En faire tourner des centaines, sur des dizaines de machines, en production, soulève d'autres questions :</p>
+  <div class="grid">
+    <div class="card"><h4>📍 Placement</h4><p>Sur quelle machine démarrer chaque conteneur, selon les ressources disponibles ?</p></div>
+    <div class="card"><h4>❤️ Auto-réparation</h4><p>Que se passe-t-il quand un conteneur plante ou qu'une machine tombe ?</p></div>
+    <div class="card"><h4>📈 Mise à l'échelle</h4><p>Comment passer de 3 à 30 instances quand la charge augmente ?</p></div>
+    <div class="card"><h4>🔀 Réseau</h4><p>Comment les services se trouvent-ils et répartissent-ils la charge entre leurs instances ?</p></div>
+    <div class="card"><h4>🚀 Déploiements</h4><p>Comment livrer une nouvelle version sans interruption, et revenir en arrière ?</p></div>
+    <div class="card"><h4>🔐 Configuration</h4><p>Comment injecter configuration et secrets selon l'environnement ?</p></div>
+  </div>
+  <p><strong>Kubernetes</strong> (souvent abrégé <strong>K8s</strong>) répond à ces questions. Issu de l'expérience de Google avec son système interne Borg, il a été rendu open source en 2014 et confié à la <strong>CNCF</strong> (Cloud Native Computing Foundation). C'est aujourd'hui le standard de fait de l'orchestration de conteneurs.</p>
+
+  <h3>Le modèle déclaratif et la boucle de réconciliation</h3>
+  <p>Comme Terraform ou Ansible, Kubernetes est <strong>déclaratif</strong> : on ne lui dit pas « démarre 3 conteneurs », on lui déclare « je veux 3 réplicas de cette application ». Kubernetes enregistre cet <strong>état désiré</strong>, puis des <strong>contrôleurs</strong> comparent en permanence l'état désiré à l'<strong>état réel</strong> et agissent pour réduire l'écart.</p>
+  <div class="callout ok">
+    <strong>Exemple</strong>
+    Vous demandez 3 réplicas. Une machine tombe et emporte un réplica : l'état réel passe à 2. Le contrôleur le constate et recrée immédiatement un réplica sur une autre machine. Personne n'a eu besoin d'intervenir.
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Conteneur = application isolée qui partage le noyau de l'hôte ; image = modèle immuable versionné.</li>
+      <li>Kubernetes orchestre : placement, auto-réparation, mise à l'échelle, réseau, déploiements.</li>
+      <li>Modèle déclaratif : on décrit l'état désiré, les contrôleurs réconcilient en continu.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 2 -->
+<section class="module" id="m2" data-title="Architecture d'un cluster">
+  <div class="eyebrow">Module 2</div>
+  <h2 class="h">L'architecture d'un cluster</h2>
+  <p>Un cluster Kubernetes se compose d'un <strong>plan de contrôle</strong> (<em>control plane</em>), qui prend les décisions, et de <strong>nœuds de travail</strong> (<em>worker nodes</em>), qui exécutent les applications.</p>
+
+  <svg class="diagram" viewBox="0 0 760 330" role="img" aria-label="Architecture Kubernetes : plan de contrôle et nœuds">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color:var(--muted)"/>
+      </marker>
+    </defs>
+    <rect class="box" x="10" y="130" width="110" height="60" rx="8"/>
+    <text x="24" y="156" font-size="13" font-weight="700">kubectl</text>
+    <text class="muted" x="24" y="174" font-size="11">CI/CD, outils</text>
+
+    <rect class="box-a" x="160" y="20" width="270" height="290" rx="10"/>
+    <text x="176" y="44" font-size="13" font-weight="700">Plan de contrôle</text>
+    <rect class="box" x="176" y="60" width="238" height="44" rx="6"/>
+    <text x="188" y="80" font-size="12" font-weight="600">kube-apiserver</text>
+    <text class="muted" x="188" y="96" font-size="11">point d'entrée unique (API REST)</text>
+    <rect class="box" x="176" y="114" width="238" height="40" rx="6"/>
+    <text x="188" y="132" font-size="12" font-weight="600">etcd</text>
+    <text class="muted" x="188" y="147" font-size="11">base clé-valeur : l'état du cluster</text>
+    <rect class="box" x="176" y="164" width="238" height="40" rx="6"/>
+    <text x="188" y="182" font-size="12" font-weight="600">kube-scheduler</text>
+    <text class="muted" x="188" y="197" font-size="11">choisit un nœud pour chaque pod</text>
+    <rect class="box" x="176" y="214" width="238" height="40" rx="6"/>
+    <text x="188" y="232" font-size="12" font-weight="600">kube-controller-manager</text>
+    <text class="muted" x="188" y="247" font-size="11">boucles de réconciliation</text>
+    <rect class="box" x="176" y="264" width="238" height="36" rx="6"/>
+    <text x="188" y="286" font-size="12" font-weight="600">cloud-controller-manager</text>
+
+    <rect class="box" x="490" y="20" width="260" height="140" rx="10"/>
+    <text x="506" y="44" font-size="13" font-weight="700">Nœud 1</text>
+    <text class="muted" x="506" y="66" font-size="11">kubelet · kube-proxy · containerd</text>
+    <rect class="box-a" x="506" y="82" width="70" height="56" rx="6"/><text x="520" y="114" font-size="11">Pod</text>
+    <rect class="box-a" x="586" y="82" width="70" height="56" rx="6"/><text x="600" y="114" font-size="11">Pod</text>
+    <rect class="box-a" x="666" y="82" width="70" height="56" rx="6"/><text x="680" y="114" font-size="11">Pod</text>
+
+    <rect class="box" x="490" y="170" width="260" height="140" rx="10"/>
+    <text x="506" y="194" font-size="13" font-weight="700">Nœud 2</text>
+    <text class="muted" x="506" y="216" font-size="11">kubelet · kube-proxy · containerd</text>
+    <rect class="box-a" x="506" y="232" width="70" height="56" rx="6"/><text x="520" y="264" font-size="11">Pod</text>
+    <rect class="box-a" x="586" y="232" width="70" height="56" rx="6"/><text x="600" y="264" font-size="11">Pod</text>
+
+    <path class="line" d="M120 160 H140 V82 H174" marker-end="url(#arr)"/>
+    <path class="line" d="M414 82 H450 V90 H488" marker-end="url(#arr)" marker-start="url(#arr)"/>
+    <path class="line" d="M414 82 H450 V240 H488" marker-end="url(#arr)"/>
+  </svg>
+
+  <h3>Le plan de contrôle</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Composant</th><th>Rôle</th></tr></thead>
+    <tbody>
+      <tr><td><code>kube-apiserver</code></td><td>Le <strong>point d'entrée unique</strong>. Tous les échanges passent par lui : kubectl, contrôleurs, kubelets. Il authentifie, autorise, valide les objets et les enregistre dans etcd.</td></tr>
+      <tr><td><code>etcd</code></td><td>Base de données clé-valeur distribuée qui contient <strong>tout l'état du cluster</strong>. Sa sauvegarde est vitale sur un cluster autogéré.</td></tr>
+      <tr><td><code>kube-scheduler</code></td><td>Choisit le <strong>nœud</strong> sur lequel placer chaque nouveau pod, selon les ressources demandées et les contraintes de placement.</td></tr>
+      <tr><td><code>kube-controller-manager</code></td><td>Exécute les <strong>contrôleurs</strong> (Deployment, ReplicaSet, Node, Job…) qui réconcilient l'état réel avec l'état désiré.</td></tr>
+      <tr><td><code>cloud-controller-manager</code></td><td>Fait le lien avec le fournisseur cloud : load balancers, routes, informations sur les machines.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>En production, le plan de contrôle est <strong>redondé</strong> (au moins 3 instances d'etcd). Avec un service managé comme <strong>EKS</strong>, AKS ou GKE, c'est le fournisseur cloud qui l'opère (voir partie 3).</p>
+
+  <h3>Les nœuds</h3>
+  <ul>
+    <li><strong><code>kubelet</code></strong> : l'agent de chaque nœud. Il reçoit les pods qui lui sont attribués, demande au runtime de démarrer les conteneurs, surveille leur santé et remonte leur statut à l'API.</li>
+    <li><strong>Runtime de conteneurs</strong> : <code>containerd</code> ou <code>CRI-O</code>, via l'interface standard CRI. Docker Engine n'est plus utilisé directement par Kubernetes depuis la version 1.24, mais les images construites avec Docker fonctionnent toujours.</li>
+    <li><strong><code>kube-proxy</code></strong> : met en œuvre les <em>Services</em> sur chaque nœud (règles iptables ou IPVS). Certains plugins réseau, comme Cilium, peuvent le remplacer.</li>
+  </ul>
+
+  <h3>Ce qui se passe lors d'un déploiement</h3>
+  <ol>
+    <li><code>kubectl apply</code> envoie le manifeste à l'<strong>API server</strong>, qui le valide et l'enregistre dans <strong>etcd</strong>.</li>
+    <li>Le <strong>contrôleur de Deployment</strong> voit le nouvel objet et crée un <strong>ReplicaSet</strong>, dont le contrôleur crée les <strong>pods</strong> demandés.</li>
+    <li>Le <strong>scheduler</strong> voit des pods sans nœud attribué et choisit un nœud pour chacun.</li>
+    <li>Le <strong>kubelet</strong> du nœud choisi voit le pod qui lui est attribué et demande au runtime de télécharger l'image et de démarrer les conteneurs.</li>
+  </ol>
+  <div class="callout">
+    <strong>Tout passe par l'API</strong>
+    Les composants ne se parlent pas directement : ils <em>observent</em> l'API server (mécanisme de <em>watch</em>) et y écrivent leurs résultats. C'est ce qui rend Kubernetes extensible : un nouveau contrôleur peut s'ajouter sans modifier les autres.
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Plan de contrôle : API server, etcd, scheduler, controller manager.</li>
+      <li>Nœuds : kubelet, runtime de conteneurs (containerd), kube-proxy.</li>
+      <li>L'API server est le point d'entrée unique ; etcd contient tout l'état.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 3 -->
+<section class="module" id="m3" data-title="Pods & workloads">
+  <div class="eyebrow">Module 3</div>
+  <h2 class="h">Pods et workloads</h2>
+
+  <h3>Le Pod</h3>
+  <p>Le <strong>Pod</strong> est la plus petite unité déployable de Kubernetes. Il contient <strong>un ou plusieurs conteneurs</strong> qui partagent :</p>
+  <ul>
+    <li>la même <strong>adresse IP</strong> et les mêmes ports (ils communiquent via <code>localhost</code>) ;</li>
+    <li>des <strong>volumes</strong> communs ;</li>
+    <li>le même cycle de vie et le même nœud.</li>
+  </ul>
+  <p>Le cas le plus courant est un pod = un conteneur. On ajoute un conteneur supplémentaire pour un besoin étroitement lié :</p>
+  <ul>
+    <li><strong>Init containers</strong> : s'exécutent jusqu'au bout <em>avant</em> les conteneurs principaux (attendre une base de données, préparer des fichiers).</li>
+    <li><strong>Sidecars</strong> : tournent <em>à côté</em> du conteneur principal (proxy de service mesh, collecteur de logs). Kubernetes les gère nativement sous forme d'init containers avec <code>restartPolicy: Always</code>.</li>
+  </ul>
+  <div class="callout warn">
+    <strong>Les pods sont éphémères</strong>
+    Un pod n'est jamais « réparé » : s'il meurt ou si son nœud tombe, un <em>nouveau</em> pod est créé, avec une nouvelle IP. On ne crée donc presque jamais de pod directement : on passe par un contrôleur (Deployment, StatefulSet…) qui les recrée.
+  </div>
+
+  <h3>Les contrôleurs de workloads</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Objet</th><th>Usage</th><th>Exemple</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Deployment</strong></td><td>Applications <strong>sans état</strong> : réplicas interchangeables, mises à jour progressives, retour arrière</td><td>API REST, front-end web</td></tr>
+      <tr><td><strong>StatefulSet</strong></td><td>Applications <strong>avec état</strong> : identité stable (<code>db-0</code>, <code>db-1</code>), ordre de démarrage, un volume persistant par pod</td><td>Bases de données, Kafka, Elasticsearch</td></tr>
+      <tr><td><strong>DaemonSet</strong></td><td>Exactement <strong>un pod par nœud</strong> (ou par nœud sélectionné)</td><td>Agent de logs, agent de supervision, plugin réseau</td></tr>
+      <tr><td><strong>Job</strong></td><td>Tâche qui s'exécute <strong>jusqu'à son terme</strong>, avec relance en cas d'échec</td><td>Migration de base, traitement par lot</td></tr>
+      <tr><td><strong>CronJob</strong></td><td>Job lancé selon une <strong>planification</strong> (syntaxe cron)</td><td>Sauvegarde nocturne, purge</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Un <strong>Deployment</strong> ne gère pas directement les pods : il gère des <strong>ReplicaSets</strong>, qui maintiennent le nombre de pods voulu. À chaque nouvelle version, le Deployment crée un nouveau ReplicaSet et fait basculer progressivement les pods de l'ancien vers le nouveau.</p>
+
+<pre><code><span class="kw">apiVersion</span>: apps/v1
+<span class="kw">kind</span>: Deployment
+<span class="kw">metadata</span>:
+  name: web
+  labels:
+    app: web
+<span class="kw">spec</span>:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web              <span class="cm"># les pods gérés par ce Deployment</span>
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1           <span class="cm"># au plus 1 pod en plus pendant la mise à jour</span>
+      maxUnavailable: 0     <span class="cm"># jamais moins de 3 pods disponibles</span>
+  template:                 <span class="cm"># modèle des pods</span>
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/acme/web:2.3.1
+          ports:
+            - containerPort: 8080</code></pre>
+
+  <h3>Mises à jour et retour arrière</h3>
+  <ul>
+    <li><strong>RollingUpdate</strong> (par défaut) : remplace les pods progressivement, selon <code>maxSurge</code> et <code>maxUnavailable</code> (25 % chacun par défaut). Pas d'interruption si l'application est bien configurée.</li>
+    <li><strong>Recreate</strong> : arrête tous les anciens pods avant de démarrer les nouveaux. Il y a une interruption, mais jamais deux versions en même temps.</li>
+    <li><code>kubectl rollout status deployment/web</code> suit le déploiement ; <code>kubectl rollout undo deployment/web</code> revient à la version précédente.</li>
+  </ul>
+  <div class="callout">
+    <strong>Évitez le tag <code>latest</code></strong>
+    Avec <code>image: web:latest</code>, on ne sait pas quelle version tourne, et un retour arrière n'a pas de sens. Utilisez un tag précis (<code>2.3.1</code>), voire une empreinte (<code>@sha256:…</code>).
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Pod = un ou plusieurs conteneurs partageant IP, volumes et cycle de vie ; il est éphémère.</li>
+      <li>Deployment pour le sans-état, StatefulSet pour l'avec-état, DaemonSet pour un pod par nœud, Job/CronJob pour les tâches.</li>
+      <li>Deployment → ReplicaSet → Pods ; RollingUpdate par défaut, <code>rollout undo</code> pour revenir en arrière.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 4 -->
+<section class="module" id="m4" data-title="Services & découverte">
+  <div class="eyebrow">Module 4</div>
+  <h2 class="h">Labels, Services et découverte de services</h2>
+
+  <h3>Labels et sélecteurs</h3>
+  <p>Les <strong>labels</strong> sont des paires clé-valeur attachées aux objets (<code>app: web</code>, <code>tier: frontend</code>, <code>env: prod</code>). Les <strong>sélecteurs</strong> permettent de désigner un ensemble d'objets par leurs labels. C'est le mécanisme qui relie les objets entre eux : un Deployment trouve ses pods, un Service trouve ses pods de destination, par label.</p>
+<pre><code>kubectl get pods -l app=web,env=prod</code></pre>
+  <p>Les <strong>annotations</strong>, elles, servent à stocker des métadonnées non utilisées pour la sélection (informations de build, configuration d'outils tiers).</p>
+
+  <h3>Le Service</h3>
+  <p>Les pods vont et viennent, et leurs IP changent. Un <strong>Service</strong> fournit un <strong>point d'accès stable</strong> (une IP virtuelle et un nom DNS) devant un ensemble de pods sélectionnés par label, et <strong>répartit la charge</strong> entre eux.</p>
+<pre><code><span class="kw">apiVersion</span>: v1
+<span class="kw">kind</span>: Service
+<span class="kw">metadata</span>:
+  name: web
+<span class="kw">spec</span>:
+  type: ClusterIP
+  selector:
+    app: web          <span class="cm"># envoie le trafic aux pods portant ce label</span>
+  ports:
+    - port: 80        <span class="cm"># port du Service</span>
+      targetPort: 8080  <span class="cm"># port du conteneur</span></code></pre>
+  <p>Seuls les pods <strong>prêts</strong> (<em>ready</em>, voir les sondes en partie 2) reçoivent du trafic. La liste à jour des pods derrière un Service est tenue dans des objets <strong>EndpointSlice</strong>.</p>
+
+  <h3>Les types de Service</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Type</th><th>Accessible depuis</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><code>ClusterIP</code> (défaut)</td><td>L'intérieur du cluster uniquement</td><td>Communication entre services internes</td></tr>
+      <tr><td><code>NodePort</code></td><td>Chaque nœud, sur un port fixe (30000–32767 par défaut)</td><td>Tests, intégration avec un load balancer externe</td></tr>
+      <tr><td><code>LoadBalancer</code></td><td>L'extérieur, via un load balancer créé chez le fournisseur cloud</td><td>Exposer un service sur Internet ou sur le réseau d'entreprise</td></tr>
+      <tr><td><code>ExternalName</code></td><td>Alias DNS (CNAME) vers un nom externe</td><td>Pointer vers une base de données managée hors du cluster</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Un Service <strong>headless</strong> (<code>clusterIP: None</code>) ne fait pas de répartition : le DNS renvoie directement les IP des pods. Il est utilisé avec les StatefulSets pour joindre un pod précis (<code>db-0.db</code>).</p>
+  <p>Pour exposer des applications HTTP, on préfère en général un seul point d'entrée qui route selon le nom de domaine et le chemin : c'est le rôle d'<strong>Ingress</strong> et de <strong>Gateway API</strong>, vus en partie 2.</p>
+
+  <h3>La découverte par DNS</h3>
+  <p>Le cluster embarque un DNS interne (<strong>CoreDNS</strong>). Chaque Service reçoit un nom de la forme :</p>
+<pre><code>&lt;service&gt;.&lt;namespace&gt;.svc.cluster.local
+
+<span class="cm"># Depuis le même namespace, le nom court suffit :</span>
+curl http://web
+<span class="cm"># Depuis un autre namespace :</span>
+curl http://web.boutique</code></pre>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Labels + sélecteurs relient les objets entre eux.</li>
+      <li>Service = IP et nom DNS stables devant des pods éphémères, avec répartition de charge.</li>
+      <li>ClusterIP (interne), NodePort, LoadBalancer (externe), ExternalName (alias).</li>
+      <li>DNS : <code>service.namespace.svc.cluster.local</code>.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 5 -->
+<section class="module" id="m5" data-title="Configuration & namespaces">
+  <div class="eyebrow">Module 5</div>
+  <h2 class="h">Configuration, secrets et namespaces</h2>
+  <p>Une bonne pratique (issue des <em>12-factor apps</em>) consiste à <strong>séparer la configuration du code</strong> : la même image est déployée partout, seule la configuration change selon l'environnement.</p>
+
+  <h3>ConfigMap</h3>
+  <p>Un <strong>ConfigMap</strong> stocke de la configuration non sensible : paires clé-valeur ou fichiers entiers.</p>
+<pre><code><span class="kw">apiVersion</span>: v1
+<span class="kw">kind</span>: ConfigMap
+<span class="kw">metadata</span>:
+  name: web-config
+<span class="kw">data</span>:
+  LOG_LEVEL: <span class="str">"info"</span>
+  app.properties: |
+    feature.newCheckout=true
+    cache.ttl=300</code></pre>
+  <p>On l'injecte dans un pod de deux façons :</p>
+  <ul>
+    <li>en <strong>variables d'environnement</strong> (<code>env</code> / <code>envFrom</code>) : lues au démarrage, un changement demande un redémarrage du pod ;</li>
+    <li>en <strong>fichiers</strong> via un volume : le contenu est mis à jour dans le pod après un court délai (l'application doit savoir le relire).</li>
+  </ul>
+
+  <h3>Secret</h3>
+  <p>Un <strong>Secret</strong> a la même structure, mais pour les données sensibles : mots de passe, jetons, certificats TLS, identifiants de registre.</p>
+  <div class="callout warn">
+    <strong>base64 n'est pas du chiffrement</strong>
+    Les valeurs d'un Secret sont simplement <strong>encodées en base64</strong>, ce qui se décode instantanément. Par défaut, elles sont aussi stockées <strong>en clair dans etcd</strong>. Pour protéger réellement les secrets :
+    <ul style="margin:6px 0 0;padding-left:20px">
+      <li>activer le <strong>chiffrement au repos</strong> d'etcd, idéalement avec un KMS ;</li>
+      <li>limiter l'accès aux Secrets par <strong>RBAC</strong> (partie 2) ;</li>
+      <li>ne jamais commiter de Secret en clair dans Git : utiliser un coffre-fort externe avec <strong>External Secrets Operator</strong> ou le <strong>Secrets Store CSI Driver</strong>, ou chiffrer avec <strong>Sealed Secrets</strong> ou <strong>SOPS</strong>.</li>
+    </ul>
+  </div>
+
+  <h3>Namespaces</h3>
+  <p>Un <strong>namespace</strong> est un espace de noms qui découpe un cluster en zones logiques : par équipe, par application ou par environnement.</p>
+  <ul>
+    <li>Les noms doivent être uniques <strong>dans</strong> un namespace, pas entre namespaces.</li>
+    <li>Ils servent de périmètre aux <strong>droits</strong> (RBAC), aux <strong>quotas</strong> de ressources et aux <strong>règles réseau</strong>.</li>
+    <li>Namespaces présents par défaut : <code>default</code>, <code>kube-system</code> (composants du cluster), <code>kube-public</code>, <code>kube-node-lease</code>.</li>
+    <li>Certains objets sont <strong>globaux</strong> au cluster et n'appartiennent à aucun namespace : Node, PersistentVolume, StorageClass, ClusterRole, Namespace lui-même.</li>
+  </ul>
+  <div class="callout">
+    <strong>Un namespace n'est pas une barrière de sécurité à lui seul</strong>
+    Par défaut, un pod peut joindre n'importe quel pod d'un autre namespace. L'isolation réelle demande des <strong>NetworkPolicies</strong>, du <strong>RBAC</strong> et des <strong>quotas</strong> (partie 2). Pour isoler des clients ou des environnements sensibles, on utilise souvent des <strong>clusters distincts</strong>.
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>ConfigMap pour la configuration, Secret pour le sensible ; injection par variables ou fichiers.</li>
+      <li>Les Secrets sont seulement encodés en base64 : chiffrement d'etcd, RBAC et coffre-fort externe nécessaires.</li>
+      <li>Namespace = découpage logique, périmètre des droits, quotas et règles réseau.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 6 -->
+<section class="module" id="m6" data-title="Manifestes & kubectl">
+  <div class="eyebrow">Module 6</div>
+  <h2 class="h">Manifestes YAML et kubectl</h2>
+
+  <h3>La structure d'un manifeste</h3>
+  <p>Tout objet Kubernetes se décrit avec les mêmes champs de premier niveau :</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Champ</th><th>Contenu</th></tr></thead>
+    <tbody>
+      <tr><td><code>apiVersion</code></td><td>Groupe et version de l'API : <code>v1</code>, <code>apps/v1</code>, <code>batch/v1</code>, <code>networking.k8s.io/v1</code>…</td></tr>
+      <tr><td><code>kind</code></td><td>Type d'objet : Pod, Deployment, Service…</td></tr>
+      <tr><td><code>metadata</code></td><td>Nom, namespace, labels, annotations</td></tr>
+      <tr><td><code>spec</code></td><td>L'<strong>état désiré</strong>, écrit par vous</td></tr>
+      <tr><td><code>status</code></td><td>L'<strong>état observé</strong>, écrit par Kubernetes (on ne le renseigne jamais)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Plusieurs objets peuvent être réunis dans un même fichier, séparés par <code>---</code>. <code>kubectl explain deployment.spec.strategy</code> documente n'importe quel champ.</p>
+
+  <h3>Impératif ou déclaratif</h3>
+  <ul>
+    <li><strong>Impératif</strong> : <code>kubectl create deployment web --image=…</code>, <code>kubectl scale</code>, <code>kubectl edit</code>. Pratique pour tester, mais rien n'est versionné.</li>
+    <li><strong>Déclaratif</strong> : <code>kubectl apply -f manifests/</code>. Les manifestes sont dans Git, relus en merge request, et <code>apply</code> peut être relancé autant de fois que nécessaire. <strong>C'est la pratique à suivre</strong>, et la base du GitOps (partie 2).</li>
+  </ul>
+  <p><code>kubectl diff -f manifests/</code> montre ce qu'un <code>apply</code> changerait, à la manière d'un <code>terraform plan</code>.</p>
+
+  <h3>Les commandes essentielles</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Commande</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><code>kubectl get pods -n boutique -o wide</code></td><td>Lister des objets (avec nœud et IP)</td></tr>
+      <tr><td><code>kubectl describe pod web-7d9f…</code></td><td>Détails d'un objet et <strong>événements</strong> récents : la première commande de dépannage</td></tr>
+      <tr><td><code>kubectl logs web-7d9f… [-c conteneur] [--previous]</code></td><td>Logs d'un conteneur ; <code>--previous</code> pour l'instance qui vient de planter</td></tr>
+      <tr><td><code>kubectl exec -it web-7d9f… -- sh</code></td><td>Ouvrir un shell dans un conteneur</td></tr>
+      <tr><td><code>kubectl port-forward svc/web 8080:80</code></td><td>Accéder en local à un service du cluster</td></tr>
+      <tr><td><code>kubectl get events --sort-by=.lastTimestamp</code></td><td>Événements récents du namespace</td></tr>
+      <tr><td><code>kubectl config get-contexts</code> / <code>use-context</code></td><td>Lister et changer de cluster (fichier <code>~/.kube/config</code>)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout warn">
+    <strong>Vérifiez toujours votre contexte</strong>
+    Le fichier kubeconfig peut contenir plusieurs clusters. Une commande lancée sur le mauvais contexte peut supprimer des ressources en production. Affichez le contexte courant dans votre invite de commande, et utilisez des outils comme <code>kubectx</code> / <code>kubens</code>.
+  </div>
+
+  <h3>Les statuts de pod à connaître</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Statut</th><th>Cause probable</th></tr></thead>
+    <tbody>
+      <tr><td><code>Pending</code></td><td>Aucun nœud ne peut accueillir le pod (ressources insuffisantes, contraintes de placement) ou volume non disponible</td></tr>
+      <tr><td><code>ImagePullBackOff</code> / <code>ErrImagePull</code></td><td>Image introuvable (nom ou tag erroné) ou registre privé sans identifiants</td></tr>
+      <tr><td><code>CrashLoopBackOff</code></td><td>Le conteneur démarre puis s'arrête en boucle : regardez <code>kubectl logs --previous</code></td></tr>
+      <tr><td><code>OOMKilled</code></td><td>Le conteneur a dépassé sa limite mémoire (code de sortie 137)</td></tr>
+      <tr><td><code>Running</code> mais pas <code>Ready</code></td><td>La sonde de disponibilité (<em>readiness</em>) échoue : le pod ne reçoit pas de trafic</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Manifeste = <code>apiVersion</code>, <code>kind</code>, <code>metadata</code>, <code>spec</code> ; <code>status</code> est rempli par Kubernetes.</li>
+      <li>Déclaratif avec <code>kubectl apply</code> et des manifestes dans Git.</li>
+      <li><code>describe</code> et <code>logs</code> sont les premiers réflexes de dépannage.</li>
+      <li>Vérifiez toujours le contexte kubectl avant d'agir.</li>
+    </ul>
+  </div>
+
+  <div class="callout ok">
+    <strong>Prêt pour le quiz ?</strong>
+    Le module suivant contient 15 questions sur cette première partie. Il faut 80 % de bonnes réponses pour la valider. Ensuite, direction la <a href="2-production.html">partie 2 : Kubernetes en production</a>.
+  </div>
+</section>
+
+<!-- ===================================================== QUIZ -->
+<section class="module" id="quiz" data-title="Quiz de validation">
+  <div class="eyebrow">Évaluation finale</div>
+  <h2 class="h">Quiz de validation des connaissances</h2>
+  <div id="quizRoot"></div>
+</section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Stockage local (tolérant aux erreurs) ---------------- */
+  var STORE_KEY = "self-training-k8s1-v1";
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save(s) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* ignoré */ }
+  }
+  var state = load();
+  state.done = state.done || {};
+
+  /* ---------------- Thème ---------------- */
+  var root = document.documentElement;
+  if (state.theme) root.setAttribute("data-theme", state.theme);
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme")
+      ? root.getAttribute("data-theme") === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    state.theme = dark ? "light" : "dark";
+    root.setAttribute("data-theme", state.theme);
+    save(state);
+  });
+
+  /* ---------------- Navigation ---------------- */
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section.module"));
+  var navList = document.getElementById("navList");
+  var learningIds = sections.filter(function (s) { return /^m[1-9]$/.test(s.id); }).map(function (s) { return s.id; });
+
+  sections.forEach(function (s, i) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#" + s.id;
+    a.dataset.id = s.id;
+    var label = s.id === "m0" ? "i" : (s.id === "quiz" ? "?" : s.id.slice(1));
+    a.innerHTML = '<span class="num">' + label + "</span><span></span>";
+    a.lastChild.textContent = s.dataset.title;
+    li.appendChild(a);
+    navList.appendChild(li);
+
+    // Pager
+    var pager = document.createElement("div");
+    pager.className = "pager";
+    var prev = sections[i - 1], next = sections[i + 1];
+    pager.innerHTML =
+      (prev ? '<a class="btn ghost" href="#' + prev.id + '">← ' + escapeHtml(prev.dataset.title) + "</a>" : "<span></span>") +
+      (next ? '<a class="btn" data-complete="' + s.id + '" href="#' + next.id + '">' + escapeHtml(next.dataset.title) + " →</a>" : "");
+    if (s.id !== "quiz") s.appendChild(pager);
+  });
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-complete]");
+    if (t) {
+      var id = t.getAttribute("data-complete");
+      if (learningIds.indexOf(id) !== -1) { state.done[id] = true; save(state); }
+    }
+  });
+
+  function show() {
+    var id = (location.hash || "#m0").slice(1);
+    if (!document.getElementById(id)) id = "m0";
+    sections.forEach(function (s) { s.classList.toggle("visible", s.id === id); });
+    navList.querySelectorAll("a").forEach(function (a) {
+      a.classList.toggle("active", a.dataset.id === id);
+      a.classList.toggle("done", !!state.done[a.dataset.id] || (a.dataset.id === "quiz" && state.passed));
+    });
+    updateProgress();
+    document.getElementById("sidebar").classList.remove("open");
+    window.scrollTo(0, 0);
+  }
+  function updateProgress() {
+    var n = learningIds.filter(function (id) { return state.done[id]; }).length;
+    document.getElementById("progressBar").style.width = (n / learningIds.length * 100) + "%";
+    document.getElementById("progressLabel").textContent = n + " / " + learningIds.length + " modules lus";
+  }
+  window.addEventListener("hashchange", show);
+  document.getElementById("menuBtn").addEventListener("click", function () {
+    document.getElementById("sidebar").classList.toggle("open");
+  });
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------------- Quiz ---------------- */
+  var PASS = 0.8;
+  var QUESTIONS = [
+    { t: "Concepts", q: "Quelle est la principale différence entre un conteneur et une machine virtuelle ?",
+      o: ["Un conteneur embarque son propre noyau", "Un conteneur partage le noyau du système hôte, ce qui le rend plus léger et plus rapide à démarrer", "Une machine virtuelle démarre plus vite qu'un conteneur", "Il n'y a aucune différence"],
+      a: 1, e: "Les conteneurs isolent des processus (namespaces et cgroups Linux) mais partagent le noyau de l'hôte, d'où leur légèreté." },
+    { t: "Concepts", q: "Que signifie le fait que Kubernetes soit déclaratif ?",
+      o: ["On lui donne la liste des commandes à exécuter", "On déclare l'état désiré, et des contrôleurs réconcilient en permanence l'état réel avec cet état", "Il faut déclarer chaque conteneur à la main sur chaque nœud", "Il ne fonctionne qu'avec Docker"],
+      a: 1, e: "La boucle de réconciliation compare état désiré et état réel, et agit pour réduire l'écart, par exemple en recréant un pod perdu." },
+    { t: "Architecture", q: "Quel composant contient l'ensemble de l'état du cluster ?",
+      o: ["kubelet", "kube-scheduler", "etcd", "kube-proxy"],
+      a: 2, e: "etcd est la base clé-valeur du plan de contrôle. Sur un cluster autogéré, sa sauvegarde est vitale." },
+    { t: "Architecture", q: "Quel composant choisit le nœud sur lequel un nouveau pod va s'exécuter ?",
+      o: ["kube-apiserver", "kube-scheduler", "kubelet", "CoreDNS"],
+      a: 1, e: "Le scheduler place les pods selon les ressources demandées et les contraintes. Le kubelet du nœud choisi démarre ensuite les conteneurs." },
+    { t: "Architecture", q: "Quel est le rôle du kubelet ?",
+      o: ["Stocker l'état du cluster", "Agent présent sur chaque nœud : il démarre les conteneurs des pods attribués au nœud et remonte leur statut", "Répartir la charge entre les Services", "Exposer l'API Kubernetes"],
+      a: 1, e: "Le kubelet dialogue avec le runtime de conteneurs (containerd, CRI-O) et rend compte à l'API server." },
+    { t: "Workloads", q: "Que partagent les conteneurs d'un même pod ?",
+      o: ["Rien, ils sont totalement isolés", "La même adresse IP, les mêmes volumes et le même cycle de vie", "Uniquement l'image", "Uniquement le namespace"],
+      a: 1, e: "Les conteneurs d'un pod communiquent via localhost, partagent des volumes et sont toujours placés sur le même nœud." },
+    { t: "Workloads", q: "Quel objet utiliser pour une base de données qui a besoin d'une identité stable et d'un volume persistant par instance ?",
+      o: ["Deployment", "DaemonSet", "StatefulSet", "CronJob"],
+      a: 2, e: "Le StatefulSet donne des noms stables (db-0, db-1), un ordre de démarrage et un volume persistant dédié à chaque pod." },
+    { t: "Workloads", q: "Vous devez déployer un agent de collecte de logs sur chaque nœud du cluster. Quel objet choisir ?",
+      o: ["Deployment avec 10 réplicas", "DaemonSet", "Job", "StatefulSet"],
+      a: 1, e: "Le DaemonSet garantit exactement un pod par nœud, y compris sur les nœuds ajoutés plus tard." },
+    { t: "Workloads", q: "Une nouvelle version déployée pose problème. Quelle commande permet de revenir rapidement à la version précédente ?",
+      o: ["kubectl delete deployment web", "kubectl rollout undo deployment/web", "kubectl scale deployment/web --replicas=0", "kubectl logs deployment/web"],
+      a: 1, e: "rollout undo réactive le ReplicaSet de la version précédente, avec une mise à jour progressive." },
+    { t: "Services", q: "Pourquoi utiliser un Service plutôt que l'adresse IP d'un pod ?",
+      o: ["Parce que les pods n'ont pas d'adresse IP", "Parce que les pods sont éphémères et changent d'IP : le Service offre une IP et un nom DNS stables, avec répartition de charge", "Parce qu'un Service est plus rapide", "Pour chiffrer le trafic"],
+      a: 1, e: "Le Service sélectionne les pods par label et répartit le trafic entre les pods prêts, quels que soient leurs changements d'IP." },
+    { t: "Services", q: "Quel type de Service n'est accessible que depuis l'intérieur du cluster ?",
+      o: ["LoadBalancer", "NodePort", "ClusterIP", "ExternalName"],
+      a: 2, e: "ClusterIP, le type par défaut, n'expose le service qu'à l'intérieur du cluster." },
+    { t: "Services", q: "Un pod du namespace « front » doit appeler le Service « api » du namespace « back ». Quel nom DNS utiliser ?",
+      o: ["api", "api.back", "back.api", "front.api.local"],
+      a: 1, e: "Le nom complet est api.back.svc.cluster.local ; api.back suffit. Le nom court « api » ne fonctionne que dans le même namespace." },
+    { t: "Configuration", q: "Quelle affirmation sur les Secrets Kubernetes est exacte ?",
+      o: ["Ils sont chiffrés en AES-256 par défaut", "Leurs valeurs sont seulement encodées en base64 et, par défaut, stockées en clair dans etcd", "Ils ne peuvent contenir que des mots de passe", "Ils sont automatiquement stockés dans un coffre-fort externe"],
+      a: 1, e: "base64 est un encodage, pas un chiffrement. Il faut activer le chiffrement d'etcd, restreindre l'accès par RBAC et éviter les Secrets en clair dans Git." },
+    { t: "Configuration", q: "Quel objet n'appartient à aucun namespace ?",
+      o: ["Deployment", "ConfigMap", "Node", "Service"],
+      a: 2, e: "Les nœuds, PersistentVolumes, StorageClasses et ClusterRoles sont globaux au cluster." },
+    { t: "kubectl", q: "Dans un manifeste, quel champ ne doit jamais être renseigné par l'utilisateur ?",
+      o: ["metadata", "spec", "status", "apiVersion"],
+      a: 2, e: "status est l'état observé, écrit par Kubernetes. On décrit l'état désiré dans spec." },
+    { t: "kubectl", q: "Un pod est en CrashLoopBackOff. Quelle commande donne le plus vite la cause du plantage ?",
+      o: ["kubectl get nodes", "kubectl logs <pod> --previous", "kubectl apply -f .", "kubectl config get-contexts"],
+      a: 1, e: "--previous affiche les logs de l'instance du conteneur qui vient de planter. kubectl describe pod complète avec les événements." },
+    { t: "kubectl", q: "Un pod reste en statut Pending. Quelle est la cause la plus probable ?",
+      o: ["L'application a une erreur de code", "Aucun nœud ne peut l'accueillir (ressources insuffisantes, contraintes de placement) ou son volume n'est pas disponible", "L'image est introuvable", "Le pod a dépassé sa limite mémoire"],
+      a: 1, e: "Pending signifie que le pod n'a pas encore pu être placé et démarré. kubectl describe pod affiche la raison dans les événements." },
+    { t: "kubectl", q: "Pourquoi préférer kubectl apply -f avec des manifestes dans Git plutôt que kubectl create / edit ?",
+      o: ["Parce que apply est plus rapide", "Parce que l'approche déclarative est versionnée, relue, rejouable, et sert de base au GitOps", "Parce que create est déprécié", "Parce que edit ne fonctionne pas en production"],
+      a: 1, e: "Les commandes impératives ne laissent pas de trace. Les manifestes versionnés rendent les changements traçables et reproductibles." },
+    { t: "Workloads", q: "Que fait la stratégie de déploiement Recreate ?",
+      o: ["Elle remplace les pods un par un sans interruption", "Elle arrête tous les anciens pods avant de démarrer les nouveaux, avec une interruption de service", "Elle recrée le cluster", "Elle double le nombre de pods pendant la mise à jour"],
+      a: 1, e: "Recreate provoque une coupure mais évite que deux versions tournent en même temps. RollingUpdate, par défaut, remplace progressivement." },
+    { t: "Workloads", q: "Pourquoi éviter le tag d'image latest en production ?",
+      o: ["Il est interdit par Kubernetes", "On ne sait pas quelle version tourne réellement et le retour arrière perd son sens", "Il ralentit le démarrage", "Il ne fonctionne qu'avec Docker Hub"],
+      a: 1, e: "Un tag précis (ou une empreinte sha256) garantit que chaque déploiement correspond à une version identifiée." }
+  ];
+  var QUIZ_SIZE = 15;
+
+  var quizRoot = document.getElementById("quizRoot");
+  var quiz = null;
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function renderIntro() {
+    var unread = learningIds.length - learningIds.filter(function (id) { return state.done[id]; }).length;
+    var best = state.best != null ? '<p>Votre meilleur score : <strong>' + state.best + ' %</strong>' + (state.passed ? ' ✅ quiz validé' : '') + '</p>' : '';
+    quizRoot.innerHTML =
+      '<div class="card qcard">' +
+        '<p class="lead" style="margin-top:0">' + QUIZ_SIZE + ' questions tirées au hasard parmi ' + QUESTIONS.length + ', ordre des réponses mélangé. Une explication s\'affiche après chaque réponse.</p>' +
+        '<ul><li>Seuil de réussite : <strong>' + Math.round(PASS * 100) + ' %</strong> (' + Math.ceil(PASS * QUIZ_SIZE) + ' bonnes réponses sur ' + QUIZ_SIZE + ')</li>' +
+        '<li>Vous pouvez recommencer autant de fois que vous le souhaitez.</li></ul>' +
+        (unread > 0 ? '<div class="callout warn"><strong>Conseil</strong>Il vous reste ' + unread + ' module(s) non lu(s). Vous pouvez quand même commencer le quiz.</div>' : '') +
+        best +
+        '<div class="quiz-actions"><button class="btn" id="startQuiz">Commencer le quiz</button></div>' +
+      '</div>';
+    document.getElementById("startQuiz").onclick = startQuiz;
+  }
+
+  function startQuiz() {
+    var picked = shuffle(QUESTIONS).slice(0, QUIZ_SIZE).map(function (q) {
+      var order = shuffle(q.o.map(function (_, i) { return i; }));
+      return { t: q.t, q: q.q, e: q.e, o: order.map(function (i) { return q.o[i]; }), a: order.indexOf(q.a) };
+    });
+    quiz = { items: picked, idx: 0, answers: [] };
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    var item = quiz.items[quiz.idx];
+    var letters = "ABCD";
+    var html =
+      '<div class="quiz-head"><span>Question ' + (quiz.idx + 1) + ' / ' + quiz.items.length + '</span><span class="tag">' + escapeHtml(item.t) + '</span></div>' +
+      '<div class="progress" style="max-width:none;margin-bottom:16px"><div style="width:' + (quiz.idx / quiz.items.length * 100) + '%"></div></div>' +
+      '<div class="card qcard"><h3>' + escapeHtml(item.q).replace(/\n/g, '<br><code>').replace(/(<code>.*)$/, '$1</code>') + '</h3>' +
+      '<div class="options">' +
+      item.o.map(function (opt, i) {
+        return '<button class="opt" data-i="' + i + '"><span class="letter">' + letters[i] + '</span><span>' + escapeHtml(opt) + '</span></button>';
+      }).join("") +
+      '</div><div class="feedback" id="fb"></div>' +
+      '<div class="quiz-actions"><button class="btn" id="validate" disabled>Valider</button></div></div>';
+    quizRoot.innerHTML = html;
+
+    var selected = null;
+    var opts = quizRoot.querySelectorAll(".opt");
+    var btn = document.getElementById("validate");
+    opts.forEach(function (b) {
+      b.onclick = function () {
+        opts.forEach(function (x) { x.classList.remove("selected"); });
+        b.classList.add("selected");
+        selected = +b.dataset.i;
+        btn.disabled = false;
+      };
+    });
+    btn.onclick = function () {
+      if (btn.dataset.next) { next(); return; }
+      var ok = selected === item.a;
+      quiz.answers.push(selected);
+      opts.forEach(function (x, i) {
+        x.disabled = true;
+        x.classList.remove("selected");
+        if (i === item.a) x.classList.add("correct");
+        else if (i === selected) x.classList.add("wrong");
+      });
+      var fb = document.getElementById("fb");
+      fb.className = "feedback show " + (ok ? "good" : "bad");
+      fb.innerHTML = "<strong>" + (ok ? "✅ Bonne réponse" : "❌ Mauvaise réponse") + "</strong><br>" + escapeHtml(item.e);
+      btn.textContent = quiz.idx + 1 < quiz.items.length ? "Question suivante →" : "Voir mes résultats";
+      btn.dataset.next = "1";
+      btn.focus();
+    };
+  }
+
+  function next() {
+    quiz.idx++;
+    if (quiz.idx < quiz.items.length) renderQuestion(); else renderResult();
+    window.scrollTo(0, 0);
+  }
+
+  function renderResult() {
+    var total = quiz.items.length;
+    var good = quiz.items.filter(function (it, i) { return quiz.answers[i] === it.a; }).length;
+    var pct = Math.round(good / total * 100);
+    var passed = good / total >= PASS;
+    state.best = Math.max(state.best || 0, pct);
+    if (passed) state.passed = true;
+    save(state);
+    show();
+
+    var themes = {};
+    quiz.items.forEach(function (it, i) {
+      themes[it.t] = themes[it.t] || { g: 0, n: 0 };
+      themes[it.t].n++;
+      if (quiz.answers[i] === it.a) themes[it.t].g++;
+    });
+
+    var r = 64, c = 2 * Math.PI * r;
+    var color = passed ? "var(--ok)" : "var(--ko)";
+    var html =
+      '<div class="card qcard result">' +
+      '<svg class="score-ring" viewBox="0 0 160 160"><circle cx="80" cy="80" r="' + r + '" fill="none" stroke="var(--surface-2)" stroke-width="14"/>' +
+      '<circle cx="80" cy="80" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + (c * pct / 100) + ' ' + c + '" transform="rotate(-90 80 80)"/>' +
+      '<text x="80" y="88" text-anchor="middle" font-size="30" font-weight="700" fill="var(--text)">' + pct + '%</text></svg>' +
+      '<div class="verdict" style="color:' + color + '">' + (passed ? "🎉 Formation validée !" : "Pas encore validée") + '</div>' +
+      '<p>' + good + ' bonnes réponses sur ' + total + '. ' +
+      (passed ? "Vous maîtrisez les fondamentaux de Kubernetes. Prochaine étape : la partie 2, Kubernetes en production."
+              : "Il faut au moins " + Math.round(PASS * 100) + " %. Revoyez les thèmes les plus faibles ci-dessous puis réessayez.") + '</p>' +
+      '<div class="themes"><h3>Résultats par thème</h3>' +
+      Object.keys(themes).map(function (k) {
+        var p = Math.round(themes[k].g / themes[k].n * 100);
+        var col = p >= 80 ? "var(--ok)" : p >= 50 ? "var(--warn)" : "var(--ko)";
+        return '<div class="theme-row"><span>' + escapeHtml(k) + '</span><div class="theme-bar"><div style="width:' + p + '%;background:' + col + '"></div></div><span>' + themes[k].g + '/' + themes[k].n + '</span></div>';
+      }).join("") + '</div>' +
+      '<div class="quiz-actions" style="justify-content:center;flex-wrap:wrap">' +
+      '<button class="btn ghost" id="toggleReview">Voir la correction détaillée</button>' +
+      '<button class="btn" id="retry">Recommencer le quiz</button></div>' +
+      '<div id="review" style="display:none;margin-top:20px"></div></div>';
+    quizRoot.innerHTML = html;
+
+    document.getElementById("retry").onclick = startQuiz;
+    document.getElementById("toggleReview").onclick = function () {
+      var rv = document.getElementById("review");
+      rv.style.display = rv.style.display === "none" ? "block" : "none";
+    };
+    document.getElementById("review").innerHTML = quiz.items.map(function (it, i) {
+      var ok = quiz.answers[i] === it.a;
+      return '<div class="review-item"><div><span class="' + (ok ? "badge-ok" : "badge-ko") + '">' + (ok ? "✓" : "✗") + '</span> <strong>' + (i + 1) + '. ' + escapeHtml(it.q) + '</strong></div>' +
+        (ok ? "" : '<div class="ans">Votre réponse : ' + escapeHtml(it.o[quiz.answers[i]]) + '</div>') +
+        '<div class="ans">Bonne réponse : <strong>' + escapeHtml(it.o[it.a]) + '</strong></div>' +
+        '<div class="ans">' + escapeHtml(it.e) + '</div></div>';
+    }).join("");
+  }
+
+  renderIntro();
+  window.addEventListener("hashchange", function () { if (location.hash === "#quiz" && !quiz) renderIntro(); });
+  show();
+})();
+</script>
+</body>
+</html>

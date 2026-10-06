@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kubernetes 3 : Amazon EKS</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface-2: #eef1f8;
+    --text: #1b1f2a;
+    --muted: #5a6275;
+    --border: #d9deea;
+    --accent: #b45309;
+    --accent-2: #7c2d12;
+    --accent-soft: #fdf0e1;
+    --ok: #1a8f4c;
+    --ok-soft: #e2f6ea;
+    --ko: #c62f3a;
+    --ko-soft: #fbe5e7;
+    --warn: #b56a00;
+    --warn-soft: #fff1d9;
+    --code-bg: #1e2230;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(20, 30, 60, .08), 0 6px 20px rgba(20, 30, 60, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141c;
+      --surface: #1a1e29;
+      --surface-2: #232838;
+      --text: #e7eaf2;
+      --muted: #9aa3b8;
+      --border: #2e3446;
+      --accent: #f5a524;
+      --accent-2: #fbbf6b;
+      --accent-soft: #3a2710;
+      --ok: #4cc583;
+      --ok-soft: #133524;
+      --ko: #ff6b76;
+      --ko-soft: #3d1a1e;
+      --warn: #f0b04c;
+      --warn-soft: #3a2c12;
+      --code-bg: #0b0d13;
+      --code-text: #e6e9f2;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141c;
+    --surface: #1a1e29;
+    --surface-2: #232838;
+    --text: #e7eaf2;
+    --muted: #9aa3b8;
+    --border: #2e3446;
+    --accent: #f5a524;
+    --accent-2: #fbbf6b;
+    --accent-soft: #3a2710;
+    --ok: #4cc583;
+    --ok-soft: #133524;
+    --ko: #ff6b76;
+    --ko-soft: #3d1a1e;
+    --warn: #f0b04c;
+    --warn-soft: #3a2c12;
+    --code-bg: #0b0d13;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+  code, pre { font-family: "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace; font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+  code { background: var(--surface-2); padding: .1em .35em; border-radius: 4px; font-size: .9em; }
+  pre {
+    background: var(--code-bg); color: var(--code-text);
+    padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: .88em; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  .kw { color: #ff9e64; } .fn { color: #7aa2f7; } .str { color: #9ece6a; } .cm { color: #7a8299; font-style: italic; }
+
+  /* ---------- Layout ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; color: #fff; font-size: .9rem;
+  }
+  .progress-wrap { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .progress { flex: 1; height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; max-width: 360px; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s; }
+  .progress-label { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+  .icon-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: .9rem;
+  }
+  .icon-btn:hover { background: var(--surface-2); }
+  #menuBtn { display: none; }
+
+  .layout { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100vh - 53px); }
+  nav.side {
+    border-right: 1px solid var(--border); background: var(--surface);
+    padding: 18px 12px; position: sticky; top: 53px; height: calc(100vh - 53px); overflow-y: auto;
+  }
+  .back-link { display: block; margin: 0 10px 14px; font-size: .88rem; color: var(--muted); text-decoration: none; }
+  .back-link:hover { color: var(--accent); }
+  nav.side h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 6px 10px 10px; }
+  nav.side ol { list-style: none; margin: 0; padding: 0; }
+  nav.side li a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px; text-decoration: none; color: var(--text); font-size: .93rem;
+  }
+  nav.side li a:hover { background: var(--surface-2); }
+  nav.side li a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .num {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center; font-size: .75rem; font-weight: 700;
+    background: var(--surface-2); color: var(--muted);
+  }
+  a.done .num { background: var(--ok); color: #fff; }
+  a.active .num { background: var(--accent); color: #fff; }
+
+  main { padding: 32px 40px 80px; max-width: 980px; width: 100%; }
+  section.module { display: none; animation: fade .25s ease; scroll-margin-top: 70px; }
+  section.module.visible { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .eyebrow { color: var(--accent); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 6px 0 12px; }
+  h2.h { font-size: 1.6rem; margin: 4px 0 16px; line-height: 1.25; }
+  h3 { font-size: 1.15rem; margin: 28px 0 10px; }
+  .lead { font-size: 1.1rem; color: var(--muted); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 16px 0; }
+  .grid .card h4 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+  .grid .card p { margin: 0; color: var(--muted); font-size: .93rem; }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap;
+    background: var(--accent-soft); color: var(--accent);
+  }
+
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .callout strong:first-child { display: block; margin-bottom: 2px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .93rem; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 600; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .table-wrap table { margin: 0; }
+
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 10px 0; }
+  details summary { cursor: pointer; font-weight: 600; }
+
+  .diagram { width: 100%; height: auto; margin: 10px 0; }
+  .diagram text { fill: var(--text); font-family: inherit; }
+  .diagram .muted { fill: var(--muted); }
+  .diagram .box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  .diagram .box-a { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .diagram .line { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .diagram .bar1 { fill: var(--accent); } .diagram .bar2 { fill: var(--accent-2); } .diagram .bar3 { fill: var(--ok); } .diagram .bar4 { fill: var(--warn); }
+
+  .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .btn {
+    border: 0; border-radius: 9px; padding: 10px 18px; font-weight: 600; cursor: pointer; font-size: .95rem;
+    background: var(--accent); color: #fff;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .keypoints { background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; padding: 14px 20px; margin-top: 26px; }
+  .keypoints h4 { margin: 0 0 6px; color: var(--accent); }
+  .keypoints ul { margin: 0; padding-left: 20px; }
+
+  /* ---------- Quiz ---------- */
+  .quiz-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; color: var(--muted); font-size: .9rem; }
+  .qcard { padding: 24px; }
+  .qcard h3 { margin-top: 0; font-size: 1.2rem; }
+  .options { display: grid; gap: 10px; margin: 16px 0; }
+  .opt {
+    display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%;
+    padding: 12px 14px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 10px; cursor: pointer; font-size: .97rem; font-family: inherit; line-height: 1.45;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt .letter {
+    flex: none; width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center;
+    background: var(--surface-2); font-weight: 700; font-size: .82rem;
+  }
+  .opt.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .opt.correct { border-color: var(--ok); background: var(--ok-soft); }
+  .opt.correct .letter { background: var(--ok); color: #fff; }
+  .opt.wrong { border-color: var(--ko); background: var(--ko-soft); }
+  .opt.wrong .letter { background: var(--ko); color: #fff; }
+  .opt:disabled { cursor: default; }
+  .feedback { display: none; padding: 12px 16px; border-radius: 10px; margin-top: 4px; }
+  .feedback.show { display: block; }
+  .feedback.good { background: var(--ok-soft); border-left: 4px solid var(--ok); }
+  .feedback.bad { background: var(--ko-soft); border-left: 4px solid var(--ko); }
+  .quiz-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+  .score-ring { width: 160px; height: 160px; margin: 0 auto 10px; display: block; }
+  .result { text-align: center; }
+  .result .verdict { font-size: 1.4rem; font-weight: 700; margin: 6px 0; }
+  .themes { text-align: left; margin-top: 24px; }
+  .theme-row { display: grid; grid-template-columns: minmax(140px, 1fr) 2fr 60px; gap: 12px; align-items: center; margin: 8px 0; font-size: .93rem; }
+  .theme-bar { height: 10px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .theme-bar > div { height: 100%; border-radius: 99px; }
+  .review-item { text-align: left; border-bottom: 1px solid var(--border); padding: 12px 0; }
+  .review-item:last-child { border: 0; }
+  .review-item .ans { font-size: .9rem; color: var(--muted); }
+  .badge-ok { color: var(--ok); font-weight: 700; } .badge-ko { color: var(--ko); font-weight: 700; }
+
+  @media (max-width: 860px) {
+    #menuBtn { display: inline-block; }
+    .layout { grid-template-columns: 1fr; }
+    nav.side {
+      position: fixed; top: 53px; left: 0; width: 290px; max-width: 85vw; z-index: 30;
+      transform: translateX(-100%); transition: transform .25s; box-shadow: var(--shadow);
+    }
+    nav.side.open { transform: none; }
+    main { padding: 22px 16px 60px; }
+    h1 { font-size: 1.6rem; }
+    .brand span.full { display: none; }
+    .progress-label { display: none; }
+    .theme-row { grid-template-columns: 1fr 1.4fr 48px; }
+  }
+  @media print {
+    header.top, nav.side, .pager, .quiz-actions { display: none !important; }
+    .layout { display: block; }
+    section.module { display: block !important; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="icon-btn" id="menuBtn" aria-label="Ouvrir le menu">☰</button>
+  <div class="brand"><div class="brand-mark">◆</div><span class="full">Kubernetes &amp; EKS · Partie 3 : Amazon EKS</span></div>
+  <div class="progress-wrap">
+    <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+    <span class="progress-label" id="progressLabel">0 / 9 modules</span>
+  </div>
+  <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Changer de thème">◐</button>
+</header>
+
+<div class="layout">
+  <nav class="side" id="sidebar" aria-label="Sommaire">
+    <a class="back-link" href="../index.html">← Toutes les self-trainings</a>
+    <h2>Parcours</h2>
+    <ol id="navList"></ol>
+  </nav>
+
+  <main id="main">
+
+<!-- ===================================================== MODULE 0 -->
+<section class="module" id="m0" data-title="Introduction">
+  <div class="eyebrow">Partie 3 sur 3 · Bienvenue</div>
+  <h1>Amazon EKS</h1>
+  <p class="lead">Cette dernière partie présente Amazon Elastic Kubernetes Service (EKS), le Kubernetes managé d'AWS : ce qu'AWS prend en charge, ce qui reste sous votre responsabilité, et les spécificités à maîtriser en matière de calcul, de réseau, d'identité, de stockage et d'exploitation. Elle se termine par un quiz de validation.</p>
+
+  <div class="grid">
+    <div class="card"><h4>⏱️ Durée</h4><p>Environ 1 h 15 de lecture, plus 15 minutes de quiz.</p></div>
+    <div class="card"><h4>🎯 Prérequis</h4><p>Parties <a href="1-fondamentaux.html">1</a> et <a href="2-production.html">2</a>, et des notions d'AWS (VPC, IAM, EC2).</p></div>
+    <div class="card"><h4>✅ Validation</h4><p>Un quiz de 15 questions. Seuil de réussite : <strong>80 %</strong>.</p></div>
+  </div>
+
+  <h3>Le parcours Kubernetes &amp; EKS</h3>
+  <div class="grid">
+    <div class="card"><h4><span class="tag">Partie 1</span> <a href="1-fondamentaux.html">Fondamentaux</a></h4><p>Architecture, pods, workloads, services, configuration, kubectl.</p></div>
+    <div class="card"><h4><span class="tag">Partie 2</span> <a href="2-production.html">En production</a></h4><p>Ressources, ordonnancement, réseau, stockage, sécurité, autoscaling, GitOps, dépannage.</p></div>
+    <div class="card"><h4><span class="tag">Partie 3</span> Amazon EKS</h4><p><strong>Vous êtes ici.</strong> Calcul, réseau VPC, IAM, stockage, mises à jour, coûts.</p></div>
+  </div>
+
+  <h3>Objectifs pédagogiques</h3>
+  <ul>
+    <li>expliquer le <strong>modèle de responsabilité partagée</strong> d'EKS et son cycle de versions ;</li>
+    <li>choisir une option de <strong>calcul</strong> : groupes de nœuds managés, Fargate, Karpenter, EKS Auto Mode ;</li>
+    <li>comprendre le <strong>VPC CNI</strong> et éviter l'épuisement des adresses IP ;</li>
+    <li>exposer des applications avec l'<strong>AWS Load Balancer Controller</strong> ;</li>
+    <li>gérer l'accès au cluster (<strong>access entries</strong>) et les droits AWS des pods (<strong>Pod Identity</strong>, IRSA) ;</li>
+    <li>utiliser <strong>EBS et EFS</strong>, gérer les <strong>add-ons</strong> et les <strong>mises à jour</strong> ;</li>
+    <li>appliquer les bonnes pratiques d'observabilité, de sécurité, de coûts et d'IaC.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Un domaine qui évolue vite</strong>
+    AWS fait évoluer EKS en continu. Les noms de fonctionnalités, versions et tarifs cités ici sont valables à la date de rédaction : vérifiez-les dans la documentation AWS avant une mise en œuvre.
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 1 -->
+<section class="module" id="m1" data-title="Présentation & architecture">
+  <div class="eyebrow">Module 1</div>
+  <h2 class="h">Présentation et architecture d'EKS</h2>
+
+  <p><strong>Amazon EKS</strong> fournit un plan de contrôle Kubernetes <strong>managé</strong>, conforme à la version open source (certifié CNCF) : les manifestes, Helm, kubectl et les outils de l'écosystème fonctionnent comme sur n'importe quel cluster.</p>
+
+  <svg class="diagram" viewBox="0 0 760 300" role="img" aria-label="Architecture EKS : plan de contrôle managé par AWS et nœuds dans le VPC client">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color:var(--muted)"/>
+      </marker>
+    </defs>
+    <rect class="box-a" x="10" y="20" width="250" height="260" rx="10"/>
+    <text x="26" y="44" font-size="13" font-weight="700">Compte AWS d'EKS (managé)</text>
+    <text class="muted" x="26" y="62" font-size="11">plan de contrôle sur plusieurs AZ</text>
+    <rect class="box" x="26" y="78" width="218" height="40" rx="6"/><text x="38" y="103" font-size="12">API servers (redondés)</text>
+    <rect class="box" x="26" y="126" width="218" height="40" rx="6"/><text x="38" y="151" font-size="12">etcd (sur 3 AZ)</text>
+    <rect class="box" x="26" y="174" width="218" height="40" rx="6"/><text x="38" y="199" font-size="12">scheduler, controllers</text>
+    <text class="muted" x="26" y="246" font-size="11">Opéré, mis à jour et sauvegardé</text>
+    <text class="muted" x="26" y="262" font-size="11">par AWS</text>
+
+    <rect class="box" x="320" y="20" width="430" height="260" rx="10"/>
+    <text x="336" y="44" font-size="13" font-weight="700">Votre compte AWS : VPC</text>
+    <rect class="box" x="336" y="60" width="128" height="200" rx="8"/>
+    <text x="348" y="80" font-size="11" font-weight="600">AZ a</text>
+    <rect class="box-a" x="346" y="92" width="108" height="70" rx="6"/><text x="356" y="114" font-size="11">Nœud EC2</text><text class="muted" x="356" y="132" font-size="10">pods (IP du VPC)</text>
+    <rect class="box" x="346" y="172" width="108" height="34" rx="6"/><text x="356" y="194" font-size="10">ENI plan de contrôle</text>
+    <rect class="box" x="478" y="60" width="128" height="200" rx="8"/>
+    <text x="490" y="80" font-size="11" font-weight="600">AZ b</text>
+    <rect class="box-a" x="488" y="92" width="108" height="70" rx="6"/><text x="498" y="114" font-size="11">Nœud EC2</text><text class="muted" x="498" y="132" font-size="10">pods (IP du VPC)</text>
+    <rect class="box" x="488" y="172" width="108" height="34" rx="6"/><text x="498" y="194" font-size="10">ENI plan de contrôle</text>
+    <rect class="box" x="620" y="60" width="118" height="200" rx="8"/>
+    <text x="632" y="80" font-size="11" font-weight="600">AZ c</text>
+    <rect class="box-a" x="630" y="92" width="98" height="70" rx="6"/><text x="640" y="114" font-size="11">Nœud EC2</text><text class="muted" x="640" y="132" font-size="10">ou Fargate</text>
+
+    <path class="line" d="M260 190 H334" marker-end="url(#arr)" marker-start="url(#arr)"/>
+    <text class="muted" x="268" y="180" font-size="10">ENI</text>
+  </svg>
+
+  <h3>La responsabilité partagée</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>AWS prend en charge</th><th>Vous restez responsable de</th></tr></thead>
+    <tbody>
+      <tr><td>Le plan de contrôle : API servers et etcd répartis sur plusieurs zones de disponibilité, haute disponibilité, sauvegarde, correctifs</td><td>Les <strong>nœuds</strong> (sauf avec Fargate ou Auto Mode) : choix, mises à jour, correctifs du système</td></tr>
+      <tr><td>La disponibilité de l'API Kubernetes (avec un engagement de niveau de service)</td><td>Les <strong>mises à jour de version</strong> du cluster : vous les déclenchez</td></tr>
+      <tr><td>L'intégration avec IAM, le VPC, les load balancers, CloudWatch</td><td>Les <strong>applications</strong>, leur configuration, le <strong>RBAC</strong>, les NetworkPolicies, les add-ons</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Le plan de contrôle tourne dans un compte AWS géré par EKS. Il communique avec vos nœuds via des <strong>interfaces réseau (ENI)</strong> qu'EKS crée dans les sous-réseaux de votre VPC. L'<strong>endpoint de l'API</strong> peut être <strong>public</strong> (restreignez alors les plages d'IP autorisées), <strong>privé</strong> (accessible seulement depuis le VPC), ou les deux.</p>
+
+  <h3>Versions et support</h3>
+  <ul>
+    <li>Kubernetes publie environ <strong>trois versions mineures par an</strong>.</li>
+    <li>Sur EKS, chaque version bénéficie de <strong>14 mois de support standard</strong>, puis de <strong>12 mois de support étendu</strong>, facturé plus cher.</li>
+    <li>À la fin du support étendu, AWS met automatiquement le cluster à jour.</li>
+  </ul>
+  <div class="callout warn">
+    <strong>Coût du support étendu</strong>
+    Le plan de contrôle coûte environ <strong>0,10 $ par heure</strong> en support standard, et environ <strong>0,60 $ par heure</strong> en support étendu. Une version non mise à jour multiplie donc le coût du plan de contrôle par six : planifiez les mises à jour (module 6).
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>EKS = plan de contrôle managé, multi-AZ, conforme à Kubernetes open source.</li>
+      <li>Vous restez responsable des nœuds (selon l'option), des mises à jour, des applications et des droits.</li>
+      <li>14 mois de support standard + 12 mois de support étendu, plus cher.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 2 -->
+<section class="module" id="m2" data-title="Options de calcul">
+  <div class="eyebrow">Module 2</div>
+  <h2 class="h">Les options de calcul (data plane)</h2>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Option</th><th>Principe</th><th>Points forts</th><th>Limites</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Groupes de nœuds managés</strong> (<em>managed node groups</em>)</td><td>EKS crée et gère des groupes Auto Scaling d'instances EC2 avec des AMI optimisées</td><td>Mises à jour des nœuds facilitées (remplacement progressif avec drain)</td><td>Un type d'instance par groupe (ou une liste restreinte) ; mise à l'échelle par groupe</td></tr>
+      <tr><td><strong>Nœuds autogérés</strong></td><td>Vous gérez vous-même vos groupes Auto Scaling et vos AMI</td><td>Contrôle total</td><td>Toute la charge d'exploitation est pour vous</td></tr>
+      <tr><td><strong>Fargate</strong></td><td>Chaque pod tourne dans sa propre micro-VM, sans nœud visible</td><td>Aucun serveur à gérer, isolation forte</td><td>Pas de DaemonSet, pas de pods privilégiés, pas de volumes EBS ; démarrage plus lent ; coût plus élevé à grande échelle</td></tr>
+      <tr><td><strong>Karpenter</strong></td><td>Autoscaler de nœuds open source qui crée directement les instances EC2 adaptées aux pods en attente</td><td>Choix de l'instance au plus juste, Spot, consolidation, rapidité</td><td>Composant à installer et à opérer (sauf avec Auto Mode)</td></tr>
+      <tr><td><strong>EKS Auto Mode</strong></td><td>AWS gère les nœuds (basés sur Karpenter) et les composants essentiels : réseau, load balancers, stockage bloc</td><td>Expérience proche du « serverless » avec la souplesse d'EC2</td><td>Surcoût par instance ; moins de personnalisation des nœuds</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Karpenter en pratique</h3>
+  <p>Karpenter ne raisonne pas en groupes de nœuds fixes. On décrit des <strong>contraintes</strong>, et il choisit l'instance la moins chère qui convient aux pods en attente :</p>
+<pre><code><span class="kw">apiVersion</span>: karpenter.sh/v1
+<span class="kw">kind</span>: NodePool
+<span class="kw">metadata</span>:
+  name: default
+<span class="kw">spec</span>:
+  template:
+    spec:
+      requirements:
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: [spot, on-demand]          <span class="cm"># Spot en priorité si disponible</span>
+        - key: kubernetes.io/arch
+          operator: In
+          values: [arm64, amd64]             <span class="cm"># Graviton autorisé</span>
+      nodeClassRef:                          <span class="cm"># EC2NodeClass : AMI, sous-réseaux, groupes de sécurité</span>
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: default
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized   <span class="cm"># regroupe les pods pour libérer des nœuds</span>
+  limits:
+    cpu: 1000</code></pre>
+
+  <h3>Réduire les coûts de calcul</h3>
+  <ul>
+    <li><strong>Instances Spot</strong> : jusqu'à environ 90 % moins chères, mais récupérables par AWS avec un préavis de 2 minutes. Elles conviennent aux charges sans état, tolérantes aux interruptions et réparties sur plusieurs réplicas.</li>
+    <li><strong>Graviton</strong> (processeurs ARM d'AWS) : meilleur rapport prix/performance, à condition de construire des images multi-architectures.</li>
+    <li><strong>Consolidation</strong> (Karpenter) et requests bien dimensionnées : moins de capacité réservée inutilement.</li>
+    <li><strong>Savings Plans</strong> pour la base de charge stable.</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Groupes de nœuds managés : simples et éprouvés. Fargate : pas de nœuds, mais des limites.</li>
+      <li>Karpenter : instances choisies au plus juste, Spot, consolidation.</li>
+      <li>EKS Auto Mode : AWS gère les nœuds et les composants essentiels.</li>
+      <li>Spot, Graviton et requests justes sont les principaux leviers de coût.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 3 -->
+<section class="module" id="m3" data-title="Réseau sur EKS">
+  <div class="eyebrow">Module 3</div>
+  <h2 class="h">Le réseau sur EKS</h2>
+
+  <h3>Le VPC CNI : des pods avec des IP du VPC</h3>
+  <p>Sur EKS, le plugin réseau par défaut est l'<strong>Amazon VPC CNI</strong>. Chaque pod reçoit une <strong>vraie adresse IP du VPC</strong>, prise sur les interfaces réseau (ENI) du nœud.</p>
+  <ul>
+    <li><strong>Avantage</strong> : pas de réseau superposé (<em>overlay</em>). Les pods sont directement joignables depuis le VPC, les load balancers peuvent cibler les pods, et les outils réseau AWS (VPC Flow Logs, groupes de sécurité) s'appliquent.</li>
+    <li><strong>Contrainte n° 1 : la consommation d'IP.</strong> Chaque pod consomme une IP du sous-réseau. Un cluster dense dans des sous-réseaux trop petits (/24 = 251 adresses utilisables) épuise vite les adresses : de nouveaux pods ne peuvent plus démarrer.</li>
+    <li><strong>Contrainte n° 2 : le nombre de pods par nœud</strong> dépend du type d'instance. Sans option particulière : <code>ENI × (IP par ENI − 1) + 2</code>. Par exemple, une <code>m5.large</code> (3 ENI × 10 IP) accepte 29 pods.</li>
+  </ul>
+
+  <h3>Les solutions à l'épuisement des IP</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Solution</th><th>Principe</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Prévoir large</strong></td><td>Des sous-réseaux dédiés aux pods, en /19 ou plus, dès la conception du VPC</td></tr>
+      <tr><td><strong>Prefix delegation</strong></td><td>Le CNI attribue des préfixes /28 (16 adresses) au lieu d'adresses individuelles : beaucoup plus de pods par nœud (instances Nitro)</td></tr>
+      <tr><td><strong>Custom networking</strong></td><td>Les pods prennent leurs IP dans un bloc CIDR secondaire, souvent dans la plage 100.64.0.0/10, distinct des sous-réseaux des nœuds</td></tr>
+      <tr><td><strong>IPv6</strong></td><td>Cluster en IPv6 : plus de problème de nombre d'adresses pour les pods</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Le VPC CNI permet aussi d'appliquer des <strong>groupes de sécurité aux pods</strong> (et pas seulement aux nœuds), par exemple pour n'autoriser l'accès à une base RDS qu'à certains pods. Il prend aussi en charge les <strong>NetworkPolicies</strong> Kubernetes, à activer explicitement.</p>
+
+  <h3>Exposer des applications : AWS Load Balancer Controller</h3>
+  <p>L'<strong>AWS Load Balancer Controller</strong> (inclus dans EKS Auto Mode, à installer sinon) crée les load balancers AWS à partir des objets Kubernetes :</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Objet Kubernetes</th><th>Load balancer créé</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Ingress</strong> (ou Gateway API)</td><td><strong>ALB</strong> (Application Load Balancer, couche 7)</td><td>HTTP/HTTPS : routage par hôte et chemin, certificats ACM, WAF</td></tr>
+      <tr><td><strong>Service type LoadBalancer</strong></td><td><strong>NLB</strong> (Network Load Balancer, couche 4)</td><td>TCP/UDP, hautes performances, IP fixes</td></tr>
+    </tbody>
+  </table>
+  </div>
+<pre><code><span class="kw">metadata</span>:
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip      <span class="cm"># le trafic va directement aux IP des pods</span>
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-3:123456789012:certificate/…
+<span class="kw">spec</span>:
+  ingressClassName: alb</code></pre>
+  <p>Le mode <code>target-type: ip</code> envoie le trafic directement aux pods, ce qui est possible grâce aux IP du VPC. Le mode <code>instance</code> passe par un NodePort sur les nœuds. Plusieurs Ingress peuvent partager un même ALB grâce à l'annotation <code>group.name</code>, ce qui réduit les coûts.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>VPC CNI : chaque pod a une IP du VPC ; attention à l'épuisement des adresses.</li>
+      <li>Remèdes : grands sous-réseaux, prefix delegation, custom networking, IPv6.</li>
+      <li>AWS Load Balancer Controller : Ingress → ALB, Service LoadBalancer → NLB.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 4 -->
+<section class="module" id="m4" data-title="Identité & accès">
+  <div class="eyebrow">Module 4</div>
+  <h2 class="h">Identité et accès : IAM et Kubernetes</h2>
+  <p>Sur EKS, deux questions d'identité distinctes se posent :</p>
+  <ol>
+    <li><strong>Qui peut accéder au cluster ?</strong> Des identités IAM (utilisateurs, rôles SSO, pipelines CI) qui doivent obtenir des droits Kubernetes.</li>
+    <li><strong>Que peuvent faire les pods dans AWS ?</strong> Des applications qui doivent lire un bucket S3, écrire dans DynamoDB, lire un secret…</li>
+  </ol>
+
+  <h3>1. Accès au cluster : access entries</h3>
+  <p>L'authentification se fait avec IAM : <code>aws eks update-kubeconfig</code> configure kubectl pour obtenir un jeton à partir de vos identifiants AWS. Il faut ensuite associer l'identité IAM à des droits Kubernetes :</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Méthode</th><th>Principe</th><th>Statut</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Access entries</strong></td><td>Associations gérées <strong>par l'API EKS</strong> (console, CLI, Terraform) entre un rôle IAM et des droits : <em>access policies</em> prédéfinies (par exemple <code>AmazonEKSClusterAdminPolicy</code>, <code>AmazonEKSViewPolicy</code>) ou groupes Kubernetes liés à votre RBAC</td><td><strong>Recommandée</strong></td></tr>
+      <tr><td><strong>ConfigMap <code>aws-auth</code></strong></td><td>Correspondances IAM → utilisateurs/groupes Kubernetes, stockées dans un ConfigMap du namespace <code>kube-system</code></td><td>Dépréciée : une erreur de syntaxe pouvait bloquer tout accès au cluster</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Le <strong>mode d'authentification</strong> du cluster (<code>API</code>, <code>API_AND_CONFIG_MAP</code> ou <code>CONFIG_MAP</code>) indique quelle méthode est active ; <code>API_AND_CONFIG_MAP</code> sert pendant la migration.</p>
+  <div class="callout">
+    <strong>Bonne pratique</strong>
+    Accordez les droits à des <strong>rôles IAM</strong> (rôles SSO par équipe, rôle de la CI), jamais à des utilisateurs IAM individuels. Limitez les administrateurs du cluster et préférez des droits limités à des namespaces.
+  </div>
+
+  <h3>2. Droits AWS des pods : Pod Identity et IRSA</h3>
+  <div class="callout warn">
+    <strong>À éviter : le rôle du nœud</strong>
+    Si l'on ajoute des permissions au rôle IAM des nœuds EC2, <strong>tous les pods</strong> du nœud en héritent. Chaque application doit avoir son propre rôle, avec le moindre privilège.
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>EKS Pod Identity</th><th>IRSA (IAM Roles for Service Accounts)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Principe</strong></td><td>Une <strong>association</strong> (cluster, namespace, ServiceAccount → rôle IAM) créée par l'API EKS ; un agent sur les nœuds fournit les identifiants</td><td>Le cluster expose un fournisseur <strong>OIDC</strong> déclaré dans IAM ; le ServiceAccount porte l'annotation <code>eks.amazonaws.com/role-arn</code></td></tr>
+      <tr><td><strong>Relation de confiance du rôle</strong></td><td>Générique (<code>pods.eks.amazonaws.com</code>), le même rôle sert sur plusieurs clusters</td><td>Propre à l'OIDC de chaque cluster : à modifier pour chaque nouveau cluster</td></tr>
+      <tr><td><strong>Prérequis</strong></td><td>Add-on <em>EKS Pod Identity Agent</em></td><td>Fournisseur OIDC IAM par cluster</td></tr>
+      <tr><td><strong>Recommandation</strong></td><td><strong>Choix par défaut pour les nouveaux usages</strong></td><td>Toujours valable, notamment là où Pod Identity n'est pas disponible</td></tr>
+    </tbody>
+  </table>
+  </div>
+<pre><code><span class="cm"># Pod Identity : associer le ServiceAccount "orders" au rôle IAM de l'application</span>
+aws eks create-pod-identity-association \
+  --cluster-name prod \
+  --namespace boutique \
+  --service-account orders \
+  --role-arn arn:aws:iam::123456789012:role/orders-app</code></pre>
+  <p>Dans les deux cas, les SDK AWS récupèrent automatiquement des <strong>identifiants temporaires</strong> : aucune clé d'accès dans le code ni dans les Secrets.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Accès au cluster : access entries (API EKS) plutôt que le ConfigMap <code>aws-auth</code>.</li>
+      <li>Droits AWS des pods : Pod Identity (recommandé) ou IRSA, jamais le rôle du nœud.</li>
+      <li>Identifiants temporaires, moindre privilège, un rôle par application.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 5 -->
+<section class="module" id="m5" data-title="Stockage & add-ons">
+  <div class="eyebrow">Module 5</div>
+  <h2 class="h">Stockage et add-ons</h2>
+
+  <h3>Les options de stockage</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Service</th><th>Driver CSI</th><th>Mode d'accès</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Amazon EBS</strong></td><td>EBS CSI driver</td><td>ReadWriteOnce</td><td>Disque d'une base de données, d'un StatefulSet</td></tr>
+      <tr><td><strong>Amazon EFS</strong></td><td>EFS CSI driver</td><td>ReadWriteMany</td><td>Fichiers partagés entre pods sur plusieurs nœuds et zones ; compatible Fargate</td></tr>
+      <tr><td><strong>Amazon FSx</strong></td><td>Drivers FSx (Lustre, NetApp ONTAP, OpenZFS)</td><td>Selon le produit</td><td>Calcul haute performance, besoins NAS spécifiques</td></tr>
+      <tr><td><strong>Amazon S3</strong></td><td>Mountpoint for Amazon S3 CSI driver</td><td>Accès fichier à des objets</td><td>Lecture de gros jeux de données (IA, analytique)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout warn">
+    <strong>Un volume EBS est lié à une zone de disponibilité</strong>
+    Un disque EBS créé en zone <em>a</em> ne peut être monté que par un nœud de la zone <em>a</em>. Si le pod est replanifié dans une autre zone, il reste <strong>Pending</strong>. Utilisez <code>volumeBindingMode: WaitForFirstConsumer</code> dans la StorageClass, et assurez-vous qu'il y a toujours de la capacité de nœuds dans chaque zone utilisée.
+  </div>
+<pre><code><span class="kw">apiVersion</span>: storage.k8s.io/v1
+<span class="kw">kind</span>: StorageClass
+<span class="kw">metadata</span>:
+  name: gp3
+<span class="kw">provisioner</span>: ebs.csi.aws.com
+<span class="kw">parameters</span>:
+  type: gp3
+  encrypted: <span class="str">"true"</span>
+<span class="kw">volumeBindingMode</span>: WaitForFirstConsumer
+<span class="kw">reclaimPolicy</span>: Retain
+<span class="kw">allowVolumeExpansion</span>: true</code></pre>
+
+  <h3>Les add-ons EKS</h3>
+  <p>Un cluster a besoin de composants pour fonctionner : réseau, DNS, kube-proxy, drivers de stockage… EKS les propose sous forme d'<strong>add-ons managés</strong>, installés et mis à jour via l'API EKS, avec des versions validées pour chaque version de Kubernetes :</p>
+  <ul>
+    <li><strong>Amazon VPC CNI</strong>, <strong>CoreDNS</strong>, <strong>kube-proxy</strong> : le socle ;</li>
+    <li><strong>Amazon EBS CSI Driver</strong>, <strong>Amazon EFS CSI Driver</strong> ;</li>
+    <li><strong>EKS Pod Identity Agent</strong> ;</li>
+    <li>d'autres add-ons AWS ou de partenaires, comme l'agent CloudWatch, l'ADOT (distribution AWS d'OpenTelemetry) ou GuardDuty.</li>
+  </ul>
+  <div class="callout">
+    <strong>Add-on managé ou installation Helm ?</strong>
+    L'add-on managé simplifie les mises à jour et garantit la compatibilité de version. Certains composants importants ne sont <strong>pas</strong> des add-ons EKS et s'installent généralement avec Helm, par exemple l'AWS Load Balancer Controller ou Karpenter (sauf avec Auto Mode, qui les intègre). Dans tous les cas, gérez-les par le code (Terraform, GitOps).
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>EBS = RWO et lié à une AZ ; EFS = RWX multi-AZ.</li>
+      <li>StorageClass avec <code>WaitForFirstConsumer</code>, chiffrement et <code>Retain</code> pour les données critiques.</li>
+      <li>Add-ons managés pour le socle (CNI, CoreDNS, kube-proxy, CSI, Pod Identity Agent).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 6 -->
+<section class="module" id="m6" data-title="Mises à jour, observabilité & sécurité">
+  <div class="eyebrow">Module 6</div>
+  <h2 class="h">Exploitation : mises à jour, observabilité et sécurité</h2>
+
+  <h3>Mettre à jour un cluster</h3>
+  <ol>
+    <li><strong>Préparer</strong> : lire les notes de version ; vérifier les <strong>API dépréciées</strong> encore utilisées par vos manifestes et charts avec les <strong>EKS upgrade insights</strong> (ou des outils comme <code>pluto</code> et <code>kubent</code>) ; vérifier la compatibilité des add-ons et des outils (contrôleurs, opérateurs).</li>
+    <li><strong>Plan de contrôle</strong> : mise à jour <strong>d'une seule version mineure à la fois</strong> (1.32 → 1.33, pas 1.32 → 1.34). Une fois mis à jour, il ne peut pas revenir en arrière.</li>
+    <li><strong>Add-ons</strong> : passer aux versions compatibles.</li>
+    <li><strong>Nœuds</strong> : remplacer les nœuds par des nœuds à jour (groupes managés, Karpenter avec la dérive des AMI, ou automatiquement avec Auto Mode). Les PDB encadrent l'opération.</li>
+  </ol>
+  <div class="callout">
+    <strong>Décalage de versions autorisé</strong>
+    Les kubelets des nœuds peuvent avoir jusqu'à trois versions mineures de retard sur le plan de contrôle, mais jamais d'avance. Ne laissez cependant pas l'écart grandir : il rend chaque mise à jour plus risquée.
+  </div>
+  <p>Bonne pratique : tester d'abord la mise à jour sur un cluster de recette, et automatiser l'ensemble par le code. Certaines équipes préfèrent même créer un nouveau cluster et y basculer le trafic (<em>blue/green</em> de clusters).</p>
+
+  <h3>Observabilité</h3>
+  <ul>
+    <li><strong>Journaux du plan de contrôle</strong> (API, audit, authentificateur, controller manager, scheduler) : <strong>désactivés par défaut</strong>. Activez au moins <code>audit</code> et <code>authenticator</code>, envoyés vers CloudWatch Logs.</li>
+    <li><strong>CloudWatch Container Insights</strong> : métriques et logs des conteneurs, nœuds et pods.</li>
+    <li><strong>Amazon Managed Service for Prometheus</strong> et <strong>Amazon Managed Grafana</strong> pour un écosystème Prometheus sans serveur à gérer.</li>
+    <li>Les plateformes tierces s'intègrent via un opérateur : par exemple le <strong>Dynatrace Operator</strong>, qui déploie OneAgent et ActiveGate sur le cluster (voir la <a href="../dynatrace/1-fondamentaux.html">formation Observabilité &amp; Dynatrace</a>).</li>
+  </ul>
+
+  <h3>Sécurité</h3>
+  <ul>
+    <li><strong>Endpoint de l'API</strong> privé, ou public restreint à des plages d'IP connues.</li>
+    <li><strong>Chiffrement des Secrets</strong> avec AWS KMS (chiffrement d'enveloppe des données de l'API Kubernetes), avec une clé gérée par vous si votre politique l'impose.</li>
+    <li><strong>Nœuds</strong> : AMI optimisées EKS récentes (Amazon Linux 2023, Bottlerocket), pas d'accès SSH ouvert (préférez SSM Session Manager), IMDSv2 obligatoire avec une limite de saut à 1 pour que les pods ne puissent pas récupérer le rôle du nœud.</li>
+    <li><strong>Images</strong> : Amazon ECR avec analyse de vulnérabilités.</li>
+    <li><strong>Détection des menaces</strong> : <strong>Amazon GuardDuty</strong> (analyse des journaux d'audit EKS et surveillance à l'exécution).</li>
+    <li><strong>Tout le module 5 de la partie 2</strong> s'applique : RBAC, Pod Security Standards, NetworkPolicies.</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Mise à jour : préparer (API dépréciées), plan de contrôle une version à la fois, add-ons, puis nœuds.</li>
+      <li>Activer les journaux d'audit du plan de contrôle ; Container Insights ou Prometheus managé.</li>
+      <li>Endpoint restreint, KMS, IMDSv2, AMI à jour, GuardDuty.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 7 -->
+<section class="module" id="m7" data-title="IaC & bonnes pratiques">
+  <div class="eyebrow">Module 7</div>
+  <h2 class="h">Infrastructure as Code et bonnes pratiques</h2>
+
+  <h3>Créer et gérer un cluster par le code</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Outil</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><strong>eksctl</strong></td><td>CLI officielle, très rapide pour créer un cluster de test ; configuration YAML possible</td></tr>
+      <tr><td><strong>Terraform / OpenTofu</strong></td><td>Le plus répandu en entreprise, avec le module communautaire <code>terraform-aws-modules/eks/aws</code> ; s'intègre au reste de l'infrastructure (VPC, IAM, RDS…)</td></tr>
+      <tr><td><strong>AWS CDK</strong> / <strong>CloudFormation</strong></td><td>Pour les équipes déjà outillées sur ces technologies</td></tr>
+      <tr><td><strong>GitOps</strong> (Argo CD, Flux)</td><td>Tout ce qui tourne <em>dans</em> le cluster : add-ons non managés, outils, applications</td></tr>
+    </tbody>
+  </table>
+  </div>
+<pre><code><span class="kw">module</span> <span class="str">"eks"</span> {
+  source  = <span class="str">"terraform-aws-modules/eks/aws"</span>
+  version = <span class="str">"~&gt; 21.0"</span>
+
+  name               = <span class="str">"prod"</span>
+  kubernetes_version = <span class="str">"1.33"</span>
+  vpc_id             = module.vpc.vpc_id
+  subnet_ids         = module.vpc.private_subnets
+
+  endpoint_public_access = false
+  enable_cluster_creator_admin_permissions = true
+
+  eks_managed_node_groups = {
+    system = {
+      instance_types = [<span class="str">"m7g.large"</span>]
+      min_size       = 2
+      max_size       = 4
+      desired_size   = 2
+    }
+  }
+}</code></pre>
+  <p><em>Les noms des paramètres changent d'une version majeure du module à l'autre : référez-vous à la documentation de la version utilisée.</em></p>
+  <p>Une répartition fréquente : <strong>Terraform</strong> crée le VPC, le cluster, les groupes de nœuds système, les rôles IAM et les associations Pod Identity, puis installe <strong>Argo CD</strong>, qui déploie tout le reste depuis Git.</p>
+
+  <h3>Check-list d'un cluster EKS de production</h3>
+  <div class="grid">
+    <div class="card"><h4>🌐 Réseau</h4><p>VPC sur 3 AZ, sous-réseaux privés larges pour les pods, prefix delegation si besoin, endpoint API restreint, AWS Load Balancer Controller.</p></div>
+    <div class="card"><h4>🖥️ Calcul</h4><p>Petit groupe de nœuds managés pour les composants système, Karpenter (ou Auto Mode) pour les applications, Spot et Graviton où c'est possible.</p></div>
+    <div class="card"><h4>🔐 Identité</h4><p>Access entries avec des rôles SSO, Pod Identity par application, aucun droit applicatif sur le rôle des nœuds.</p></div>
+    <div class="card"><h4>🛡️ Sécurité</h4><p>Secrets chiffrés par KMS, Pod Security Standards, NetworkPolicies, IMDSv2, GuardDuty, images scannées.</p></div>
+    <div class="card"><h4>📈 Exploitation</h4><p>Journaux d'audit activés, supervision et alertes, PDB, mises à jour planifiées au rythme des versions.</p></div>
+    <div class="card"><h4>💰 Coûts</h4><p>Requests mesurées, consolidation, étiquettes de coût, suivi par namespace (Kubecost, AWS Split Cost Allocation Data).</p></div>
+  </div>
+
+  <div class="callout warn">
+    <strong>Pièges courants sur EKS</strong>
+    <ul style="margin:6px 0 0;padding-left:20px">
+      <li>Sous-réseaux trop petits : épuisement des IP et pods bloqués.</li>
+      <li>Permissions AWS ajoutées au rôle des nœuds au lieu de Pod Identity ou IRSA.</li>
+      <li>Versions jamais mises à jour : passage coûteux en support étendu, puis mise à jour forcée.</li>
+      <li>Volumes EBS dans une zone sans capacité de nœuds : pods Pending.</li>
+      <li>Un load balancer par service, au lieu de mutualiser les ALB.</li>
+      <li>Un cluster créé à la main dans la console, impossible à reproduire.</li>
+    </ul>
+  </div>
+
+  <div class="callout ok">
+    <strong>Prêt pour le quiz final ?</strong>
+    Le module suivant contient 15 questions sur Amazon EKS. Il faut 80 % de bonnes réponses pour le valider et terminer le parcours Kubernetes &amp; EKS. Bonne chance !
+  </div>
+</section>
+
+<!-- ===================================================== QUIZ -->
+<section class="module" id="quiz" data-title="Quiz de validation">
+  <div class="eyebrow">Évaluation finale</div>
+  <h2 class="h">Quiz de validation des connaissances</h2>
+  <div id="quizRoot"></div>
+</section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Stockage local (tolérant aux erreurs) ---------------- */
+  var STORE_KEY = "self-training-k8s3-v1";
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save(s) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* ignoré */ }
+  }
+  var state = load();
+  state.done = state.done || {};
+
+  /* ---------------- Thème ---------------- */
+  var root = document.documentElement;
+  if (state.theme) root.setAttribute("data-theme", state.theme);
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme")
+      ? root.getAttribute("data-theme") === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    state.theme = dark ? "light" : "dark";
+    root.setAttribute("data-theme", state.theme);
+    save(state);
+  });
+
+  /* ---------------- Navigation ---------------- */
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section.module"));
+  var navList = document.getElementById("navList");
+  var learningIds = sections.filter(function (s) { return /^m[1-9]$/.test(s.id); }).map(function (s) { return s.id; });
+
+  sections.forEach(function (s, i) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#" + s.id;
+    a.dataset.id = s.id;
+    var label = s.id === "m0" ? "i" : (s.id === "quiz" ? "?" : s.id.slice(1));
+    a.innerHTML = '<span class="num">' + label + "</span><span></span>";
+    a.lastChild.textContent = s.dataset.title;
+    li.appendChild(a);
+    navList.appendChild(li);
+
+    // Pager
+    var pager = document.createElement("div");
+    pager.className = "pager";
+    var prev = sections[i - 1], next = sections[i + 1];
+    pager.innerHTML =
+      (prev ? '<a class="btn ghost" href="#' + prev.id + '">← ' + escapeHtml(prev.dataset.title) + "</a>" : "<span></span>") +
+      (next ? '<a class="btn" data-complete="' + s.id + '" href="#' + next.id + '">' + escapeHtml(next.dataset.title) + " →</a>" : "");
+    if (s.id !== "quiz") s.appendChild(pager);
+  });
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-complete]");
+    if (t) {
+      var id = t.getAttribute("data-complete");
+      if (learningIds.indexOf(id) !== -1) { state.done[id] = true; save(state); }
+    }
+  });
+
+  function show() {
+    var id = (location.hash || "#m0").slice(1);
+    if (!document.getElementById(id)) id = "m0";
+    sections.forEach(function (s) { s.classList.toggle("visible", s.id === id); });
+    navList.querySelectorAll("a").forEach(function (a) {
+      a.classList.toggle("active", a.dataset.id === id);
+      a.classList.toggle("done", !!state.done[a.dataset.id] || (a.dataset.id === "quiz" && state.passed));
+    });
+    updateProgress();
+    document.getElementById("sidebar").classList.remove("open");
+    window.scrollTo(0, 0);
+  }
+  function updateProgress() {
+    var n = learningIds.filter(function (id) { return state.done[id]; }).length;
+    document.getElementById("progressBar").style.width = (n / learningIds.length * 100) + "%";
+    document.getElementById("progressLabel").textContent = n + " / " + learningIds.length + " modules lus";
+  }
+  window.addEventListener("hashchange", show);
+  document.getElementById("menuBtn").addEventListener("click", function () {
+    document.getElementById("sidebar").classList.toggle("open");
+  });
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------------- Quiz ---------------- */
+  var PASS = 0.8;
+  var QUESTIONS = [
+    { t: "Architecture", q: "Avec Amazon EKS, quelle partie du cluster est opérée par AWS ?",
+      o: ["Les applications et leurs manifestes", "Le plan de contrôle (API servers, etcd), réparti sur plusieurs zones de disponibilité", "Le RBAC du cluster", "Les mises à jour de version, déclenchées automatiquement dès leur sortie"],
+      a: 1, e: "AWS opère le plan de contrôle. Vous déclenchez les mises à jour et restez responsable des applications, des droits et, selon l'option, des nœuds." },
+    { t: "Architecture", q: "Que se passe-t-il quand une version de Kubernetes sur EKS sort du support standard (14 mois) ?",
+      o: ["Le cluster s'arrête", "Elle passe en support étendu pendant 12 mois, avec un coût du plan de contrôle nettement plus élevé", "Rien, le support est illimité", "Les nœuds sont supprimés"],
+      a: 1, e: "Le support étendu coûte environ six fois plus cher que le standard. À sa fin, AWS met automatiquement le cluster à jour." },
+    { t: "Architecture", q: "Lors d'une mise à jour, de combien de versions mineures peut-on faire avancer le plan de contrôle d'un coup ?",
+      o: ["Une seule", "Deux", "Autant que nécessaire", "Aucune, il faut recréer le cluster"],
+      a: 0, e: "Le plan de contrôle se met à jour une version mineure à la fois, et sans retour arrière possible. Les nœuds suivent ensuite." },
+    { t: "Calcul", q: "Quelle limite s'applique aux pods exécutés sur AWS Fargate ?",
+      o: ["Ils ne peuvent pas avoir de variables d'environnement", "Pas de DaemonSet, pas de pods privilégiés, pas de volumes EBS", "Ils ne peuvent pas être exposés par un Service", "Ils ne peuvent pas utiliser d'images privées"],
+      a: 1, e: "Chaque pod Fargate tourne dans sa propre micro-VM, sans nœud visible : les DaemonSets n'ont donc pas de sens, et certains types de volumes ne sont pas pris en charge." },
+    { t: "Calcul", q: "Qu'apporte Karpenter par rapport aux groupes de nœuds classiques ?",
+      o: ["Il remplace le plan de contrôle", "Il crée directement l'instance EC2 la plus adaptée aux pods en attente, gère le Spot et consolide les nœuds sous-utilisés", "Il chiffre les volumes", "Il remplace le VPC CNI"],
+      a: 1, e: "Karpenter raisonne sur les besoins des pods plutôt que sur des groupes figés, ce qui améliore la rapidité et les coûts." },
+    { t: "Calcul", q: "Qu'est-ce qu'EKS Auto Mode ?",
+      o: ["Un mode de mise à jour automatique des applications", "Un mode où AWS gère aussi les nœuds (basés sur Karpenter) et des composants essentiels comme le réseau, les load balancers et le stockage bloc", "Un autre nom de Fargate", "Un outil de sauvegarde"],
+      a: 1, e: "Auto Mode étend la gestion d'AWS au data plane et aux composants essentiels, moyennant un surcoût par instance." },
+    { t: "Calcul", q: "Pour quel type de charge les instances Spot conviennent-elles ?",
+      o: ["Une base de données à instance unique", "Des charges sans état, tolérantes aux interruptions et réparties sur plusieurs réplicas", "Le plan de contrôle", "Toutes les charges sans exception"],
+      a: 1, e: "AWS peut récupérer une instance Spot avec un préavis de 2 minutes ; il faut donc des applications capables de le supporter." },
+    { t: "Réseau", q: "Avec le VPC CNI, quelle est la particularité des adresses IP des pods ?",
+      o: ["Les pods n'ont pas d'IP", "Chaque pod reçoit une vraie adresse IP du VPC, ce qui peut épuiser les adresses des sous-réseaux", "Les pods partagent l'IP du nœud", "Les IP sont attribuées par CoreDNS"],
+      a: 1, e: "Les pods sont directement joignables dans le VPC, mais chacun consomme une IP : il faut dimensionner les sous-réseaux en conséquence." },
+    { t: "Réseau", q: "Des pods ne démarrent plus car les sous-réseaux n'ont plus d'adresses IP libres. Quelle solution est adaptée ?",
+      o: ["Augmenter les limits mémoire", "Activer la prefix delegation ou le custom networking avec un CIDR secondaire (ou passer en IPv6)", "Supprimer CoreDNS", "Passer tous les Services en NodePort"],
+      a: 1, e: "Ces options augmentent le nombre d'adresses disponibles pour les pods. Le mieux reste de prévoir de grands sous-réseaux dès la conception." },
+    { t: "Réseau", q: "Avec l'AWS Load Balancer Controller, quel load balancer est créé pour un objet Ingress ?",
+      o: ["Un NLB", "Un ALB (Application Load Balancer)", "Un Classic Load Balancer", "Aucun"],
+      a: 1, e: "Ingress → ALB (couche 7, HTTP/HTTPS) ; Service de type LoadBalancer → NLB (couche 4)." },
+    { t: "Identité", q: "Quelle est aujourd'hui la méthode recommandée pour donner à un rôle IAM des droits sur un cluster EKS ?",
+      o: ["Modifier le ConfigMap aws-auth", "Créer une access entry via l'API EKS, avec une access policy ou des groupes Kubernetes", "Partager le kubeconfig de l'administrateur", "Créer un utilisateur IAM par personne"],
+      a: 1, e: "Les access entries sont gérées par l'API EKS (console, CLI, Terraform). Le ConfigMap aws-auth est déprécié." },
+    { t: "Identité", q: "Une application doit lire un bucket S3. Quelle approche est recommandée ?",
+      o: ["Ajouter la permission S3 au rôle IAM des nœuds", "Mettre une clé d'accès AWS dans un Secret", "Associer son ServiceAccount à un rôle IAM dédié avec EKS Pod Identity (ou IRSA)", "Rendre le bucket public"],
+      a: 2, e: "Pod Identity ou IRSA fournissent des identifiants temporaires propres à l'application. Le rôle du nœud donnerait le droit à tous les pods du nœud." },
+    { t: "Identité", q: "Quel avantage EKS Pod Identity a-t-il par rapport à IRSA ?",
+      o: ["Il ne nécessite aucun rôle IAM", "La relation de confiance du rôle est générique : le même rôle peut servir sur plusieurs clusters sans fournisseur OIDC par cluster", "Il fonctionne sans ServiceAccount", "Il donne automatiquement tous les droits"],
+      a: 1, e: "Avec IRSA, la relation de confiance dépend de l'OIDC de chaque cluster. Pod Identity utilise le principal pods.eks.amazonaws.com et des associations gérées par l'API EKS." },
+    { t: "Stockage", q: "Un pod utilisant un volume EBS reste Pending après avoir été replanifié. Quelle est la cause probable ?",
+      o: ["Le volume EBS est lié à une zone de disponibilité et aucun nœud de cette zone n'est disponible", "EBS ne fonctionne qu'avec Fargate", "Le volume est en lecture seule", "CoreDNS est arrêté"],
+      a: 0, e: "Un volume EBS ne peut être monté que dans sa zone. Utilisez WaitForFirstConsumer et gardez de la capacité de nœuds dans chaque zone." },
+    { t: "Stockage", q: "Plusieurs pods répartis sur plusieurs zones doivent écrire dans les mêmes fichiers. Quel stockage choisir ?",
+      o: ["Amazon EBS", "Amazon EFS", "Le disque racine du nœud", "Un emptyDir"],
+      a: 1, e: "EFS est un système de fichiers partagé multi-AZ qui prend en charge le mode ReadWriteMany." },
+    { t: "Exploitation", q: "Quel est l'intérêt des add-ons managés EKS (VPC CNI, CoreDNS, kube-proxy…) ?",
+      o: ["Ils sont gratuits alors que Helm est payant", "Ils sont installés et mis à jour via l'API EKS, avec des versions validées pour chaque version de Kubernetes", "Ils remplacent le plan de contrôle", "Ils ne nécessitent jamais de mise à jour"],
+      a: 1, e: "Les add-ons managés simplifient les mises à jour et garantissent la compatibilité. D'autres composants, comme Karpenter ou l'AWS Load Balancer Controller, s'installent souvent avec Helm." },
+    { t: "Exploitation", q: "Quelle affirmation sur les journaux du plan de contrôle EKS est exacte ?",
+      o: ["Ils sont toujours activés", "Ils sont désactivés par défaut et doivent être activés (au moins audit et authenticator) vers CloudWatch Logs", "Ils n'existent pas sur EKS", "Ils sont stockés sur les nœuds"],
+      a: 1, e: "Les journaux d'audit sont essentiels pour la sécurité et l'investigation : il faut les activer explicitement." },
+    { t: "Exploitation", q: "Avant de mettre à jour un cluster EKS, quelle vérification est la plus importante ?",
+      o: ["Le nombre de namespaces", "Les API Kubernetes dépréciées ou supprimées encore utilisées par vos manifestes et charts", "La couleur des dashboards", "Le nombre d'utilisateurs IAM"],
+      a: 1, e: "Une API supprimée dans la nouvelle version casse les déploiements. Les EKS upgrade insights, pluto ou kubent aident à les détecter." },
+    { t: "Sécurité", q: "Pourquoi imposer IMDSv2 avec une limite de saut (hop limit) à 1 sur les nœuds ?",
+      o: ["Pour accélérer le réseau", "Pour empêcher les pods de récupérer les identifiants du rôle IAM du nœud via le service de métadonnées", "Pour activer le Spot", "C'est obligatoire pour utiliser EFS"],
+      a: 1, e: "Les pods, situés un saut réseau plus loin que le nœud, ne peuvent alors plus joindre le service de métadonnées. Ils obtiennent leurs droits par Pod Identity ou IRSA." },
+    { t: "IaC", q: "Quelle répartition des rôles entre Terraform et GitOps est la plus courante pour EKS ?",
+      o: ["Terraform déploie les applications, Argo CD crée le VPC", "Terraform crée le VPC, le cluster, les nœuds système et les rôles IAM ; Argo CD ou Flux déploient tout ce qui tourne dans le cluster", "Tout est fait à la main dans la console", "Seul eksctl est supporté par AWS"],
+      a: 1, e: "Terraform gère l'infrastructure AWS ; le GitOps gère le contenu du cluster, avec Git comme source de vérité." }
+  ];
+  var QUIZ_SIZE = 15;
+
+  var quizRoot = document.getElementById("quizRoot");
+  var quiz = null;
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function renderIntro() {
+    var unread = learningIds.length - learningIds.filter(function (id) { return state.done[id]; }).length;
+    var best = state.best != null ? '<p>Votre meilleur score : <strong>' + state.best + ' %</strong>' + (state.passed ? ' ✅ quiz validé' : '') + '</p>' : '';
+    quizRoot.innerHTML =
+      '<div class="card qcard">' +
+        '<p class="lead" style="margin-top:0">' + QUIZ_SIZE + ' questions tirées au hasard parmi ' + QUESTIONS.length + ', ordre des réponses mélangé. Une explication s\'affiche après chaque réponse.</p>' +
+        '<ul><li>Seuil de réussite : <strong>' + Math.round(PASS * 100) + ' %</strong> (' + Math.ceil(PASS * QUIZ_SIZE) + ' bonnes réponses sur ' + QUIZ_SIZE + ')</li>' +
+        '<li>Vous pouvez recommencer autant de fois que vous le souhaitez.</li></ul>' +
+        (unread > 0 ? '<div class="callout warn"><strong>Conseil</strong>Il vous reste ' + unread + ' module(s) non lu(s). Vous pouvez quand même commencer le quiz.</div>' : '') +
+        best +
+        '<div class="quiz-actions"><button class="btn" id="startQuiz">Commencer le quiz</button></div>' +
+      '</div>';
+    document.getElementById("startQuiz").onclick = startQuiz;
+  }
+
+  function startQuiz() {
+    var picked = shuffle(QUESTIONS).slice(0, QUIZ_SIZE).map(function (q) {
+      var order = shuffle(q.o.map(function (_, i) { return i; }));
+      return { t: q.t, q: q.q, e: q.e, o: order.map(function (i) { return q.o[i]; }), a: order.indexOf(q.a) };
+    });
+    quiz = { items: picked, idx: 0, answers: [] };
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    var item = quiz.items[quiz.idx];
+    var letters = "ABCD";
+    var html =
+      '<div class="quiz-head"><span>Question ' + (quiz.idx + 1) + ' / ' + quiz.items.length + '</span><span class="tag">' + escapeHtml(item.t) + '</span></div>' +
+      '<div class="progress" style="max-width:none;margin-bottom:16px"><div style="width:' + (quiz.idx / quiz.items.length * 100) + '%"></div></div>' +
+      '<div class="card qcard"><h3>' + escapeHtml(item.q).replace(/\n/g, '<br><code>').replace(/(<code>.*)$/, '$1</code>') + '</h3>' +
+      '<div class="options">' +
+      item.o.map(function (opt, i) {
+        return '<button class="opt" data-i="' + i + '"><span class="letter">' + letters[i] + '</span><span>' + escapeHtml(opt) + '</span></button>';
+      }).join("") +
+      '</div><div class="feedback" id="fb"></div>' +
+      '<div class="quiz-actions"><button class="btn" id="validate" disabled>Valider</button></div></div>';
+    quizRoot.innerHTML = html;
+
+    var selected = null;
+    var opts = quizRoot.querySelectorAll(".opt");
+    var btn = document.getElementById("validate");
+    opts.forEach(function (b) {
+      b.onclick = function () {
+        opts.forEach(function (x) { x.classList.remove("selected"); });
+        b.classList.add("selected");
+        selected = +b.dataset.i;
+        btn.disabled = false;
+      };
+    });
+    btn.onclick = function () {
+      if (btn.dataset.next) { next(); return; }
+      var ok = selected === item.a;
+      quiz.answers.push(selected);
+      opts.forEach(function (x, i) {
+        x.disabled = true;
+        x.classList.remove("selected");
+        if (i === item.a) x.classList.add("correct");
+        else if (i === selected) x.classList.add("wrong");
+      });
+      var fb = document.getElementById("fb");
+      fb.className = "feedback show " + (ok ? "good" : "bad");
+      fb.innerHTML = "<strong>" + (ok ? "✅ Bonne réponse" : "❌ Mauvaise réponse") + "</strong><br>" + escapeHtml(item.e);
+      btn.textContent = quiz.idx + 1 < quiz.items.length ? "Question suivante →" : "Voir mes résultats";
+      btn.dataset.next = "1";
+      btn.focus();
+    };
+  }
+
+  function next() {
+    quiz.idx++;
+    if (quiz.idx < quiz.items.length) renderQuestion(); else renderResult();
+    window.scrollTo(0, 0);
+  }
+
+  function renderResult() {
+    var total = quiz.items.length;
+    var good = quiz.items.filter(function (it, i) { return quiz.answers[i] === it.a; }).length;
+    var pct = Math.round(good / total * 100);
+    var passed = good / total >= PASS;
+    state.best = Math.max(state.best || 0, pct);
+    if (passed) state.passed = true;
+    save(state);
+    show();
+
+    var themes = {};
+    quiz.items.forEach(function (it, i) {
+      themes[it.t] = themes[it.t] || { g: 0, n: 0 };
+      themes[it.t].n++;
+      if (quiz.answers[i] === it.a) themes[it.t].g++;
+    });
+
+    var r = 64, c = 2 * Math.PI * r;
+    var color = passed ? "var(--ok)" : "var(--ko)";
+    var html =
+      '<div class="card qcard result">' +
+      '<svg class="score-ring" viewBox="0 0 160 160"><circle cx="80" cy="80" r="' + r + '" fill="none" stroke="var(--surface-2)" stroke-width="14"/>' +
+      '<circle cx="80" cy="80" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + (c * pct / 100) + ' ' + c + '" transform="rotate(-90 80 80)"/>' +
+      '<text x="80" y="88" text-anchor="middle" font-size="30" font-weight="700" fill="var(--text)">' + pct + '%</text></svg>' +
+      '<div class="verdict" style="color:' + color + '">' + (passed ? "🎉 Formation validée !" : "Pas encore validée") + '</div>' +
+      '<p>' + good + ' bonnes réponses sur ' + total + '. ' +
+      (passed ? "Vous maîtrisez les spécificités d'Amazon EKS et terminez le parcours Kubernetes & EKS."
+              : "Il faut au moins " + Math.round(PASS * 100) + " %. Revoyez les thèmes les plus faibles ci-dessous puis réessayez.") + '</p>' +
+      '<div class="themes"><h3>Résultats par thème</h3>' +
+      Object.keys(themes).map(function (k) {
+        var p = Math.round(themes[k].g / themes[k].n * 100);
+        var col = p >= 80 ? "var(--ok)" : p >= 50 ? "var(--warn)" : "var(--ko)";
+        return '<div class="theme-row"><span>' + escapeHtml(k) + '</span><div class="theme-bar"><div style="width:' + p + '%;background:' + col + '"></div></div><span>' + themes[k].g + '/' + themes[k].n + '</span></div>';
+      }).join("") + '</div>' +
+      '<div class="quiz-actions" style="justify-content:center;flex-wrap:wrap">' +
+      '<button class="btn ghost" id="toggleReview">Voir la correction détaillée</button>' +
+      '<button class="btn" id="retry">Recommencer le quiz</button></div>' +
+      '<div id="review" style="display:none;margin-top:20px"></div></div>';
+    quizRoot.innerHTML = html;
+
+    document.getElementById("retry").onclick = startQuiz;
+    document.getElementById("toggleReview").onclick = function () {
+      var rv = document.getElementById("review");
+      rv.style.display = rv.style.display === "none" ? "block" : "none";
+    };
+    document.getElementById("review").innerHTML = quiz.items.map(function (it, i) {
+      var ok = quiz.answers[i] === it.a;
+      return '<div class="review-item"><div><span class="' + (ok ? "badge-ok" : "badge-ko") + '">' + (ok ? "✓" : "✗") + '</span> <strong>' + (i + 1) + '. ' + escapeHtml(it.q) + '</strong></div>' +
+        (ok ? "" : '<div class="ans">Votre réponse : ' + escapeHtml(it.o[quiz.answers[i]]) + '</div>') +
+        '<div class="ans">Bonne réponse : <strong>' + escapeHtml(it.o[it.a]) + '</strong></div>' +
+        '<div class="ans">' + escapeHtml(it.e) + '</div></div>';
+    }).join("");
+  }
+
+  renderIntro();
+  window.addEventListener("hashchange", function () { if (location.hash === "#quiz" && !quiz) renderIntro(); });
+  show();
+})();
+</script>
+</body>
+</html>

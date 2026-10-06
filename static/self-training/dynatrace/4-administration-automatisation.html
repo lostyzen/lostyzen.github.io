@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynatrace 4 : administration</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface-2: #eef1f8;
+    --text: #1b1f2a;
+    --muted: #5a6275;
+    --border: #d9deea;
+    --accent: #1496ff;
+    --accent-2: #6f2da8;
+    --accent-soft: #e3f1ff;
+    --ok: #1a8f4c;
+    --ok-soft: #e2f6ea;
+    --ko: #c62f3a;
+    --ko-soft: #fbe5e7;
+    --warn: #b56a00;
+    --warn-soft: #fff1d9;
+    --code-bg: #1e2230;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(20, 30, 60, .08), 0 6px 20px rgba(20, 30, 60, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141c;
+      --surface: #1a1e29;
+      --surface-2: #232838;
+      --text: #e7eaf2;
+      --muted: #9aa3b8;
+      --border: #2e3446;
+      --accent: #4aaeff;
+      --accent-2: #b07fe0;
+      --accent-soft: #16304a;
+      --ok: #4cc583;
+      --ok-soft: #133524;
+      --ko: #ff6b76;
+      --ko-soft: #3d1a1e;
+      --warn: #f0b04c;
+      --warn-soft: #3a2c12;
+      --code-bg: #0b0d13;
+      --code-text: #e6e9f2;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141c;
+    --surface: #1a1e29;
+    --surface-2: #232838;
+    --text: #e7eaf2;
+    --muted: #9aa3b8;
+    --border: #2e3446;
+    --accent: #4aaeff;
+    --accent-2: #b07fe0;
+    --accent-soft: #16304a;
+    --ok: #4cc583;
+    --ok-soft: #133524;
+    --ko: #ff6b76;
+    --ko-soft: #3d1a1e;
+    --warn: #f0b04c;
+    --warn-soft: #3a2c12;
+    --code-bg: #0b0d13;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+  code, pre { font-family: "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace; font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+  code { background: var(--surface-2); padding: .1em .35em; border-radius: 4px; font-size: .9em; }
+  pre {
+    background: var(--code-bg); color: var(--code-text);
+    padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: .88em; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  .kw { color: #ff9e64; } .fn { color: #7aa2f7; } .str { color: #9ece6a; } .cm { color: #7a8299; font-style: italic; }
+
+  /* ---------- Layout ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; color: #fff; font-size: .9rem;
+  }
+  .progress-wrap { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .progress { flex: 1; height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; max-width: 360px; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s; }
+  .progress-label { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+  .icon-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: .9rem;
+  }
+  .icon-btn:hover { background: var(--surface-2); }
+  #menuBtn { display: none; }
+
+  .layout { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100vh - 53px); }
+  nav.side {
+    border-right: 1px solid var(--border); background: var(--surface);
+    padding: 18px 12px; position: sticky; top: 53px; height: calc(100vh - 53px); overflow-y: auto;
+  }
+  .back-link { display: block; margin: 0 10px 14px; font-size: .88rem; color: var(--muted); text-decoration: none; }
+  .back-link:hover { color: var(--accent); }
+  nav.side h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 6px 10px 10px; }
+  nav.side ol { list-style: none; margin: 0; padding: 0; }
+  nav.side li a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px; text-decoration: none; color: var(--text); font-size: .93rem;
+  }
+  nav.side li a:hover { background: var(--surface-2); }
+  nav.side li a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .num {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center; font-size: .75rem; font-weight: 700;
+    background: var(--surface-2); color: var(--muted);
+  }
+  a.done .num { background: var(--ok); color: #fff; }
+  a.active .num { background: var(--accent); color: #fff; }
+
+  main { padding: 32px 40px 80px; max-width: 980px; width: 100%; }
+  section.module { display: none; animation: fade .25s ease; scroll-margin-top: 70px; }
+  section.module.visible { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .eyebrow { color: var(--accent); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 6px 0 12px; }
+  h2.h { font-size: 1.6rem; margin: 4px 0 16px; line-height: 1.25; }
+  h3 { font-size: 1.15rem; margin: 28px 0 10px; }
+  .lead { font-size: 1.1rem; color: var(--muted); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 16px 0; }
+  .grid .card h4 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+  .grid .card p { margin: 0; color: var(--muted); font-size: .93rem; }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap;
+    background: var(--accent-soft); color: var(--accent);
+  }
+
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .callout strong:first-child { display: block; margin-bottom: 2px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .93rem; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 600; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .table-wrap table { margin: 0; }
+
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 10px 0; }
+  details summary { cursor: pointer; font-weight: 600; }
+
+  .diagram { width: 100%; height: auto; margin: 10px 0; }
+  .diagram text { fill: var(--text); font-family: inherit; }
+  .diagram .muted { fill: var(--muted); }
+  .diagram .box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  .diagram .box-a { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .diagram .line { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .diagram .bar1 { fill: var(--accent); } .diagram .bar2 { fill: var(--accent-2); } .diagram .bar3 { fill: var(--ok); } .diagram .bar4 { fill: var(--warn); }
+
+  .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .btn {
+    border: 0; border-radius: 9px; padding: 10px 18px; font-weight: 600; cursor: pointer; font-size: .95rem;
+    background: var(--accent); color: #fff;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .keypoints { background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; padding: 14px 20px; margin-top: 26px; }
+  .keypoints h4 { margin: 0 0 6px; color: var(--accent); }
+  .keypoints ul { margin: 0; padding-left: 20px; }
+
+  /* ---------- Quiz ---------- */
+  .quiz-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; color: var(--muted); font-size: .9rem; }
+  .qcard { padding: 24px; }
+  .qcard h3 { margin-top: 0; font-size: 1.2rem; }
+  .options { display: grid; gap: 10px; margin: 16px 0; }
+  .opt {
+    display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%;
+    padding: 12px 14px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 10px; cursor: pointer; font-size: .97rem; font-family: inherit; line-height: 1.45;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt .letter {
+    flex: none; width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center;
+    background: var(--surface-2); font-weight: 700; font-size: .82rem;
+  }
+  .opt.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .opt.correct { border-color: var(--ok); background: var(--ok-soft); }
+  .opt.correct .letter { background: var(--ok); color: #fff; }
+  .opt.wrong { border-color: var(--ko); background: var(--ko-soft); }
+  .opt.wrong .letter { background: var(--ko); color: #fff; }
+  .opt:disabled { cursor: default; }
+  .feedback { display: none; padding: 12px 16px; border-radius: 10px; margin-top: 4px; }
+  .feedback.show { display: block; }
+  .feedback.good { background: var(--ok-soft); border-left: 4px solid var(--ok); }
+  .feedback.bad { background: var(--ko-soft); border-left: 4px solid var(--ko); }
+  .quiz-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+  .score-ring { width: 160px; height: 160px; margin: 0 auto 10px; display: block; }
+  .result { text-align: center; }
+  .result .verdict { font-size: 1.4rem; font-weight: 700; margin: 6px 0; }
+  .themes { text-align: left; margin-top: 24px; }
+  .theme-row { display: grid; grid-template-columns: minmax(140px, 1fr) 2fr 60px; gap: 12px; align-items: center; margin: 8px 0; font-size: .93rem; }
+  .theme-bar { height: 10px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .theme-bar > div { height: 100%; border-radius: 99px; }
+  .review-item { text-align: left; border-bottom: 1px solid var(--border); padding: 12px 0; }
+  .review-item:last-child { border: 0; }
+  .review-item .ans { font-size: .9rem; color: var(--muted); }
+  .badge-ok { color: var(--ok); font-weight: 700; } .badge-ko { color: var(--ko); font-weight: 700; }
+
+  @media (max-width: 860px) {
+    #menuBtn { display: inline-block; }
+    .layout { grid-template-columns: 1fr; }
+    nav.side {
+      position: fixed; top: 53px; left: 0; width: 290px; max-width: 85vw; z-index: 30;
+      transform: translateX(-100%); transition: transform .25s; box-shadow: var(--shadow);
+    }
+    nav.side.open { transform: none; }
+    main { padding: 22px 16px 60px; }
+    h1 { font-size: 1.6rem; }
+    .brand span.full { display: none; }
+    .progress-label { display: none; }
+    .theme-row { grid-template-columns: 1fr 1.4fr 48px; }
+  }
+  @media print {
+    header.top, nav.side, .pager, .quiz-actions { display: none !important; }
+    .layout { display: block; }
+    section.module { display: block !important; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="icon-btn" id="menuBtn" aria-label="Ouvrir le menu">☰</button>
+  <div class="brand"><div class="brand-mark">◆</div><span class="full">Dynatrace · Partie 4 : administration et automatisation</span></div>
+  <div class="progress-wrap">
+    <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+    <span class="progress-label" id="progressLabel">0 / 9 modules</span>
+  </div>
+  <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Changer de thème">◐</button>
+</header>
+
+<div class="layout">
+  <nav class="side" id="sidebar" aria-label="Sommaire">
+    <a class="back-link" href="../index.html">← Toutes les self-trainings</a>
+    <h2>Parcours</h2>
+    <ol id="navList"></ol>
+  </nav>
+
+  <main id="main">
+
+<!-- ===================================================== MODULE 0 -->
+<section class="module" id="m0" data-title="Introduction">
+  <div class="eyebrow">Partie 4 sur 4 · Bienvenue</div>
+  <h1>Dynatrace : administration et automatisation</h1>
+  <p class="lead">Cette dernière partie s'adresse à celles et ceux qui administrent une plateforme Dynatrace partagée : gérer les utilisateurs et leurs droits, automatiser les réactions avec les Workflows, et gérer toute la configuration par le code avec Terraform et Monaco. Elle se termine par un quiz de validation.</p>
+
+  <div class="grid">
+    <div class="card"><h4>⏱️ Durée</h4><p>Environ 1 h 15 de lecture, plus 15 minutes de quiz.</p></div>
+    <div class="card"><h4>🎯 Prérequis</h4><p>Parties <a href="1-fondamentaux.html">1</a> et <a href="2-analyse-visualisation.html">2</a> ; des notions de Terraform (voir la <a href="../terraform/1-fondamentaux.html">self-training Terraform</a>).</p></div>
+    <div class="card"><h4>✅ Validation</h4><p>Un quiz de 15 questions. Seuil de réussite : <strong>80 %</strong>.</p></div>
+  </div>
+
+  <h3>Le parcours Dynatrace</h3>
+  <div class="grid">
+    <div class="card"><h4><span class="tag">Partie 1</span> <a href="1-fondamentaux.html">Fondamentaux</a></h4><p>Concepts de l'observabilité, architecture et plateforme Dynatrace.</p></div>
+    <div class="card"><h4><span class="tag">Partie 2</span> <a href="2-analyse-visualisation.html">Analyse et visualisation</a></h4><p>Smartscape, DQL avancé, Notebooks, Dashboards.</p></div>
+    <div class="card"><h4><span class="tag">Partie 3</span> <a href="3-synthetic.html">Surveillance synthétique</a></h4><p>Moniteurs HTTP, navigateur et réseau, emplacements, alertes.</p></div>
+    <div class="card"><h4><span class="tag">Partie 4</span> Administration et automatisation</h4><p><strong>Vous êtes ici.</strong> IAM et RBAC, Workflows, configuration as code avec Terraform.</p></div>
+  </div>
+
+  <h3>Objectifs pédagogiques</h3>
+  <ul>
+    <li>gérer les <strong>utilisateurs, groupes, comptes de service</strong> et jetons, avec une authentification centralisée (SSO) ;</li>
+    <li>concevoir des droits avec les <strong>politiques IAM</strong>, y compris l'accès aux données par périmètre ;</li>
+    <li>distinguer <strong>droits d'accès</strong> et <strong>segments</strong> de filtrage ;</li>
+    <li>créer des <strong>Workflows</strong> : déclencheurs, tâches, expressions, intégrations ;</li>
+    <li>gérer la configuration avec le <strong>provider Terraform Dynatrace</strong> et <strong>Monaco</strong>.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Un produit qui évolue vite</strong>
+    Les noms de permissions, de ressources Terraform et de menus cités ici sont valables à la date de rédaction. Les exemples de code sont simplifiés : référez-vous à la documentation Dynatrace et à celle du provider pour la syntaxe exacte de votre version.
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 1 -->
+<section class="module" id="m1" data-title="Utilisateurs & identités">
+  <div class="eyebrow">Module 1</div>
+  <h2 class="h">Gérer les utilisateurs et les identités</h2>
+
+  <h3>Compte et environnements</h3>
+  <p>Dynatrace s'organise en deux niveaux :</p>
+  <ul>
+    <li>le <strong>compte</strong> (<em>account</em>), géré dans l'interface d'administration du compte (<em>Account Management</em>) : utilisateurs, groupes, politiques, licences, facturation ;</li>
+    <li>les <strong>environnements</strong> (par exemple production et hors production), qui contiennent les données et la configuration.</li>
+  </ul>
+  <p>Les droits se définissent au niveau du compte et s'appliquent à tout le compte ou à un environnement précis.</p>
+
+  <h3>Les types d'identités</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Identité</th><th>Pour qui ?</th><th>Remarques</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Utilisateur</strong></td><td>Une personne</td><td>Idéalement fédéré depuis l'annuaire de l'entreprise (SSO)</td></tr>
+      <tr><td><strong>Groupe</strong></td><td>Un ensemble d'utilisateurs</td><td>C'est aux groupes, pas aux utilisateurs, qu'on attribue les droits</td></tr>
+      <tr><td><strong>Utilisateur de service</strong> (<em>service user</em>)</td><td>Un processus automatisé : workflow, pipeline CI, intégration</td><td>N'est lié à aucune personne : survit aux départs</td></tr>
+      <tr><td><strong>Client OAuth</strong></td><td>Une application qui appelle les API de la plateforme</td><td>Identifiant + secret, avec des portées (<em>scopes</em>) limitées</td></tr>
+      <tr><td><strong>Jeton</strong> (API classique ou plateforme)</td><td>Des scripts et outils qui appellent les API</td><td>Portées minimales, durée de validité, rotation régulière</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Authentification centralisée</h3>
+  <ul>
+    <li><strong>SSO avec SAML</strong> : les utilisateurs se connectent avec le fournisseur d'identité de l'entreprise (Microsoft Entra ID, Okta, ADFS…), avec ses règles (MFA, accès conditionnel).</li>
+    <li><strong>Groupes fédérés</strong> : l'appartenance aux groupes Dynatrace est déduite des groupes de l'annuaire transmis lors de la connexion.</li>
+    <li><strong>SCIM</strong> : synchronisation automatique des utilisateurs et des groupes depuis l'annuaire ; un départ dans l'annuaire désactive l'accès dans Dynatrace.</li>
+  </ul>
+  <div class="callout ok">
+    <strong>Le schéma cible</strong>
+    Les arrivées, départs et changements d'équipe se gèrent <strong>dans l'annuaire de l'entreprise</strong>, pas dans Dynatrace. Dynatrace ne fait que traduire des groupes d'annuaire en groupes Dynatrace, auxquels sont attachées des politiques. Ainsi, personne n'a à créer ou supprimer des comptes à la main.
+  </div>
+
+  <h3>Hygiène des accès</h3>
+  <ul>
+    <li>Garder un ou deux <strong>comptes administrateurs d'urgence</strong> hors SSO, avec MFA, pour le cas où le fournisseur d'identité serait indisponible.</li>
+    <li>Utiliser des <strong>utilisateurs de service</strong> pour les automatisations, jamais le compte d'une personne.</li>
+    <li>Donner aux jetons et clients OAuth les <strong>portées minimales</strong>, une date d'expiration, et les stocker dans un coffre-fort.</li>
+    <li>Consulter régulièrement le <strong>journal d'audit</strong> : connexions, changements de configuration et de droits.</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Compte (utilisateurs, groupes, politiques) et environnements (données, configuration).</li>
+      <li>Droits attribués aux groupes ; utilisateurs de service pour les automatisations.</li>
+      <li>SSO SAML, groupes fédérés et SCIM : l'annuaire de l'entreprise reste la source de vérité.</li>
+      <li>Portées minimales, expiration et rotation des jetons ; journal d'audit.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 2 -->
+<section class="module" id="m2" data-title="IAM & RBAC">
+  <div class="eyebrow">Module 2</div>
+  <h2 class="h">Les droits : IAM, politiques et accès aux données</h2>
+
+  <h3>Les politiques IAM</h3>
+  <p>Les droits reposent sur des <strong>politiques</strong> (<em>policies</em>) rattachées à des <strong>groupes</strong>, pour tout le compte ou pour un environnement (<em>binding</em>). Une politique contient des <strong>déclarations</strong> qui autorisent des <strong>permissions</strong>, éventuellement sous <strong>conditions</strong> :</p>
+<pre><code><span class="cm">// Lire les logs et les spans, uniquement pour le périmètre "boutique"</span>
+<span class="kw">ALLOW</span> storage:logs:read, storage:spans:read, storage:buckets:read
+  <span class="kw">WHERE</span> storage:dt.security_context = <span class="str">"boutique"</span>;
+
+<span class="cm">// Lire et exécuter les workflows</span>
+<span class="kw">ALLOW</span> automation:workflows:read, automation:workflows:run;</code></pre>
+  <p>Les permissions suivent la forme <code>service:ressource:action</code>. Tout ce qui n'est pas autorisé est interdit. Les politiques s'additionnent : un utilisateur membre de plusieurs groupes cumule leurs droits.</p>
+
+  <h3>Les politiques par défaut et les limites</h3>
+  <ul>
+    <li>Dynatrace fournit des <strong>politiques par défaut</strong> (par exemple pour un utilisateur standard, un utilisateur avancé ou un administrateur), pratiques pour démarrer.</li>
+    <li>Les <strong>limites de politique</strong> (<em>policy boundaries</em>) ajoutent une restriction réutilisable à une politique au moment de son attribution : la même politique « lecture des logs » peut être attribuée à l'équipe A limitée à son périmètre, et à l'équipe B limitée au sien.</li>
+  </ul>
+
+  <h3>L'accès aux données par périmètre</h3>
+  <p>Dans Grail, chaque enregistrement peut porter un champ <code>dt.security_context</code>, renseigné à l'ingestion, en général par <strong>OpenPipeline</strong> (par exemple à partir du namespace Kubernetes ou d'un tag d'équipe). Les politiques filtrent ensuite l'accès sur ce champ : chaque équipe ne lit que ses propres logs, traces ou événements. On peut aussi restreindre l'accès par <strong>bucket</strong>.</p>
+  <div class="callout">
+    <strong>Concevoir le périmètre dès l'ingestion</strong>
+    Si le contexte de sécurité n'est pas posé à l'ingestion, il est difficile de restreindre l'accès ensuite. Définissez votre découpage (par équipe, par application, par entité juridique) avant d'ouvrir la plateforme à de nombreuses équipes.
+  </div>
+
+  <h3>Droits d'accès ou segments ?</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>Politiques IAM</th><th>Segments</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Rôle</strong></td><td><strong>Sécurité</strong> : ce que l'utilisateur a le droit de voir et de faire</td><td><strong>Confort</strong> : filtrer les données affichées dans les applications (dashboards, notebooks…) sur un périmètre</td></tr>
+      <tr><td><strong>Contournable ?</strong></td><td>Non</td><td>Oui : l'utilisateur peut changer ou retirer le segment</td></tr>
+      <tr><td><strong>Exemple</strong></td><td>L'équipe Boutique ne peut lire que les logs « boutique »</td><td>Un segment « Boutique – prod » pour ne voir que ses entités et données</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout warn">
+    <strong>Ne confondez pas filtrage et sécurité</strong>
+    Un segment n'est <strong>pas</strong> un mécanisme de sécurité. Pour empêcher l'accès à des données, il faut des politiques IAM.
+  </div>
+
+  <h3>Le modèle classique</h3>
+  <p>Les environnements plus anciens utilisent aussi des <strong>rôles classiques</strong> (lecture, gestion des paramètres…) et des <strong>zones de gestion</strong> (<em>management zones</em>), qui restreignent la vue et les droits à un sous-ensemble d'entités défini par règles. Ils restent pris en charge pour les applications classiques, mais les politiques IAM, le contexte de sécurité et les segments sont la cible pour la plateforme actuelle.</p>
+
+  <h3>Un modèle type</h3>
+  <ul>
+    <li>Un groupe <strong>par équipe</strong>, fédéré depuis l'annuaire, avec lecture de ses données (contexte de sécurité de l'équipe), création de notebooks et dashboards, exécution de ses workflows.</li>
+    <li>Un groupe <strong>plateforme</strong> qui administre la configuration (de préférence par le code, module 5).</li>
+    <li>Un groupe <strong>lecture transverse</strong> pour l'astreinte et le support, sur toutes les données mais sans droits de modification.</li>
+    <li>Très peu d'<strong>administrateurs</strong> du compte.</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Politiques (<code>ALLOW permission WHERE condition;</code>) attribuées à des groupes, pour le compte ou un environnement.</li>
+      <li>Limites de politique pour réutiliser une politique sur des périmètres différents.</li>
+      <li><code>dt.security_context</code>, posé à l'ingestion, permet l'accès aux données par périmètre.</li>
+      <li>Segments = filtrage d'affichage, pas sécurité ; zones de gestion = modèle classique.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 3 -->
+<section class="module" id="m3" data-title="Workflows : principes">
+  <div class="eyebrow">Module 3</div>
+  <h2 class="h">Les Workflows : principes</h2>
+  <p>Les <strong>Workflows</strong> (moteur <em>AutomationEngine</em>) automatisent des actions dans Dynatrace et vers d'autres outils. Un workflow est composé d'un <strong>déclencheur</strong> et d'une suite de <strong>tâches</strong>, organisées en graphe.</p>
+
+  <h3>Les déclencheurs</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Déclencheur</th><th>Exemple</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Problème Davis</strong></td><td>Un problème s'ouvre, se met à jour ou se ferme, avec des filtres (catégorie, entités concernées, tags)</td></tr>
+      <tr><td><strong>Événement</strong></td><td>Un événement correspondant à un filtre arrive : déploiement, événement de sécurité, business event, résultat de validation…</td></tr>
+      <tr><td><strong>Planification</strong></td><td>Tous les lundis à 8 h, toutes les heures (syntaxe cron ou intervalle)</td></tr>
+      <tr><td><strong>À la demande</strong></td><td>Lancé manuellement, depuis une autre application ou par API</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Les tâches</h3>
+  <div class="grid">
+    <div class="card"><h4>🔎 Exécuter une requête DQL</h4><p>Lire des données de Grail : logs, entités, métriques.</p></div>
+    <div class="card"><h4>💻 Exécuter du JavaScript</h4><p>Transformer des données, appliquer une logique, appeler les API de la plateforme avec le SDK.</p></div>
+    <div class="card"><h4>🌐 Requête HTTP</h4><p>Appeler n'importe quelle API externe (avec une liste d'hôtes autorisés).</p></div>
+    <div class="card"><h4>🔌 Intégrations</h4><p>Actions prêtes à l'emploi : Slack, Microsoft Teams, e-mail, Jira, ServiceNow, PagerDuty, Red Hat Ansible, Kubernetes…</p></div>
+  </div>
+
+  <h3>Cas d'usage typiques</h3>
+  <ul>
+    <li><strong>Notification ciblée</strong> : un problème sur un service de l'équipe Boutique → message dans le canal Teams de l'équipe, avec le lien vers le problème.</li>
+    <li><strong>Gestion des incidents</strong> : création d'un ticket ServiceNow ou Jira à l'ouverture, mise à jour et fermeture automatiques.</li>
+    <li><strong>Remédiation automatique</strong> : redémarrer un pod, vider un cache, augmenter un nombre de réplicas, lancer un job Ansible (voir la <a href="../ansible/1-fondamentaux.html">self-training Ansible</a>).</li>
+    <li><strong>Validation de déploiement</strong> : à la réception d'un événement de déploiement, lancer le Site Reliability Guardian et notifier le résultat.</li>
+    <li><strong>Rapports planifiés</strong> : chaque lundi, envoyer par e-mail l'état des SLO de la semaine.</li>
+    <li><strong>Hygiène</strong> : chaque nuit, détecter les hôtes sans tag <code>owner</code> et ouvrir un ticket.</li>
+  </ul>
+
+  <h3>Les droits d'exécution : l'acteur</h3>
+  <p>Un workflow s'exécute avec les droits d'un <strong>acteur</strong> : un utilisateur ou, de préférence, un <strong>utilisateur de service</strong>. Une tâche ne peut lire que les données et appeler que les API autorisées à cet acteur. Ce mécanisme évite qu'un workflow critique cesse de fonctionner quand son créateur quitte l'entreprise, et applique le moindre privilège.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Workflow = déclencheur (problème, événement, planification, à la demande) + tâches.</li>
+      <li>Tâches : DQL, JavaScript, HTTP, intégrations prêtes à l'emploi.</li>
+      <li>Notifications, tickets, remédiation, validation de déploiement, rapports.</li>
+      <li>Exécution avec les droits d'un acteur, idéalement un utilisateur de service.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 4 -->
+<section class="module" id="m4" data-title="Workflows : construire">
+  <div class="eyebrow">Module 4</div>
+  <h2 class="h">Construire un workflow</h2>
+
+  <h3>Exemple : notifier l'équipe propriétaire d'un problème</h3>
+  <svg class="diagram" viewBox="0 0 760 170" role="img" aria-label="Workflow : déclencheur problème Davis, requête DQL, condition, notification Teams et ticket Jira">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color:var(--muted)"/>
+      </marker>
+    </defs>
+    <rect class="box-a" x="10" y="55" width="150" height="60" rx="8"/>
+    <text x="22" y="80" font-size="12" font-weight="700">Déclencheur</text>
+    <text class="muted" x="22" y="98" font-size="11">Problème Davis ouvert</text>
+    <rect class="box" x="200" y="55" width="160" height="60" rx="8"/>
+    <text x="212" y="80" font-size="12" font-weight="700">get_owner</text>
+    <text class="muted" x="212" y="98" font-size="11">DQL : tag owner</text>
+    <rect class="box" x="400" y="10" width="160" height="60" rx="8"/>
+    <text x="412" y="35" font-size="12" font-weight="700">notify_teams</text>
+    <text class="muted" x="412" y="53" font-size="11">Microsoft Teams</text>
+    <rect class="box" x="400" y="100" width="160" height="60" rx="8"/>
+    <text x="412" y="125" font-size="12" font-weight="700">create_ticket</text>
+    <text class="muted" x="412" y="143" font-size="11">si criticité = haute</text>
+    <rect class="box" x="600" y="100" width="150" height="60" rx="8"/>
+    <text x="612" y="125" font-size="12" font-weight="700">Jira</text>
+    <text class="muted" x="612" y="143" font-size="11">ticket créé</text>
+    <path class="line" d="M160 85 H198" marker-end="url(#arr)"/>
+    <path class="line" d="M360 85 H380 V40 H398" marker-end="url(#arr)"/>
+    <path class="line" d="M360 85 H380 V130 H398" marker-end="url(#arr)"/>
+    <path class="line" d="M560 130 H598" marker-end="url(#arr)"/>
+  </svg>
+
+  <h3>Les expressions</h3>
+  <p>Les champs des tâches acceptent des <strong>expressions</strong> entre doubles accolades, pour réutiliser les données de l'événement déclencheur et les résultats des tâches précédentes :</p>
+<pre><code><span class="cm">// Données de l'événement déclencheur</span>
+Problème : {{ event()["event.name"] }}
+Lien     : {{ environment().url }}/ui/apps/dynatrace.davis.problems/problem/{{ event()["event.id"] }}
+
+<span class="cm">// Résultat d'une tâche précédente (ici, la requête DQL "get_owner")</span>
+Équipe   : {{ result("get_owner").records[0].owner }}</code></pre>
+  <p><em>Les chemins exacts disponibles dépendent du déclencheur : l'éditeur de workflows propose l'autocomplétion et un aperçu de l'événement.</em></p>
+
+  <h3>Contrôler l'enchaînement</h3>
+  <ul>
+    <li><strong>Conditions</strong> : exécuter une tâche seulement si la précédente a réussi (ou échoué), et/ou si une expression est vraie (<code>{{ event()["event.category"] == "AVAILABILITY" }}</code>).</li>
+    <li><strong>Boucles</strong> : exécuter une tâche pour chaque élément d'une liste (par exemple chaque entité concernée).</li>
+    <li><strong>Nouvelles tentatives</strong> et <strong>délai d'expiration</strong> : pour les appels externes peu fiables.</li>
+    <li><strong>Attente</strong> avant exécution : par exemple attendre 10 minutes et vérifier si le problème est toujours ouvert avant de réveiller l'astreinte.</li>
+  </ul>
+
+  <h3>Mettre au point et exploiter</h3>
+  <ol>
+    <li>Tester d'abord les requêtes DQL dans un <strong>Notebook</strong> (partie 2).</li>
+    <li>Lancer le workflow <strong>manuellement</strong> avec un événement de test, et vérifier le résultat de chaque tâche dans l'historique des exécutions.</li>
+    <li>Commencer par des actions <strong>sans risque</strong> (notification) avant toute remédiation automatique.</li>
+    <li>Pour une remédiation, prévoir des <strong>garde-fous</strong> : périmètre limité, nombre maximal d'exécutions, notification systématique de ce qui a été fait.</li>
+    <li>Surveiller les <strong>échecs de workflows</strong> eux-mêmes : un workflow de notification en panne est un angle mort.</li>
+  </ol>
+  <div class="callout warn">
+    <strong>Attention aux tempêtes de notifications</strong>
+    Un déclencheur trop large (tous les problèmes, toutes les mises à jour) peut envoyer des centaines de messages. Filtrez sur l'ouverture et la fermeture des problèmes, sur les tags de l'équipe, et regroupez les informations dans un seul message.
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Expressions <code>{{ event()[...] }}</code> et <code>{{ result("tâche") }}</code> pour passer des données entre tâches.</li>
+      <li>Conditions, boucles, nouvelles tentatives, attente.</li>
+      <li>Tester dans un Notebook, lancer manuellement, commencer par des actions sans risque.</li>
+      <li>Garde-fous pour la remédiation ; filtrer les déclencheurs pour éviter les tempêtes.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 5 -->
+<section class="module" id="m5" data-title="Terraform & provider Dynatrace">
+  <div class="eyebrow">Module 5</div>
+  <h2 class="h">La configuration as code avec Terraform</h2>
+  <p>Une plateforme Dynatrace partagée accumule vite des centaines d'éléments de configuration : règles de tagging, profils d'alerte, fenêtres de maintenance, moniteurs synthétiques, SLO, dashboards, workflows, groupes et politiques. Les gérer à la main pose les mêmes problèmes que pour l'infrastructure : pas de traçabilité, pas de relecture, environnements qui divergent. La réponse est la même : <strong>la configuration as code</strong>.</p>
+
+  <h3>Le provider Terraform Dynatrace</h3>
+  <p>Le provider <code>dynatrace-oss/dynatrace</code> du Terraform Registry couvre la plupart de la configuration d'un environnement, ainsi que la gestion du compte (IAM).</p>
+<pre><code><span class="kw">terraform</span> {
+  required_providers {
+    dynatrace = {
+      source  = <span class="str">"dynatrace-oss/dynatrace"</span>
+      version = <span class="str">"~&gt; 1.0"</span>
+    }
+  }
+}
+
+<span class="cm"># Authentification par variables d'environnement, jamais en dur :</span>
+<span class="cm">#   DYNATRACE_ENV_URL, DYNATRACE_API_TOKEN       → configuration de l'environnement</span>
+<span class="cm">#   DT_CLIENT_ID, DT_CLIENT_SECRET, DT_ACCOUNT_ID → ressources du compte et de la plateforme (OAuth)</span>
+<span class="kw">provider</span> <span class="str">"dynatrace"</span> {}</code></pre>
+
+  <h3>Quelques ressources</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Domaine</th><th>Exemples de ressources</th></tr></thead>
+    <tbody>
+      <tr><td>Topologie et tags</td><td><code>dynatrace_autotag_v2</code>, <code>dynatrace_management_zone_v2</code></td></tr>
+      <tr><td>Alertes et maintenance</td><td><code>dynatrace_alerting</code>, <code>dynatrace_maintenance</code></td></tr>
+      <tr><td>Synthétique</td><td><code>dynatrace_http_monitor</code>, <code>dynatrace_browser_monitor</code></td></tr>
+      <tr><td>Expérience utilisateur</td><td><code>dynatrace_web_application</code></td></tr>
+      <tr><td>SLO</td><td><code>dynatrace_slo_v2</code></td></tr>
+      <tr><td>Automatisation et documents</td><td><code>dynatrace_automation_workflow</code>, <code>dynatrace_document</code> (dashboards et notebooks)</td></tr>
+      <tr><td>Identités et droits</td><td><code>dynatrace_iam_group</code>, <code>dynatrace_iam_policy</code>, <code>dynatrace_iam_policy_bindings_v2</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Exemple : les droits d'une équipe</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"dynatrace_iam_group"</span> <span class="str">"boutique"</span> {
+  name = <span class="str">"team-boutique"</span>
+}
+
+<span class="kw">resource</span> <span class="str">"dynatrace_iam_policy"</span> <span class="str">"boutique_data"</span> {
+  name            = <span class="str">"boutique-data-read"</span>
+  account         = var.account_id
+  statement_query = &lt;&lt;-EOT
+    ALLOW storage:logs:read, storage:spans:read, storage:buckets:read
+      WHERE storage:dt.security_context = "boutique";
+  EOT
+}
+
+<span class="kw">resource</span> <span class="str">"dynatrace_iam_policy_bindings_v2"</span> <span class="str">"boutique_prod"</span> {
+  group       = dynatrace_iam_group.boutique.id
+  environment = var.environment_id
+  policy {
+    id = dynatrace_iam_policy.boutique_data.id
+  }
+}</code></pre>
+  <p><em>Exemple simplifié : les attributs exacts dépendent de la version du provider.</em> Avec un module Terraform « équipe », l'arrivée d'une nouvelle équipe se résume à une merge request de quelques lignes : groupe, politiques, segment, dashboards et workflows de notification.</p>
+
+  <h3>Reprendre l'existant</h3>
+  <p>Le binaire du provider dispose d'un <strong>mode export</strong> qui génère les fichiers <code>.tf</code> correspondant à la configuration existante d'un environnement. C'est le point de départ classique pour passer d'une configuration faite à la main à une configuration gérée par le code ; on peut aussi utiliser les blocs <code>import</code> de Terraform (voir la <a href="../terraform/1-fondamentaux.html">self-training Terraform</a>, module 7).</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Provider <code>dynatrace-oss/dynatrace</code> : configuration d'environnement, documents, workflows et IAM.</li>
+      <li>Authentification par variables d'environnement (jeton API ou client OAuth).</li>
+      <li>Modules Terraform pour standardiser l'arrivée d'une équipe.</li>
+      <li>Mode export ou blocs <code>import</code> pour reprendre l'existant.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 6 -->
+<section class="module" id="m6" data-title="Monaco & stratégie as code">
+  <div class="eyebrow">Module 6</div>
+  <h2 class="h">Monaco et la stratégie de configuration as code</h2>
+
+  <h3>Monaco</h3>
+  <p><strong>Monaco</strong> (<em>Monitoring as Code</em>) est l'outil en ligne de commande de Dynatrace pour gérer la configuration par le code. Il utilise des fichiers <strong>YAML</strong> qui décrivent les éléments de configuration, avec des modèles <strong>JSON</strong> paramétrables, et un fichier <code>manifest.yaml</code> qui liste les projets et les environnements cibles.</p>
+<pre><code>monaco/
+├── manifest.yaml            <span class="cm"># projets, environnements (URL, identifiants via variables)</span>
+└── projects/
+    └── boutique/
+        ├── alerting/
+        │   ├── config.yaml  <span class="cm"># éléments, paramètres, dépendances</span>
+        │   └── profile.json <span class="cm"># modèle JSON avec des {{ .variables }}</span>
+        └── dashboards/
+            └── ...
+
+monaco download --manifest manifest.yaml --environment prod   <span class="cm"># récupérer l'existant</span>
+monaco deploy manifest.yaml --environment recette --dry-run   <span class="cm"># simulation</span>
+monaco deploy manifest.yaml --environment recette</code></pre>
+
+  <h3>Terraform ou Monaco ?</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>Terraform</th><th>Monaco</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Éditeur</strong></td><td>HashiCorp, provider maintenu par Dynatrace</td><td>Dynatrace</td></tr>
+      <tr><td><strong>State</strong></td><td>Oui : plan précis, détection de la dérive, suppression des éléments retirés du code</td><td>Pas de fichier de state : déploiement de ce qui est décrit</td></tr>
+      <tr><td><strong>Format</strong></td><td>HCL, avec un schéma par ressource</td><td>YAML + modèles JSON proches des API</td></tr>
+      <tr><td><strong>Points forts</strong></td><td>Un seul outil pour l'infrastructure (cloud, Kubernetes) et Dynatrace ; écosystème riche</td><td>Prise en main rapide, export et promotion entre environnements simples</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Les deux sont valables. Choisissez <strong>un seul outil par élément de configuration</strong> : gérer le même élément avec les deux, ou avec un outil et à la main, crée des conflits.</p>
+
+  <h3>La chaîne de livraison</h3>
+  <ol>
+    <li>La configuration est dans <strong>Git</strong>, relue en merge request.</li>
+    <li>La CI valide : <code>terraform plan</code> ou <code>monaco deploy --dry-run</code>.</li>
+    <li>Déploiement automatique en <strong>hors production</strong>, puis promotion en <strong>production</strong> avec les mêmes fichiers et des paramètres différents.</li>
+    <li>Les identifiants de la CI sont ceux d'un <strong>utilisateur de service</strong> ou d'un client OAuth aux portées limitées.</li>
+    <li>Une vérification régulière de la <strong>dérive</strong> signale les modifications faites à la main.</li>
+  </ol>
+
+  <h3>Que gérer par le code ?</h3>
+  <div class="grid">
+    <div class="card"><h4>✅ Par le code</h4><p>Ce qui est partagé, critique ou répété entre environnements : tags, alertes, maintenance, synthétique, SLO, workflows d'astreinte, groupes et politiques, dashboards de référence.</p></div>
+    <div class="card"><h4>🖐️ Dans l'interface</h4><p>Ce qui est personnel ou exploratoire : notebooks d'investigation, dashboards personnels, essais. Ils pourront être passés dans le code s'ils deviennent des références.</p></div>
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Monaco : outil Dynatrace en YAML + JSON, avec <code>download</code> et <code>deploy</code>.</li>
+      <li>Terraform : state, plan, un seul outil pour l'infrastructure et Dynatrace.</li>
+      <li>Un seul outil par élément ; Git, CI, promotion entre environnements, contrôle de la dérive.</li>
+      <li>Le partagé et le critique dans le code ; l'exploratoire dans l'interface.</li>
+    </ul>
+  </div>
+
+  <div class="callout ok">
+    <strong>Prêt pour le quiz final ?</strong>
+    Le module suivant contient 15 questions sur cette quatrième partie. Il faut 80 % de bonnes réponses pour la valider et terminer le parcours Dynatrace. Bonne chance !
+  </div>
+</section>
+
+<!-- ===================================================== QUIZ -->
+<section class="module" id="quiz" data-title="Quiz de validation">
+  <div class="eyebrow">Évaluation finale</div>
+  <h2 class="h">Quiz de validation des connaissances</h2>
+  <div id="quizRoot"></div>
+</section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Stockage local (tolérant aux erreurs) ---------------- */
+  var STORE_KEY = "self-training-dt4-v1";
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save(s) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* ignoré */ }
+  }
+  var state = load();
+  state.done = state.done || {};
+
+  /* ---------------- Thème ---------------- */
+  var root = document.documentElement;
+  if (state.theme) root.setAttribute("data-theme", state.theme);
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme")
+      ? root.getAttribute("data-theme") === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    state.theme = dark ? "light" : "dark";
+    root.setAttribute("data-theme", state.theme);
+    save(state);
+  });
+
+  /* ---------------- Navigation ---------------- */
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section.module"));
+  var navList = document.getElementById("navList");
+  var learningIds = sections.filter(function (s) { return /^m[1-9]$/.test(s.id); }).map(function (s) { return s.id; });
+
+  sections.forEach(function (s, i) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#" + s.id;
+    a.dataset.id = s.id;
+    var label = s.id === "m0" ? "i" : (s.id === "quiz" ? "?" : s.id.slice(1));
+    a.innerHTML = '<span class="num">' + label + "</span><span></span>";
+    a.lastChild.textContent = s.dataset.title;
+    li.appendChild(a);
+    navList.appendChild(li);
+
+    // Pager
+    var pager = document.createElement("div");
+    pager.className = "pager";
+    var prev = sections[i - 1], next = sections[i + 1];
+    pager.innerHTML =
+      (prev ? '<a class="btn ghost" href="#' + prev.id + '">← ' + escapeHtml(prev.dataset.title) + "</a>" : "<span></span>") +
+      (next ? '<a class="btn" data-complete="' + s.id + '" href="#' + next.id + '">' + escapeHtml(next.dataset.title) + " →</a>" : "");
+    if (s.id !== "quiz") s.appendChild(pager);
+  });
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-complete]");
+    if (t) {
+      var id = t.getAttribute("data-complete");
+      if (learningIds.indexOf(id) !== -1) { state.done[id] = true; save(state); }
+    }
+  });
+
+  function show() {
+    var id = (location.hash || "#m0").slice(1);
+    if (!document.getElementById(id)) id = "m0";
+    sections.forEach(function (s) { s.classList.toggle("visible", s.id === id); });
+    navList.querySelectorAll("a").forEach(function (a) {
+      a.classList.toggle("active", a.dataset.id === id);
+      a.classList.toggle("done", !!state.done[a.dataset.id] || (a.dataset.id === "quiz" && state.passed));
+    });
+    updateProgress();
+    document.getElementById("sidebar").classList.remove("open");
+    window.scrollTo(0, 0);
+  }
+  function updateProgress() {
+    var n = learningIds.filter(function (id) { return state.done[id]; }).length;
+    document.getElementById("progressBar").style.width = (n / learningIds.length * 100) + "%";
+    document.getElementById("progressLabel").textContent = n + " / " + learningIds.length + " modules lus";
+  }
+  window.addEventListener("hashchange", show);
+  document.getElementById("menuBtn").addEventListener("click", function () {
+    document.getElementById("sidebar").classList.toggle("open");
+  });
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------------- Quiz ---------------- */
+  var PASS = 0.8;
+  var QUESTIONS = [
+    { t: "Utilisateurs", q: "À qui faut-il attribuer les droits dans Dynatrace ?",
+      o: ["À chaque utilisateur individuellement", "À des groupes, dont les utilisateurs sont membres", "Uniquement aux jetons API", "À personne : tout le monde est administrateur"],
+      a: 1, e: "Attribuer les droits à des groupes, idéalement fédérés depuis l'annuaire, rend la gestion simple et auditable." },
+    { t: "Utilisateurs", q: "Avec quelle identité un pipeline CI ou un workflow doit-il s'exécuter ?",
+      o: ["Le compte personnel de l'administrateur", "Un utilisateur de service (ou un client OAuth) aux droits limités", "Un compte partagé dont le mot de passe circule par e-mail", "Aucune identité"],
+      a: 1, e: "Un utilisateur de service n'est lié à aucune personne : il survit aux départs et applique le moindre privilège." },
+    { t: "Utilisateurs", q: "À quoi sert SCIM ?",
+      o: ["À chiffrer les données", "À synchroniser automatiquement utilisateurs et groupes depuis l'annuaire de l'entreprise", "À créer des dashboards", "À exécuter des moniteurs synthétiques"],
+      a: 1, e: "Avec SAML pour la connexion et SCIM pour la synchronisation, l'annuaire reste la source de vérité : un départ y désactive aussi l'accès à Dynatrace." },
+    { t: "Utilisateurs", q: "Pourquoi garder un ou deux comptes administrateurs d'urgence hors SSO ?",
+      o: ["Pour contourner l'audit", "Pour pouvoir administrer la plateforme si le fournisseur d'identité est indisponible", "Pour les partager avec toutes les équipes", "Ce n'est pas recommandé"],
+      a: 1, e: "Ces comptes, protégés par MFA et très peu utilisés, évitent d'être bloqué hors de la plateforme." },
+    { t: "IAM", q: "Que fait la déclaration de politique suivante ?\nALLOW storage:logs:read WHERE storage:dt.security_context = \"boutique\";",
+      o: ["Elle interdit la lecture des logs", "Elle autorise la lecture des logs dont le contexte de sécurité est « boutique »", "Elle supprime les logs de la boutique", "Elle crée un bucket"],
+      a: 1, e: "Les politiques autorisent des permissions, éventuellement sous condition ; tout ce qui n'est pas autorisé est interdit." },
+    { t: "IAM", q: "Comment le champ dt.security_context est-il généralement renseigné ?",
+      o: ["Par l'utilisateur au moment de la requête", "À l'ingestion, en général par OpenPipeline, à partir d'attributs comme le namespace ou un tag d'équipe", "Par le navigateur", "Il est toujours vide"],
+      a: 1, e: "Le découpage doit être prévu dès l'ingestion : il est difficile de restreindre l'accès a posteriori." },
+    { t: "IAM", q: "Quelle est la différence entre une politique IAM et un segment ?",
+      o: ["Aucune", "La politique IAM est un mécanisme de sécurité ; le segment filtre seulement l'affichage et peut être changé par l'utilisateur", "Le segment est plus sécurisé que la politique", "Les segments remplacent les groupes"],
+      a: 1, e: "Pour empêcher l'accès à des données, seules les politiques IAM font foi. Les segments sont un confort de filtrage." },
+    { t: "IAM", q: "À quoi servent les limites de politique (policy boundaries) ?",
+      o: ["À limiter le nombre d'utilisateurs", "À réutiliser une même politique pour plusieurs groupes, chacun restreint à son propre périmètre", "À limiter la durée des sessions", "À plafonner la facture"],
+      a: 1, e: "La même politique « lecture des logs » peut être attribuée à plusieurs équipes, avec une limite différente pour chacune." },
+    { t: "Workflows", q: "Lequel n'est PAS un type de déclencheur de workflow ?",
+      o: ["Un problème Davis", "Une planification", "Un événement", "La modification d'un fichier sur le poste d'un utilisateur"],
+      a: 3, e: "Les workflows se déclenchent sur un problème, un événement, une planification ou à la demande." },
+    { t: "Workflows", q: "Avec quels droits un workflow s'exécute-t-il ?",
+      o: ["Avec tous les droits de la plateforme", "Avec les droits de son acteur, de préférence un utilisateur de service", "Avec les droits de la dernière personne connectée", "Sans aucun droit"],
+      a: 1, e: "Une tâche ne peut lire que les données et appeler que les API autorisées à l'acteur du workflow." },
+    { t: "Workflows", q: "Comment réutiliser, dans une tâche, le résultat de la tâche DQL nommée get_owner ?",
+      o: ["{{ result(\"get_owner\") }}", "$get_owner", "${get_owner.output}", "Ce n'est pas possible"],
+      a: 0, e: "Les expressions entre doubles accolades accèdent à l'événement (event()) et aux résultats des tâches précédentes (result())." },
+    { t: "Workflows", q: "Quelle approche est recommandée avant de mettre en place une remédiation automatique ?",
+      o: ["L'activer directement en production sur tout le périmètre", "Tester les requêtes dans un Notebook, lancer le workflow manuellement, commencer par des notifications, puis ajouter des garde-fous", "Ne jamais tester", "Désactiver Davis"],
+      a: 1, e: "Une remédiation mal maîtrisée peut aggraver un incident : périmètre limité, nombre d'exécutions plafonné, notification systématique." },
+    { t: "Workflows", q: "Un workflow de notification envoie des centaines de messages par jour. Quelle est la cause probable ?",
+      o: ["Le canal Teams est trop petit", "Un déclencheur trop large (tous les problèmes, toutes les mises à jour) sans filtre sur les tags ou le type d'événement", "Un Notebook mal partagé", "Une politique IAM trop stricte"],
+      a: 1, e: "Filtrez sur l'ouverture et la fermeture des problèmes et sur le périmètre de l'équipe, et regroupez l'information." },
+    { t: "IaC", q: "Comment fournir les identifiants au provider Terraform Dynatrace ?",
+      o: ["En dur dans le fichier main.tf", "Par des variables d'environnement (par exemple DYNATRACE_ENV_URL et DYNATRACE_API_TOKEN, ou un client OAuth)", "Dans un tag", "Dans le nom du workspace"],
+      a: 1, e: "Les secrets ne doivent jamais être dans le code : la CI les injecte depuis un coffre-fort." },
+    { t: "IaC", q: "Quelle ressource Terraform gère un moniteur synthétique HTTP ?",
+      o: ["dynatrace_http_monitor", "dynatrace_iam_group", "dynatrace_document", "aws_instance"],
+      a: 0, e: "Les moniteurs navigateur se gèrent avec dynatrace_browser_monitor, les dashboards et notebooks avec dynatrace_document." },
+    { t: "IaC", q: "Comment passer d'une configuration Dynatrace créée à la main à une configuration gérée par Terraform ?",
+      o: ["Tout supprimer et tout recréer", "Utiliser le mode export du provider pour générer les fichiers .tf, ou des blocs import", "Copier les écrans de configuration", "Ce n'est pas possible"],
+      a: 1, e: "L'export génère une base de code à partir de l'existant ; les blocs import font entrer des éléments dans le state." },
+    { t: "IaC", q: "Quelle est une différence importante entre Terraform et Monaco ?",
+      o: ["Monaco ne fonctionne pas avec Dynatrace", "Terraform maintient un state (plan précis, dérive, suppression des éléments retirés) ; Monaco déploie ce qui est décrit, sans fichier de state", "Terraform est réservé aux dashboards", "Monaco est écrit en HCL"],
+      a: 1, e: "Les deux sont valables ; Terraform permet aussi de gérer l'infrastructure et Dynatrace avec un seul outil." },
+    { t: "IaC", q: "Pourquoi ne faut-il pas gérer le même élément de configuration à la fois avec Terraform et dans l'interface ?",
+      o: ["Parce que l'interface est en lecture seule", "Parce que les deux sources se contredisent : les modifications manuelles sont écrasées ou créent de la dérive", "Parce que Terraform est plus lent", "Ce n'est pas un problème"],
+      a: 1, e: "Un seul outil par élément : le code est la source de vérité, et la dérive est contrôlée régulièrement." },
+    { t: "IaC", q: "Quels éléments gagnent le plus à être gérés par le code ?",
+      o: ["Les notebooks d'investigation personnels", "Ce qui est partagé, critique ou répété entre environnements : alertes, synthétique, SLO, workflows d'astreinte, droits", "Les essais ponctuels", "Rien, tout doit rester dans l'interface"],
+      a: 1, e: "L'exploratoire et le personnel restent dans l'interface ; ils passent dans le code s'ils deviennent des références." },
+    { t: "IAM", q: "Que sont les zones de gestion (management zones) ?",
+      o: ["Le nouveau mécanisme recommandé pour sécuriser l'accès aux données de Grail", "Un mécanisme du modèle classique qui restreint la vue et les droits à un sous-ensemble d'entités", "Des zones de disponibilité AWS", "Des emplacements synthétiques"],
+      a: 1, e: "Elles restent prises en charge pour les applications classiques ; la cible est le trio politiques IAM, contexte de sécurité et segments." }
+  ];
+  var QUIZ_SIZE = 15;
+
+  var quizRoot = document.getElementById("quizRoot");
+  var quiz = null;
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function renderIntro() {
+    var unread = learningIds.length - learningIds.filter(function (id) { return state.done[id]; }).length;
+    var best = state.best != null ? '<p>Votre meilleur score : <strong>' + state.best + ' %</strong>' + (state.passed ? ' ✅ quiz validé' : '') + '</p>' : '';
+    quizRoot.innerHTML =
+      '<div class="card qcard">' +
+        '<p class="lead" style="margin-top:0">' + QUIZ_SIZE + ' questions tirées au hasard parmi ' + QUESTIONS.length + ', ordre des réponses mélangé. Une explication s\'affiche après chaque réponse.</p>' +
+        '<ul><li>Seuil de réussite : <strong>' + Math.round(PASS * 100) + ' %</strong> (' + Math.ceil(PASS * QUIZ_SIZE) + ' bonnes réponses sur ' + QUIZ_SIZE + ')</li>' +
+        '<li>Vous pouvez recommencer autant de fois que vous le souhaitez.</li></ul>' +
+        (unread > 0 ? '<div class="callout warn"><strong>Conseil</strong>Il vous reste ' + unread + ' module(s) non lu(s). Vous pouvez quand même commencer le quiz.</div>' : '') +
+        best +
+        '<div class="quiz-actions"><button class="btn" id="startQuiz">Commencer le quiz</button></div>' +
+      '</div>';
+    document.getElementById("startQuiz").onclick = startQuiz;
+  }
+
+  function startQuiz() {
+    var picked = shuffle(QUESTIONS).slice(0, QUIZ_SIZE).map(function (q) {
+      var order = shuffle(q.o.map(function (_, i) { return i; }));
+      return { t: q.t, q: q.q, e: q.e, o: order.map(function (i) { return q.o[i]; }), a: order.indexOf(q.a) };
+    });
+    quiz = { items: picked, idx: 0, answers: [] };
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    var item = quiz.items[quiz.idx];
+    var letters = "ABCD";
+    var html =
+      '<div class="quiz-head"><span>Question ' + (quiz.idx + 1) + ' / ' + quiz.items.length + '</span><span class="tag">' + escapeHtml(item.t) + '</span></div>' +
+      '<div class="progress" style="max-width:none;margin-bottom:16px"><div style="width:' + (quiz.idx / quiz.items.length * 100) + '%"></div></div>' +
+      '<div class="card qcard"><h3>' + escapeHtml(item.q).replace(/\n/g, '<br><code>').replace(/(<code>.*)$/, '$1</code>') + '</h3>' +
+      '<div class="options">' +
+      item.o.map(function (opt, i) {
+        return '<button class="opt" data-i="' + i + '"><span class="letter">' + letters[i] + '</span><span>' + escapeHtml(opt) + '</span></button>';
+      }).join("") +
+      '</div><div class="feedback" id="fb"></div>' +
+      '<div class="quiz-actions"><button class="btn" id="validate" disabled>Valider</button></div></div>';
+    quizRoot.innerHTML = html;
+
+    var selected = null;
+    var opts = quizRoot.querySelectorAll(".opt");
+    var btn = document.getElementById("validate");
+    opts.forEach(function (b) {
+      b.onclick = function () {
+        opts.forEach(function (x) { x.classList.remove("selected"); });
+        b.classList.add("selected");
+        selected = +b.dataset.i;
+        btn.disabled = false;
+      };
+    });
+    btn.onclick = function () {
+      if (btn.dataset.next) { next(); return; }
+      var ok = selected === item.a;
+      quiz.answers.push(selected);
+      opts.forEach(function (x, i) {
+        x.disabled = true;
+        x.classList.remove("selected");
+        if (i === item.a) x.classList.add("correct");
+        else if (i === selected) x.classList.add("wrong");
+      });
+      var fb = document.getElementById("fb");
+      fb.className = "feedback show " + (ok ? "good" : "bad");
+      fb.innerHTML = "<strong>" + (ok ? "✅ Bonne réponse" : "❌ Mauvaise réponse") + "</strong><br>" + escapeHtml(item.e);
+      btn.textContent = quiz.idx + 1 < quiz.items.length ? "Question suivante →" : "Voir mes résultats";
+      btn.dataset.next = "1";
+      btn.focus();
+    };
+  }
+
+  function next() {
+    quiz.idx++;
+    if (quiz.idx < quiz.items.length) renderQuestion(); else renderResult();
+    window.scrollTo(0, 0);
+  }
+
+  function renderResult() {
+    var total = quiz.items.length;
+    var good = quiz.items.filter(function (it, i) { return quiz.answers[i] === it.a; }).length;
+    var pct = Math.round(good / total * 100);
+    var passed = good / total >= PASS;
+    state.best = Math.max(state.best || 0, pct);
+    if (passed) state.passed = true;
+    save(state);
+    show();
+
+    var themes = {};
+    quiz.items.forEach(function (it, i) {
+      themes[it.t] = themes[it.t] || { g: 0, n: 0 };
+      themes[it.t].n++;
+      if (quiz.answers[i] === it.a) themes[it.t].g++;
+    });
+
+    var r = 64, c = 2 * Math.PI * r;
+    var color = passed ? "var(--ok)" : "var(--ko)";
+    var html =
+      '<div class="card qcard result">' +
+      '<svg class="score-ring" viewBox="0 0 160 160"><circle cx="80" cy="80" r="' + r + '" fill="none" stroke="var(--surface-2)" stroke-width="14"/>' +
+      '<circle cx="80" cy="80" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + (c * pct / 100) + ' ' + c + '" transform="rotate(-90 80 80)"/>' +
+      '<text x="80" y="88" text-anchor="middle" font-size="30" font-weight="700" fill="var(--text)">' + pct + '%</text></svg>' +
+      '<div class="verdict" style="color:' + color + '">' + (passed ? "🎉 Formation validée !" : "Pas encore validée") + '</div>' +
+      '<p>' + good + ' bonnes réponses sur ' + total + '. ' +
+      (passed ? "Vous savez administrer et automatiser une plateforme Dynatrace, et terminez le parcours Dynatrace."
+              : "Il faut au moins " + Math.round(PASS * 100) + " %. Revoyez les thèmes les plus faibles ci-dessous puis réessayez.") + '</p>' +
+      '<div class="themes"><h3>Résultats par thème</h3>' +
+      Object.keys(themes).map(function (k) {
+        var p = Math.round(themes[k].g / themes[k].n * 100);
+        var col = p >= 80 ? "var(--ok)" : p >= 50 ? "var(--warn)" : "var(--ko)";
+        return '<div class="theme-row"><span>' + escapeHtml(k) + '</span><div class="theme-bar"><div style="width:' + p + '%;background:' + col + '"></div></div><span>' + themes[k].g + '/' + themes[k].n + '</span></div>';
+      }).join("") + '</div>' +
+      '<div class="quiz-actions" style="justify-content:center;flex-wrap:wrap">' +
+      '<button class="btn ghost" id="toggleReview">Voir la correction détaillée</button>' +
+      '<button class="btn" id="retry">Recommencer le quiz</button></div>' +
+      '<div id="review" style="display:none;margin-top:20px"></div></div>';
+    quizRoot.innerHTML = html;
+
+    document.getElementById("retry").onclick = startQuiz;
+    document.getElementById("toggleReview").onclick = function () {
+      var rv = document.getElementById("review");
+      rv.style.display = rv.style.display === "none" ? "block" : "none";
+    };
+    document.getElementById("review").innerHTML = quiz.items.map(function (it, i) {
+      var ok = quiz.answers[i] === it.a;
+      return '<div class="review-item"><div><span class="' + (ok ? "badge-ok" : "badge-ko") + '">' + (ok ? "✓" : "✗") + '</span> <strong>' + (i + 1) + '. ' + escapeHtml(it.q) + '</strong></div>' +
+        (ok ? "" : '<div class="ans">Votre réponse : ' + escapeHtml(it.o[quiz.answers[i]]) + '</div>') +
+        '<div class="ans">Bonne réponse : <strong>' + escapeHtml(it.o[it.a]) + '</strong></div>' +
+        '<div class="ans">' + escapeHtml(it.e) + '</div></div>';
+    }).join("");
+  }
+
+  renderIntro();
+  window.addEventListener("hashchange", function () { if (location.hash === "#quiz" && !quiz) renderIntro(); });
+  show();
+})();
+</script>
+</body>
+</html>
