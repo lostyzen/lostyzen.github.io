@@ -117,6 +117,8 @@
     border-right: 1px solid var(--border); background: var(--surface);
     padding: 18px 12px; position: sticky; top: 53px; height: calc(100vh - 53px); overflow-y: auto;
   }
+  .back-link { display: block; margin: 0 10px 14px; font-size: .88rem; color: var(--muted); text-decoration: none; }
+  .back-link:hover { color: var(--accent); }
   nav.side h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 6px 10px 10px; }
   nav.side ol { list-style: none; margin: 0; padding: 0; }
   nav.side li a {
@@ -149,10 +151,10 @@
     padding: 18px 20px; box-shadow: var(--shadow);
   }
   .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 16px 0; }
-  .grid .card h4 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+  .grid .card h4 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
   .grid .card p { margin: 0; color: var(--muted); font-size: .93rem; }
   .tag {
-    display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px;
+    display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap;
     background: var(--accent-soft); color: var(--accent);
   }
 
@@ -230,15 +232,6 @@
   .review-item .ans { font-size: .9rem; color: var(--muted); }
   .badge-ok { color: var(--ok); font-weight: 700; } .badge-ko { color: var(--ko); font-weight: 700; }
 
-  .cert {
-    border: 2px solid var(--accent); border-radius: 14px; padding: 24px; margin-top: 24px;
-    background: linear-gradient(135deg, var(--accent-soft), var(--surface));
-  }
-  .cert input {
-    padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
-    color: var(--text); font-size: 1rem; width: 100%; max-width: 320px;
-  }
-
   @media (max-width: 860px) {
     #menuBtn { display: inline-block; }
     .layout { grid-template-columns: 1fr; }
@@ -257,8 +250,6 @@
     header.top, nav.side, .pager, .quiz-actions { display: none !important; }
     .layout { display: block; }
     section.module { display: block !important; page-break-after: always; }
-    body.print-cert section.module:not(#quiz), body.print-cert #quiz > :not(#quizRoot),
-    body.print-cert .result > :not(.cert), body.print-cert .cert input, body.print-cert .cert p:not(#certText) { display: none !important; }
   }
 </style>
 </head>
@@ -276,6 +267,7 @@
 
 <div class="layout">
   <nav class="side" id="sidebar" aria-label="Sommaire">
+    <a class="back-link" href="../index.html">← Toutes les self-trainings</a>
     <h2>Parcours</h2>
     <ol id="navList"></ol>
   </nav>
@@ -1254,13 +1246,8 @@ Plan: 2 to add, 1 to change, 1 to destroy.</code></pre>
         var col = p >= 80 ? "var(--ok)" : p >= 50 ? "var(--warn)" : "var(--ko)";
         return '<div class="theme-row"><span>' + escapeHtml(k) + '</span><div class="theme-bar"><div style="width:' + p + '%;background:' + col + '"></div></div><span>' + themes[k].g + '/' + themes[k].n + '</span></div>';
       }).join("") + '</div>' +
-      (passed
-        ? '<div class="cert"><h3 style="margin-top:0">Attestation de réussite</h3><p>Saisissez votre nom pour l\'afficher sur l\'attestation, puis imprimez-la.</p>' +
-          '<input id="certName" placeholder="Prénom Nom" aria-label="Votre nom"><p id="certText" style="font-size:1.05rem;margin-top:16px"></p></div>'
-        : "") +
       '<div class="quiz-actions" style="justify-content:center;flex-wrap:wrap">' +
       '<button class="btn ghost" id="toggleReview">Voir la correction détaillée</button>' +
-      (passed ? '<button class="btn ghost" id="printCert">Imprimer l\'attestation</button>' : '') +
       '<button class="btn" id="retry">Recommencer le quiz</button></div>' +
       '<div id="review" style="display:none;margin-top:20px"></div></div>';
     quizRoot.innerHTML = html;
@@ -1277,24 +1264,6 @@ Plan: 2 to add, 1 to change, 1 to destroy.</code></pre>
         '<div class="ans">Bonne réponse : <strong>' + escapeHtml(it.o[it.a]) + '</strong></div>' +
         '<div class="ans">' + escapeHtml(it.e) + '</div></div>';
     }).join("");
-
-    if (passed) {
-      var nameInput = document.getElementById("certName");
-      var certText = document.getElementById("certText");
-      var date = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
-      var upd = function () {
-        var n = nameInput.value.trim() || "…";
-        certText.innerHTML = "Nous attestons que <strong>" + escapeHtml(n) + "</strong> a validé la formation <em>Terraform &amp; Infrastructure as Code</em> avec un score de <strong>" + pct + " %</strong>, le " + date + ".";
-        state.name = nameInput.value; save(state);
-      };
-      nameInput.value = state.name || "";
-      nameInput.oninput = upd; upd();
-      document.getElementById("printCert").onclick = function () {
-        document.body.classList.add("print-cert");
-        window.print();
-        document.body.classList.remove("print-cert");
-      };
-    }
   }
 
   renderIntro();

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynatrace 3 : synthétique</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface-2: #eef1f8;
+    --text: #1b1f2a;
+    --muted: #5a6275;
+    --border: #d9deea;
+    --accent: #1496ff;
+    --accent-2: #6f2da8;
+    --accent-soft: #e3f1ff;
+    --ok: #1a8f4c;
+    --ok-soft: #e2f6ea;
+    --ko: #c62f3a;
+    --ko-soft: #fbe5e7;
+    --warn: #b56a00;
+    --warn-soft: #fff1d9;
+    --code-bg: #1e2230;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(20, 30, 60, .08), 0 6px 20px rgba(20, 30, 60, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141c;
+      --surface: #1a1e29;
+      --surface-2: #232838;
+      --text: #e7eaf2;
+      --muted: #9aa3b8;
+      --border: #2e3446;
+      --accent: #4aaeff;
+      --accent-2: #b07fe0;
+      --accent-soft: #16304a;
+      --ok: #4cc583;
+      --ok-soft: #133524;
+      --ko: #ff6b76;
+      --ko-soft: #3d1a1e;
+      --warn: #f0b04c;
+      --warn-soft: #3a2c12;
+      --code-bg: #0b0d13;
+      --code-text: #e6e9f2;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141c;
+    --surface: #1a1e29;
+    --surface-2: #232838;
+    --text: #e7eaf2;
+    --muted: #9aa3b8;
+    --border: #2e3446;
+    --accent: #4aaeff;
+    --accent-2: #b07fe0;
+    --accent-soft: #16304a;
+    --ok: #4cc583;
+    --ok-soft: #133524;
+    --ko: #ff6b76;
+    --ko-soft: #3d1a1e;
+    --warn: #f0b04c;
+    --warn-soft: #3a2c12;
+    --code-bg: #0b0d13;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+  code, pre { font-family: "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace; font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+  code { background: var(--surface-2); padding: .1em .35em; border-radius: 4px; font-size: .9em; }
+  pre {
+    background: var(--code-bg); color: var(--code-text);
+    padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: .88em; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  .kw { color: #ff9e64; } .fn { color: #7aa2f7; } .str { color: #9ece6a; } .cm { color: #7a8299; font-style: italic; }
+
+  /* ---------- Layout ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; color: #fff; font-size: .9rem;
+  }
+  .progress-wrap { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .progress { flex: 1; height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; max-width: 360px; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s; }
+  .progress-label { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+  .icon-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: .9rem;
+  }
+  .icon-btn:hover { background: var(--surface-2); }
+  #menuBtn { display: none; }
+
+  .layout { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100vh - 53px); }
+  nav.side {
+    border-right: 1px solid var(--border); background: var(--surface);
+    padding: 18px 12px; position: sticky; top: 53px; height: calc(100vh - 53px); overflow-y: auto;
+  }
+  .back-link { display: block; margin: 0 10px 14px; font-size: .88rem; color: var(--muted); text-decoration: none; }
+  .back-link:hover { color: var(--accent); }
+  nav.side h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 6px 10px 10px; }
+  nav.side ol { list-style: none; margin: 0; padding: 0; }
+  nav.side li a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px; text-decoration: none; color: var(--text); font-size: .93rem;
+  }
+  nav.side li a:hover { background: var(--surface-2); }
+  nav.side li a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .num {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center; font-size: .75rem; font-weight: 700;
+    background: var(--surface-2); color: var(--muted);
+  }
+  a.done .num { background: var(--ok); color: #fff; }
+  a.active .num { background: var(--accent); color: #fff; }
+
+  main { padding: 32px 40px 80px; max-width: 980px; width: 100%; }
+  section.module { display: none; animation: fade .25s ease; scroll-margin-top: 70px; }
+  section.module.visible { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .eyebrow { color: var(--accent); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 6px 0 12px; }
+  h2.h { font-size: 1.6rem; margin: 4px 0 16px; line-height: 1.25; }
+  h3 { font-size: 1.15rem; margin: 28px 0 10px; }
+  .lead { font-size: 1.1rem; color: var(--muted); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 16px 0; }
+  .grid .card h4 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+  .grid .card p { margin: 0; color: var(--muted); font-size: .93rem; }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap;
+    background: var(--accent-soft); color: var(--accent);
+  }
+
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .callout strong:first-child { display: block; margin-bottom: 2px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .93rem; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 600; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .table-wrap table { margin: 0; }
+
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 10px 0; }
+  details summary { cursor: pointer; font-weight: 600; }
+
+  .diagram { width: 100%; height: auto; margin: 10px 0; }
+  .diagram text { fill: var(--text); font-family: inherit; }
+  .diagram .muted { fill: var(--muted); }
+  .diagram .box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  .diagram .box-a { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .diagram .line { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .diagram .bar1 { fill: var(--accent); } .diagram .bar2 { fill: var(--accent-2); } .diagram .bar3 { fill: var(--ok); } .diagram .bar4 { fill: var(--warn); }
+
+  .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .btn {
+    border: 0; border-radius: 9px; padding: 10px 18px; font-weight: 600; cursor: pointer; font-size: .95rem;
+    background: var(--accent); color: #fff;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .keypoints { background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; padding: 14px 20px; margin-top: 26px; }
+  .keypoints h4 { margin: 0 0 6px; color: var(--accent); }
+  .keypoints ul { margin: 0; padding-left: 20px; }
+
+  /* ---------- Quiz ---------- */
+  .quiz-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; color: var(--muted); font-size: .9rem; }
+  .qcard { padding: 24px; }
+  .qcard h3 { margin-top: 0; font-size: 1.2rem; }
+  .options { display: grid; gap: 10px; margin: 16px 0; }
+  .opt {
+    display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%;
+    padding: 12px 14px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 10px; cursor: pointer; font-size: .97rem; font-family: inherit; line-height: 1.45;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt .letter {
+    flex: none; width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center;
+    background: var(--surface-2); font-weight: 700; font-size: .82rem;
+  }
+  .opt.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .opt.correct { border-color: var(--ok); background: var(--ok-soft); }
+  .opt.correct .letter { background: var(--ok); color: #fff; }
+  .opt.wrong { border-color: var(--ko); background: var(--ko-soft); }
+  .opt.wrong .letter { background: var(--ko); color: #fff; }
+  .opt:disabled { cursor: default; }
+  .feedback { display: none; padding: 12px 16px; border-radius: 10px; margin-top: 4px; }
+  .feedback.show { display: block; }
+  .feedback.good { background: var(--ok-soft); border-left: 4px solid var(--ok); }
+  .feedback.bad { background: var(--ko-soft); border-left: 4px solid var(--ko); }
+  .quiz-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+  .score-ring { width: 160px; height: 160px; margin: 0 auto 10px; display: block; }
+  .result { text-align: center; }
+  .result .verdict { font-size: 1.4rem; font-weight: 700; margin: 6px 0; }
+  .themes { text-align: left; margin-top: 24px; }
+  .theme-row { display: grid; grid-template-columns: minmax(140px, 1fr) 2fr 60px; gap: 12px; align-items: center; margin: 8px 0; font-size: .93rem; }
+  .theme-bar { height: 10px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .theme-bar > div { height: 100%; border-radius: 99px; }
+  .review-item { text-align: left; border-bottom: 1px solid var(--border); padding: 12px 0; }
+  .review-item:last-child { border: 0; }
+  .review-item .ans { font-size: .9rem; color: var(--muted); }
+  .badge-ok { color: var(--ok); font-weight: 700; } .badge-ko { color: var(--ko); font-weight: 700; }
+
+  @media (max-width: 860px) {
+    #menuBtn { display: inline-block; }
+    .layout { grid-template-columns: 1fr; }
+    nav.side {
+      position: fixed; top: 53px; left: 0; width: 290px; max-width: 85vw; z-index: 30;
+      transform: translateX(-100%); transition: transform .25s; box-shadow: var(--shadow);
+    }
+    nav.side.open { transform: none; }
+    main { padding: 22px 16px 60px; }
+    h1 { font-size: 1.6rem; }
+    .brand span.full { display: none; }
+    .progress-label { display: none; }
+    .theme-row { grid-template-columns: 1fr 1.4fr 48px; }
+  }
+  @media print {
+    header.top, nav.side, .pager, .quiz-actions { display: none !important; }
+    .layout { display: block; }
+    section.module { display: block !important; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="icon-btn" id="menuBtn" aria-label="Ouvrir le menu">☰</button>
+  <div class="brand"><div class="brand-mark">◆</div><span class="full">Dynatrace · Partie 3 : surveillance synthétique</span></div>
+  <div class="progress-wrap">
+    <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+    <span class="progress-label" id="progressLabel">0 / 9 modules</span>
+  </div>
+  <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Changer de thème">◐</button>
+</header>
+
+<div class="layout">
+  <nav class="side" id="sidebar" aria-label="Sommaire">
+    <a class="back-link" href="../index.html">← Toutes les self-trainings</a>
+    <h2>Parcours</h2>
+    <ol id="navList"></ol>
+  </nav>
+
+  <main id="main">
+
+<!-- ===================================================== MODULE 0 -->
+<section class="module" id="m0" data-title="Introduction">
+  <div class="eyebrow">Partie 3 sur 4 · Bienvenue</div>
+  <h1>Dynatrace : la surveillance synthétique</h1>
+  <p class="lead">Cette troisième partie est consacrée à la surveillance synthétique (<em>Synthetic Monitoring</em>) : simuler des utilisateurs et des appels pour vérifier en continu la disponibilité et la performance de vos applications, API et équipements, même quand personne ne les utilise. Elle se termine par un quiz de validation.</p>
+
+  <div class="grid">
+    <div class="card"><h4>⏱️ Durée</h4><p>Environ 1 h de lecture, plus 15 minutes de quiz.</p></div>
+    <div class="card"><h4>🎯 Prérequis</h4><p>Avoir suivi la <a href="1-fondamentaux.html">partie 1 : fondamentaux</a>, notamment le module 8 sur l'expérience utilisateur.</p></div>
+    <div class="card"><h4>✅ Validation</h4><p>Un quiz de 15 questions. Seuil de réussite : <strong>80 %</strong>.</p></div>
+  </div>
+
+  <h3>Le parcours Dynatrace</h3>
+  <div class="grid">
+    <div class="card"><h4><span class="tag">Partie 1</span> <a href="1-fondamentaux.html">Fondamentaux</a></h4><p>Concepts de l'observabilité, architecture et plateforme Dynatrace.</p></div>
+    <div class="card"><h4><span class="tag">Partie 2</span> <a href="2-analyse-visualisation.html">Analyse et visualisation</a></h4><p>Smartscape, DQL avancé, Notebooks, Dashboards.</p></div>
+    <div class="card"><h4><span class="tag">Partie 3</span> Surveillance synthétique</h4><p><strong>Vous êtes ici.</strong> Moniteurs HTTP, navigateur et réseau, emplacements, alertes.</p></div>
+    <div class="card"><h4><span class="tag">Partie 4</span> <a href="4-administration-automatisation.html">Administration et automatisation</a></h4><p>IAM et RBAC, Workflows, configuration as code avec Terraform.</p></div>
+  </div>
+
+  <h3>Objectifs pédagogiques</h3>
+  <ul>
+    <li>expliquer l'intérêt du synthétique et sa complémentarité avec le <strong>RUM</strong> ;</li>
+    <li>choisir le bon type de moniteur : <strong>HTTP</strong>, <strong>navigateur</strong>, <strong>disponibilité réseau</strong> ;</li>
+    <li>concevoir des parcours scriptés robustes, avec des <strong>identifiants</strong> stockés en sécurité ;</li>
+    <li>choisir entre <strong>emplacements publics et privés</strong> ;</li>
+    <li>régler les <strong>alertes</strong>, la détection des pannes et les <strong>SLO</strong> ;</li>
+    <li>maîtriser les <strong>coûts</strong> et appliquer les bonnes pratiques.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Un produit qui évolue vite</strong>
+    Les fréquences, limites et noms de menus cités ici sont valables à la date de rédaction et peuvent différer selon votre version de Dynatrace : vérifiez-les dans la documentation de votre environnement.
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 1 -->
+<section class="module" id="m1" data-title="Principes du synthétique">
+  <div class="eyebrow">Module 1</div>
+  <h2 class="h">Les principes de la surveillance synthétique</h2>
+  <p>Un <strong>moniteur synthétique</strong> exécute un test à intervalles réguliers depuis un ou plusieurs <strong>emplacements</strong> : appeler une API, charger une page, dérouler un parcours de connexion, joindre un équipement réseau. Chaque exécution mesure la <strong>disponibilité</strong> (le test a-t-il réussi ?) et la <strong>performance</strong> (en combien de temps ?).</p>
+
+  <h3>Pourquoi le synthétique ?</h3>
+  <div class="grid">
+    <div class="card"><h4>🌙 Détection proactive</h4><p>Une panne à 3 h du matin est détectée avant l'arrivée des premiers utilisateurs, même sans aucun trafic.</p></div>
+    <div class="card"><h4>📏 Référence stable</h4><p>Mêmes conditions à chaque exécution : idéal pour comparer les performances dans le temps et entre versions.</p></div>
+    <div class="card"><h4>🌍 Vue géographique</h4><p>Vérifier l'accès depuis différents pays ou sites de l'entreprise.</p></div>
+    <div class="card"><h4>🤝 Engagements contractuels</h4><p>Mesurer objectivement la disponibilité d'un service pour un SLA ou un SLO.</p></div>
+    <div class="card"><h4>🧪 Avant la mise en production</h4><p>Tester un environnement de recette ou une nouvelle version avant l'ouverture aux utilisateurs.</p></div>
+    <div class="card"><h4>🔌 Dépendances tierces</h4><p>Surveiller les API de partenaires (paiement, transport) dont vous dépendez.</p></div>
+  </div>
+
+  <h3>Synthétique et RUM</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>Synthétique</th><th>RUM</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Source</strong></td><td>Robots, parcours définis à l'avance</td><td>Utilisateurs réels</td></tr>
+      <tr><td><strong>Disponibilité des mesures</strong></td><td>En continu, 24 h/24</td><td>Seulement quand il y a du trafic</td></tr>
+      <tr><td><strong>Conditions</strong></td><td>Contrôlées et constantes</td><td>Toute la diversité réelle (navigateurs, réseaux, appareils)</td></tr>
+      <tr><td><strong>Répond à</strong></td><td>« Le service fonctionne-t-il ? »</td><td>« Comment les utilisateurs le vivent-ils ? »</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Les deux se complètent : le synthétique alerte tôt et sert de référence, le RUM mesure l'expérience réelle. Pour aller plus loin sur le RUM, voir l'article <em>Le Real User Monitoring (RUM) dans Dynatrace et l'injection du tag JavaScript</em>.</p>
+
+  <h3>Les types de moniteurs</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Type</th><th>Ce qu'il fait</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Moniteur HTTP</strong></td><td>Envoie une ou plusieurs requêtes HTTP et vérifie les réponses, sans navigateur</td><td>API, points de santé, services web ; léger et peu coûteux</td></tr>
+      <tr><td><strong>Moniteur navigateur</strong> (une URL)</td><td>Charge une page dans un vrai navigateur (Chrome) et mesure son chargement complet</td><td>Disponibilité et performance d'une page d'accueil</td></tr>
+      <tr><td><strong>Parcours navigateur</strong> (<em>clickpath</em>)</td><td>Rejoue une suite d'actions : clics, saisies, navigation</td><td>Parcours critiques : connexion, recherche, ajout au panier</td></tr>
+      <tr><td><strong>Moniteur de disponibilité réseau</strong></td><td>Teste l'accessibilité réseau : ICMP (ping), port TCP, résolution DNS</td><td>Équipements, serveurs, services non HTTP, depuis le réseau interne</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Moniteur = test exécuté régulièrement depuis des emplacements ; mesure disponibilité et performance.</li>
+      <li>Détection proactive, référence stable, vue géographique, mesure des engagements.</li>
+      <li>Complémentaire du RUM.</li>
+      <li>Types : HTTP, navigateur (URL unique ou parcours), disponibilité réseau.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 2 -->
+<section class="module" id="m2" data-title="Moniteurs HTTP">
+  <div class="eyebrow">Module 2</div>
+  <h2 class="h">Les moniteurs HTTP</h2>
+  <p>Un moniteur HTTP n'utilise pas de navigateur : il envoie des requêtes et analyse les réponses. Il est rapide, économique et idéal pour les <strong>API</strong> et les <strong>points de santé</strong>.</p>
+
+  <h3>Configurer une requête</h3>
+  <ul>
+    <li><strong>URL et méthode</strong> (GET, POST, PUT…), <strong>en-têtes</strong> et <strong>corps</strong> de la requête ;</li>
+    <li><strong>Authentification</strong> : basique, jeton, certificat client, OAuth… avec des identifiants issus du <strong>coffre-fort d'identifiants</strong> (<em>credential vault</em>) ;</li>
+    <li><strong>Règles de validation</strong> : code de statut attendu, présence ou absence d'un texte ou d'une expression régulière dans la réponse ;</li>
+    <li><strong>Seuils de performance</strong> : durée au-delà de laquelle le test est considéré comme lent ;</li>
+    <li><strong>Validation du certificat</strong> TLS et alerte avant son expiration.</li>
+  </ul>
+  <div class="callout warn">
+    <strong>Un code 200 ne suffit pas</strong>
+    Une API peut répondre 200 avec un message d'erreur dans le corps, ou une page de maintenance. Ajoutez toujours une règle de validation sur le <strong>contenu</strong> : par exemple, vérifier que la réponse contient <code>"status":"UP"</code>.
+  </div>
+
+  <h3>Les moniteurs multi-requêtes</h3>
+  <p>Un moniteur HTTP peut enchaîner plusieurs requêtes pour tester un scénario d'API complet : obtenir un jeton, créer une ressource, la relire, la supprimer. Des <strong>scripts JavaScript</strong> exécutés avant ou après chaque requête permettent de :</p>
+  <ul>
+    <li><strong>extraire une valeur</strong> d'une réponse (un jeton, un identifiant) pour la réutiliser dans la requête suivante ;</li>
+    <li><strong>construire dynamiquement</strong> une requête (horodatage, signature) ;</li>
+    <li><strong>faire échouer</strong> le test selon une logique métier plus fine que les règles de validation.</li>
+  </ul>
+<pre><code><span class="cm">// Script après la requête "Obtenir un jeton" (illustratif)</span>
+<span class="kw">var</span> body = <span class="fn">JSON.parse</span>(response.getResponseBody());
+<span class="kw">if</span> (!body.access_token) {
+  api.<span class="fn">fail</span>(<span class="str">"Aucun jeton dans la réponse"</span>);
+}
+api.<span class="fn">setValue</span>(<span class="str">"token"</span>, body.access_token);   <span class="cm">// réutilisé ensuite via {token}</span></code></pre>
+  <p><em>Les noms exacts des objets et méthodes disponibles dans les scripts sont décrits dans la documentation Dynatrace des moniteurs HTTP.</em></p>
+
+  <h3>Bonnes pratiques</h3>
+  <ul>
+    <li>Tester un <strong>point de santé applicatif</strong> qui vérifie réellement les dépendances essentielles, plutôt qu'une simple page statique.</li>
+    <li>Pour les scénarios qui écrivent des données, utiliser un <strong>compte de test</strong> et <strong>nettoyer</strong> en fin de scénario.</li>
+    <li>Ne jamais mettre de mot de passe ou de jeton en clair dans le moniteur : passer par le coffre-fort d'identifiants.</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Moniteur HTTP : sans navigateur, rapide et économique, idéal pour les API.</li>
+      <li>Toujours valider le contenu de la réponse, pas seulement le code de statut.</li>
+      <li>Multi-requêtes et scripts pour enchaîner des appels et réutiliser des valeurs.</li>
+      <li>Identifiants dans le coffre-fort, comptes de test, nettoyage.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 3 -->
+<section class="module" id="m3" data-title="Moniteurs navigateur">
+  <div class="eyebrow">Module 3</div>
+  <h2 class="h">Les moniteurs navigateur</h2>
+  <p>Un moniteur navigateur exécute un <strong>vrai navigateur Chrome</strong> : le JavaScript s'exécute, les ressources se chargent, les pages s'affichent. Il mesure donc ce qu'un utilisateur verrait, y compris les <strong>Core Web Vitals</strong>, les erreurs JavaScript et les ressources tierces lentes.</p>
+
+  <h3>Enregistrer un parcours</h3>
+  <p>Les parcours (<em>clickpaths</em>) s'enregistrent avec le <strong>Dynatrace Synthetic Recorder</strong>, une extension pour Chrome : on navigue normalement sur le site, et chaque action (clic, saisie, sélection, navigation) devient un <strong>événement</strong> du moniteur. On peut ensuite modifier le script, dans l'éditeur visuel ou en mode script (JSON).</p>
+  <ol>
+    <li>Démarrer l'enregistrement depuis l'assistant de création de moniteur.</li>
+    <li>Dérouler le parcours : page d'accueil → connexion → recherche → fiche produit.</li>
+    <li>Vérifier et rendre les <strong>localisateurs</strong> robustes (voir ci-dessous).</li>
+    <li>Ajouter des <strong>validations</strong> : tel texte ou tel élément doit être présent à telle étape.</li>
+    <li>Remplacer les mots de passe saisis par des <strong>identifiants du coffre-fort</strong>.</li>
+    <li>Lancer une exécution de test, puis activer le moniteur.</li>
+  </ol>
+
+  <h3>Des parcours robustes</h3>
+  <p>La cause n° 1 des fausses alertes est un parcours qui casse dès que la page change un peu. Pour l'éviter :</p>
+  <ul>
+    <li><strong>Localisateurs stables</strong> : préférez un identifiant (<code>#login-button</code>) ou un attribut dédié aux tests (<code>[data-testid="login"]</code>) à un chemin CSS ou XPath long et fragile. Le Recorder enregistre plusieurs localisateurs de secours pour chaque élément.</li>
+    <li><strong>Attendre les bons éléments</strong> : configurer l'attente d'un élément ou d'un texte précis plutôt qu'un délai fixe.</li>
+    <li><strong>Valider chaque étape importante</strong> : sans validation, un parcours peut « réussir » sur une page d'erreur.</li>
+    <li><strong>Collaborer avec les développeurs</strong> : ajouter des attributs <code>data-testid</code> stables profite aussi aux tests automatisés.</li>
+    <li><strong>Gérer les bannières</strong> de consentement aux cookies et les fenêtres surgissantes au début du parcours.</li>
+  </ul>
+  <div class="callout warn">
+    <strong>Attention aux effets de bord</strong>
+    Un parcours exécuté toutes les 15 minutes depuis 4 emplacements tourne près de 400 fois par jour. S'il passe une vraie commande, envoie un vrai e-mail ou crée un vrai compte, les conséquences sont réelles. Utilisez des comptes et des données de test, arrêtez le parcours avant l'étape irréversible, ou prévoyez un environnement où ces actions sont neutralisées.
+  </div>
+
+  <h3>Les résultats d'un moniteur navigateur</h3>
+  <ul>
+    <li>Disponibilité et durée totale, détail <strong>par événement</strong> du parcours ;</li>
+    <li><strong>Cascade</strong> des ressources chargées (scripts, images, API) : idéal pour repérer un appel tiers lent ;</li>
+    <li><strong>Capture d'écran</strong> de la page au moment d'un échec ;</li>
+    <li>Lien vers les traces côté serveur quand l'application est surveillée par OneAgent.</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Moniteur navigateur = vrai Chrome : JavaScript, ressources, Web Vitals.</li>
+      <li>Parcours enregistrés avec le Synthetic Recorder, puis rendus robustes.</li>
+      <li>Localisateurs stables, attentes d'éléments, validations à chaque étape.</li>
+      <li>Jamais d'actions réelles irréversibles ; comptes et données de test.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 4 -->
+<section class="module" id="m4" data-title="Emplacements & réseau">
+  <div class="eyebrow">Module 4</div>
+  <h2 class="h">Emplacements publics, privés et disponibilité réseau</h2>
+
+  <h3>Emplacements publics et privés</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>Emplacements publics</th><th>Emplacements privés</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Hébergés par</strong></td><td>Dynatrace, chez les grands fournisseurs cloud, dans de nombreuses régions du monde</td><td>Vous, sur un ou plusieurs <strong>ActiveGates</strong> avec la fonction Synthetic activée, ou dans un cluster Kubernetes</td></tr>
+      <tr><td><strong>Testent</strong></td><td>Ce qui est accessible depuis Internet</td><td>Les applications <strong>internes</strong> (intranet, back-office, API privées) et l'accès depuis vos sites</td></tr>
+      <tr><td><strong>Exploitation</strong></td><td>Aucune</td><td>Dimensionnement, mises à jour, haute disponibilité (plusieurs ActiveGates par emplacement)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout">
+    <strong>Choisir les emplacements</strong>
+    Pour un site public, prenez des emplacements proches de vos utilisateurs réels (par exemple Paris, Francfort et Londres pour une clientèle européenne) et au moins <strong>trois</strong> emplacements : cela permet de distinguer une vraie panne d'un problème réseau local (module 5). Pour une application interne, placez des emplacements privés dans les sites ou réseaux d'où se connectent les utilisateurs.
+  </div>
+
+  <h3>Les moniteurs de disponibilité réseau</h3>
+  <p>Ces moniteurs testent l'accessibilité <strong>réseau</strong> de cibles, sans passer par HTTP :</p>
+  <ul>
+    <li><strong>ICMP</strong> : la cible répond-elle au ping, avec quelle latence et quelle perte de paquets ?</li>
+    <li><strong>TCP</strong> : le port (base de données, serveur de messagerie, service propriétaire) accepte-t-il les connexions ?</li>
+    <li><strong>DNS</strong> : le nom est-il résolu, et vers les bonnes adresses ?</li>
+  </ul>
+  <p>Ils s'exécutent depuis des <strong>emplacements privés</strong> et servent à surveiller des équipements et services internes : routeurs, imprimantes, serveurs sans OneAgent, accès à des partenaires par VPN. Un même moniteur peut tester de nombreuses cibles.</p>
+
+  <h3>Fréquence d'exécution</h3>
+  <p>Chaque moniteur s'exécute à une fréquence choisie, par exemple toutes les minutes pour une API critique, toutes les 15 minutes pour un parcours navigateur. Plus la fréquence est élevée, plus la détection est rapide… et plus le coût est élevé (module 6). Les fréquences proposées dépendent du type de moniteur.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Publics : gérés par Dynatrace, pour ce qui est exposé sur Internet.</li>
+      <li>Privés : ActiveGates (ou Kubernetes) chez vous, pour les applications internes.</li>
+      <li>Au moins trois emplacements pour distinguer une panne d'un incident local.</li>
+      <li>Moniteurs réseau ICMP, TCP, DNS depuis des emplacements privés.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 5 -->
+<section class="module" id="m5" data-title="Alertes, pannes & SLO">
+  <div class="eyebrow">Module 5</div>
+  <h2 class="h">Alertes, détection des pannes et SLO</h2>
+
+  <h3>Panne globale et panne locale</h3>
+  <p>Un test qui échoue une fois depuis un seul emplacement ne signifie pas forcément que le service est en panne : le problème peut venir du réseau de cet emplacement. Dynatrace distingue :</p>
+  <ul>
+    <li><strong>Panne globale</strong> (<em>global outage</em>) : le test échoue depuis <strong>tous</strong> les emplacements ;</li>
+    <li><strong>Panne locale</strong> (<em>local outage</em>) : le test échoue depuis <strong>un nombre donné d'emplacements</strong>, pendant un nombre donné d'exécutions consécutives.</li>
+  </ul>
+  <p>On règle ces seuils pour chaque moniteur. L'option de <strong>nouvelle tentative en cas d'erreur</strong> relance immédiatement un test échoué avant de le compter comme un échec, ce qui élimine beaucoup de faux positifs dus à un incident réseau ponctuel.</p>
+
+  <h3>Les seuils de performance</h3>
+  <p>En plus de la disponibilité, on définit des seuils de durée, globaux ou par étape (par exemple « la page de résultats de recherche doit s'afficher en moins de 3 s »). Un dépassement répété ouvre un problème de lenteur.</p>
+
+  <h3>Des problèmes, pas seulement des alertes</h3>
+  <p>Les échecs synthétiques deviennent des <strong>problèmes Davis</strong>, comme les autres anomalies. Quand l'application testée est surveillée par OneAgent, Davis peut relier l'échec du moniteur à la <strong>cause racine</strong> côté serveur : service en erreur, base saturée, déploiement récent. Les notifications passent ensuite par les mêmes canaux que les autres problèmes, en général via un workflow (voir la <a href="4-administration-automatisation.html">partie 4</a>).</p>
+
+  <h3>Fenêtres de maintenance</h3>
+  <p>Pendant une maintenance planifiée, un site volontairement indisponible ne doit ni réveiller l'astreinte ni dégrader le calcul de disponibilité. Déclarez des <strong>fenêtres de maintenance</strong> : selon leur configuration, elles suspendent l'exécution des moniteurs ou les alertes sur la période.</p>
+
+  <h3>SLO de disponibilité</h3>
+  <p>Les résultats synthétiques sont une excellente base pour un <strong>SLO de disponibilité</strong> : « le parcours de connexion doit réussir dans 99,9 % des exécutions sur 30 jours ». On peut aussi interroger les résultats en DQL, dans un Notebook ou un dashboard, pour suivre la disponibilité par emplacement ou par étape.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Panne globale (tous les emplacements) et panne locale (N emplacements, X fois de suite).</li>
+      <li>Nouvelle tentative en cas d'erreur pour limiter les faux positifs.</li>
+      <li>Échecs = problèmes Davis, reliés à la cause racine côté serveur si OneAgent est présent.</li>
+      <li>Fenêtres de maintenance et SLO de disponibilité.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 6 -->
+<section class="module" id="m6" data-title="Coûts & bonnes pratiques">
+  <div class="eyebrow">Module 6</div>
+  <h2 class="h">Coûts et bonnes pratiques</h2>
+
+  <h3>Comprendre la consommation</h3>
+  <p>Le synthétique est facturé selon le <strong>nombre d'exécutions</strong> : nombre d'actions pour les moniteurs navigateur, nombre de requêtes pour les moniteurs HTTP, nombre de requêtes réseau pour la disponibilité réseau. La consommation se calcule simplement :</p>
+  <div class="card">
+    <strong>Exemple de calcul</strong><br>
+    Parcours navigateur de <strong>5 actions</strong>, toutes les <strong>15 minutes</strong>, depuis <strong>3 emplacements</strong> :<br>
+    4 exécutions/heure × 24 h × 30 jours = 2 880 exécutions par emplacement et par mois.<br>
+    2 880 × 3 emplacements × 5 actions = <strong>43 200 actions par mois</strong>.<br>
+    Le même parcours toutes les 5 minutes en consomme <strong>trois fois plus</strong>.
+  </div>
+  <p>Les moniteurs navigateur sont les plus coûteux, les moniteurs HTTP beaucoup moins. Les emplacements privés n'évitent pas la consommation de licence, mais ajoutent le coût de leurs ActiveGates.</p>
+
+  <h3>Une stratégie équilibrée</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Cible</th><th>Moniteur conseillé</th><th>Fréquence indicative</th></tr></thead>
+    <tbody>
+      <tr><td>API et points de santé critiques</td><td>HTTP</td><td>1 à 5 min</td></tr>
+      <tr><td>Page d'accueil, disponibilité d'un site</td><td>HTTP (contenu validé), ou navigateur URL unique</td><td>5 à 15 min</td></tr>
+      <tr><td>Parcours métier critiques (connexion, achat)</td><td>Parcours navigateur</td><td>10 à 15 min</td></tr>
+      <tr><td>Parcours secondaires</td><td>Parcours navigateur</td><td>30 à 60 min</td></tr>
+      <tr><td>Équipements et services internes non HTTP</td><td>Disponibilité réseau</td><td>1 à 5 min</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Check-list</h3>
+  <ul>
+    <li><strong>Couvrir ce qui compte</strong> : quelques parcours critiques bien conçus valent mieux que des dizaines de moniteurs fragiles.</li>
+    <li><strong>Nommer et taguer</strong> les moniteurs (application, environnement, équipe propriétaire) pour les retrouver et router les alertes.</li>
+    <li><strong>Gérer par le code</strong> : les moniteurs se créent avec Terraform ou Monaco (ressources de type <code>dynatrace_http_monitor</code>, <code>dynatrace_browser_monitor</code>), ce qui permet de les dupliquer entre environnements.</li>
+    <li><strong>Identifiants</strong> dans le coffre-fort, comptes de test dédiés, pas d'actions réelles irréversibles.</li>
+    <li><strong>Revoir régulièrement</strong> les moniteurs : supprimer ceux dont personne ne regarde les résultats, ajuster ceux qui génèrent de fausses alertes.</li>
+    <li><strong>Prévenir les équipes</strong> concernées : un pare-feu applicatif (WAF) ou une protection anti-robots peut bloquer les emplacements synthétiques ; il faut alors autoriser leurs adresses IP.</li>
+  </ul>
+
+  <div class="callout ok">
+    <strong>Prêt pour le quiz ?</strong>
+    Le module suivant contient 15 questions sur cette troisième partie. Il faut 80 % de bonnes réponses pour la valider. Ensuite, direction la <a href="4-administration-automatisation.html">partie 4 : administration et automatisation</a>.
+  </div>
+</section>
+
+<!-- ===================================================== QUIZ -->
+<section class="module" id="quiz" data-title="Quiz de validation">
+  <div class="eyebrow">Évaluation finale</div>
+  <h2 class="h">Quiz de validation des connaissances</h2>
+  <div id="quizRoot"></div>
+</section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Stockage local (tolérant aux erreurs) ---------------- */
+  var STORE_KEY = "self-training-dt3-v1";
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save(s) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* ignoré */ }
+  }
+  var state = load();
+  state.done = state.done || {};
+
+  /* ---------------- Thème ---------------- */
+  var root = document.documentElement;
+  if (state.theme) root.setAttribute("data-theme", state.theme);
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme")
+      ? root.getAttribute("data-theme") === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    state.theme = dark ? "light" : "dark";
+    root.setAttribute("data-theme", state.theme);
+    save(state);
+  });
+
+  /* ---------------- Navigation ---------------- */
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section.module"));
+  var navList = document.getElementById("navList");
+  var learningIds = sections.filter(function (s) { return /^m[1-9]$/.test(s.id); }).map(function (s) { return s.id; });
+
+  sections.forEach(function (s, i) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#" + s.id;
+    a.dataset.id = s.id;
+    var label = s.id === "m0" ? "i" : (s.id === "quiz" ? "?" : s.id.slice(1));
+    a.innerHTML = '<span class="num">' + label + "</span><span></span>";
+    a.lastChild.textContent = s.dataset.title;
+    li.appendChild(a);
+    navList.appendChild(li);
+
+    // Pager
+    var pager = document.createElement("div");
+    pager.className = "pager";
+    var prev = sections[i - 1], next = sections[i + 1];
+    pager.innerHTML =
+      (prev ? '<a class="btn ghost" href="#' + prev.id + '">← ' + escapeHtml(prev.dataset.title) + "</a>" : "<span></span>") +
+      (next ? '<a class="btn" data-complete="' + s.id + '" href="#' + next.id + '">' + escapeHtml(next.dataset.title) + " →</a>" : "");
+    if (s.id !== "quiz") s.appendChild(pager);
+  });
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-complete]");
+    if (t) {
+      var id = t.getAttribute("data-complete");
+      if (learningIds.indexOf(id) !== -1) { state.done[id] = true; save(state); }
+    }
+  });
+
+  function show() {
+    var id = (location.hash || "#m0").slice(1);
+    if (!document.getElementById(id)) id = "m0";
+    sections.forEach(function (s) { s.classList.toggle("visible", s.id === id); });
+    navList.querySelectorAll("a").forEach(function (a) {
+      a.classList.toggle("active", a.dataset.id === id);
+      a.classList.toggle("done", !!state.done[a.dataset.id] || (a.dataset.id === "quiz" && state.passed));
+    });
+    updateProgress();
+    document.getElementById("sidebar").classList.remove("open");
+    window.scrollTo(0, 0);
+  }
+  function updateProgress() {
+    var n = learningIds.filter(function (id) { return state.done[id]; }).length;
+    document.getElementById("progressBar").style.width = (n / learningIds.length * 100) + "%";
+    document.getElementById("progressLabel").textContent = n + " / " + learningIds.length + " modules lus";
+  }
+  window.addEventListener("hashchange", show);
+  document.getElementById("menuBtn").addEventListener("click", function () {
+    document.getElementById("sidebar").classList.toggle("open");
+  });
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------------- Quiz ---------------- */
+  var PASS = 0.8;
+  var QUESTIONS = [
+    { t: "Principes", q: "Quel est le principal avantage du synthétique par rapport au RUM ?",
+      o: ["Il mesure l'expérience des utilisateurs réels", "Il fonctionne en continu, même sans aucun trafic, ce qui permet une détection proactive", "Il est gratuit", "Il remplace OneAgent"],
+      a: 1, e: "Le synthétique teste 24 h/24 dans des conditions constantes ; le RUM mesure l'expérience réelle, seulement quand il y a des utilisateurs." },
+    { t: "Principes", q: "Quel type de moniteur choisir pour vérifier une API REST de façon légère et économique ?",
+      o: ["Un parcours navigateur", "Un moniteur HTTP", "Un moniteur de disponibilité réseau ICMP", "Session Replay"],
+      a: 1, e: "Le moniteur HTTP envoie des requêtes sans navigateur : il est rapide et peu coûteux." },
+    { t: "Principes", q: "Quel moniteur permet de vérifier qu'un utilisateur peut se connecter puis rechercher un produit sur un site web ?",
+      o: ["Un moniteur HTTP à requête unique", "Un parcours navigateur (clickpath)", "Un moniteur DNS", "Un dashboard"],
+      a: 1, e: "Le parcours navigateur rejoue une suite d'actions dans un vrai navigateur Chrome." },
+    { t: "HTTP", q: "Un moniteur HTTP ne vérifie que le code de statut 200. Quel est le risque ?",
+      o: ["Aucun", "L'API peut renvoyer 200 avec une erreur ou une page de maintenance dans le corps : le test réussit à tort", "Le moniteur coûte plus cher", "Le test échoue toujours"],
+      a: 1, e: "Ajoutez une règle de validation sur le contenu de la réponse." },
+    { t: "HTTP", q: "Dans un moniteur HTTP multi-requêtes, comment réutiliser un jeton obtenu à la première requête ?",
+      o: ["En le copiant à la main chaque jour", "Avec un script exécuté après la requête qui extrait la valeur et la rend disponible pour les requêtes suivantes", "Ce n'est pas possible", "En le mettant en clair dans l'URL"],
+      a: 1, e: "Les scripts avant et après chaque requête permettent d'extraire et de réutiliser des valeurs, ou de faire échouer le test selon une logique métier." },
+    { t: "HTTP", q: "Où stocker le mot de passe utilisé par un moniteur pour se connecter ?",
+      o: ["En clair dans la configuration du moniteur", "Dans le coffre-fort d'identifiants (credential vault) de Dynatrace", "Dans un tag", "Dans le nom du moniteur"],
+      a: 1, e: "Le coffre-fort d'identifiants évite d'exposer les secrets dans la configuration et facilite leur rotation." },
+    { t: "Navigateur", q: "Quel outil sert à enregistrer un parcours navigateur ?",
+      o: ["Le Dynatrace Synthetic Recorder, une extension pour Chrome", "kubectl", "OneAgent", "Un Notebook"],
+      a: 0, e: "On navigue normalement et chaque action devient un événement du moniteur, modifiable ensuite." },
+    { t: "Navigateur", q: "Quelle est la principale cause de fausses alertes sur les parcours navigateur ?",
+      o: ["Une fréquence trop basse", "Des localisateurs d'éléments fragiles qui cassent dès que la page change un peu", "L'utilisation d'emplacements publics", "Le coffre-fort d'identifiants"],
+      a: 1, e: "Préférez des identifiants stables ou des attributs data-testid, attendez les bons éléments et validez chaque étape." },
+    { t: "Navigateur", q: "Un parcours navigateur passe une vraie commande à chaque exécution. Quel est le problème ?",
+      o: ["Aucun, c'est le meilleur test possible", "Le parcours s'exécute des centaines de fois par jour : il crée de vraies commandes, avec des conséquences réelles", "Le moniteur sera trop rapide", "Dynatrace l'interdit"],
+      a: 1, e: "Utilisez des comptes et données de test, arrêtez avant l'étape irréversible ou utilisez un environnement où l'action est neutralisée." },
+    { t: "Emplacements", q: "Comment surveiller une application interne, inaccessible depuis Internet ?",
+      o: ["Avec un emplacement public", "Avec un emplacement privé, sur un ActiveGate avec la fonction Synthetic activée (ou dans Kubernetes) dans votre réseau", "Avec Session Replay", "Ce n'est pas possible"],
+      a: 1, e: "Les emplacements privés s'exécutent chez vous et accèdent donc à vos applications internes." },
+    { t: "Emplacements", q: "Pourquoi utiliser au moins trois emplacements pour un moniteur important ?",
+      o: ["Parce que c'est obligatoire", "Pour distinguer une vraie panne d'un problème réseau propre à un emplacement", "Pour réduire les coûts", "Pour accélérer le site"],
+      a: 1, e: "Les règles de panne locale et globale s'appuient sur le nombre d'emplacements en échec." },
+    { t: "Emplacements", q: "Que testent les moniteurs de disponibilité réseau ?",
+      o: ["Le temps de chargement complet d'une page", "L'accessibilité réseau de cibles : ICMP (ping), ports TCP, résolution DNS", "Les erreurs JavaScript", "Les Core Web Vitals"],
+      a: 1, e: "Ils s'exécutent depuis des emplacements privés et servent pour les équipements et services internes non HTTP." },
+    { t: "Alertes", q: "Comment limiter les fausses alertes dues à un incident réseau ponctuel ?",
+      o: ["Supprimer les moniteurs", "Activer la nouvelle tentative en cas d'erreur et régler les seuils de panne locale (N emplacements, X exécutions consécutives)", "Utiliser un seul emplacement", "Augmenter la fréquence à toutes les secondes"],
+      a: 1, e: "Un échec isolé est relancé avant d'être compté, et une panne locale n'est déclarée qu'après plusieurs échecs." },
+    { t: "Alertes", q: "Un site est volontairement arrêté pour une maintenance planifiée. Comment éviter des alertes et une baisse du calcul de disponibilité ?",
+      o: ["Désactiver Dynatrace", "Déclarer une fenêtre de maintenance", "Supprimer puis recréer les moniteurs", "Ignorer les alertes"],
+      a: 1, e: "Selon leur configuration, les fenêtres de maintenance suspendent l'exécution des moniteurs ou les alertes sur la période." },
+    { t: "Alertes", q: "Quel avantage apporte OneAgent sur l'application testée par un moniteur synthétique ?",
+      o: ["Aucun", "Davis peut relier l'échec du moniteur à la cause racine côté serveur (service en erreur, base saturée, déploiement)", "Le moniteur devient gratuit", "Le moniteur n'a plus besoin d'emplacement"],
+      a: 1, e: "L'échec synthétique devient un problème Davis enrichi par la topologie et les traces du serveur." },
+    { t: "Coûts", q: "Un parcours navigateur de 4 actions s'exécute toutes les 15 minutes depuis 2 emplacements. Combien d'actions consomme-t-il par jour ?",
+      o: ["96", "384", "768", "2 880"],
+      a: 2, e: "96 exécutions par jour et par emplacement × 2 emplacements × 4 actions = 768 actions par jour." },
+    { t: "Coûts", q: "Quel type de moniteur est généralement le plus coûteux ?",
+      o: ["Moniteur HTTP", "Moniteur navigateur", "Moniteur de disponibilité réseau", "Ils coûtent tous la même chose"],
+      a: 1, e: "Les moniteurs navigateur sont facturés par action et sont les plus coûteux ; les moniteurs HTTP le sont beaucoup moins." },
+    { t: "Bonnes pratiques", q: "Les tests synthétiques sont bloqués par le pare-feu applicatif (WAF) du site. Que faire ?",
+      o: ["Désactiver le WAF", "Autoriser les adresses IP des emplacements synthétiques auprès de l'équipe qui gère le WAF ou la protection anti-robots", "Augmenter la fréquence", "Passer en moniteur réseau"],
+      a: 1, e: "Les robots synthétiques ressemblent à du trafic automatisé : il faut les déclarer pour qu'ils ne soient pas bloqués." },
+    { t: "Bonnes pratiques", q: "Comment gérer des moniteurs synthétiques de façon reproductible entre plusieurs environnements ?",
+      o: ["Les recréer à la main", "Les gérer par le code avec Terraform (dynatrace_http_monitor, dynatrace_browser_monitor) ou Monaco", "Les exporter en PDF", "Les copier par capture d'écran"],
+      a: 1, e: "La configuration as code permet de versionner, relire et dupliquer les moniteurs (voir la partie 4)." },
+    { t: "Bonnes pratiques", q: "Quelle base est particulièrement adaptée à un SLO de disponibilité d'un parcours de connexion ?",
+      o: ["Le nombre de tags", "Le taux de réussite des exécutions du moniteur synthétique correspondant", "Le nombre de dashboards", "La taille des logs"],
+      a: 1, e: "Exemple : le parcours de connexion doit réussir dans 99,9 % des exécutions sur 30 jours." }
+  ];
+  var QUIZ_SIZE = 15;
+
+  var quizRoot = document.getElementById("quizRoot");
+  var quiz = null;
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function renderIntro() {
+    var unread = learningIds.length - learningIds.filter(function (id) { return state.done[id]; }).length;
+    var best = state.best != null ? '<p>Votre meilleur score : <strong>' + state.best + ' %</strong>' + (state.passed ? ' ✅ quiz validé' : '') + '</p>' : '';
+    quizRoot.innerHTML =
+      '<div class="card qcard">' +
+        '<p class="lead" style="margin-top:0">' + QUIZ_SIZE + ' questions tirées au hasard parmi ' + QUESTIONS.length + ', ordre des réponses mélangé. Une explication s\'affiche après chaque réponse.</p>' +
+        '<ul><li>Seuil de réussite : <strong>' + Math.round(PASS * 100) + ' %</strong> (' + Math.ceil(PASS * QUIZ_SIZE) + ' bonnes réponses sur ' + QUIZ_SIZE + ')</li>' +
+        '<li>Vous pouvez recommencer autant de fois que vous le souhaitez.</li></ul>' +
+        (unread > 0 ? '<div class="callout warn"><strong>Conseil</strong>Il vous reste ' + unread + ' module(s) non lu(s). Vous pouvez quand même commencer le quiz.</div>' : '') +
+        best +
+        '<div class="quiz-actions"><button class="btn" id="startQuiz">Commencer le quiz</button></div>' +
+      '</div>';
+    document.getElementById("startQuiz").onclick = startQuiz;
+  }
+
+  function startQuiz() {
+    var picked = shuffle(QUESTIONS).slice(0, QUIZ_SIZE).map(function (q) {
+      var order = shuffle(q.o.map(function (_, i) { return i; }));
+      return { t: q.t, q: q.q, e: q.e, o: order.map(function (i) { return q.o[i]; }), a: order.indexOf(q.a) };
+    });
+    quiz = { items: picked, idx: 0, answers: [] };
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    var item = quiz.items[quiz.idx];
+    var letters = "ABCD";
+    var html =
+      '<div class="quiz-head"><span>Question ' + (quiz.idx + 1) + ' / ' + quiz.items.length + '</span><span class="tag">' + escapeHtml(item.t) + '</span></div>' +
+      '<div class="progress" style="max-width:none;margin-bottom:16px"><div style="width:' + (quiz.idx / quiz.items.length * 100) + '%"></div></div>' +
+      '<div class="card qcard"><h3>' + escapeHtml(item.q).replace(/\n/g, '<br><code>').replace(/(<code>.*)$/, '$1</code>') + '</h3>' +
+      '<div class="options">' +
+      item.o.map(function (opt, i) {
+        return '<button class="opt" data-i="' + i + '"><span class="letter">' + letters[i] + '</span><span>' + escapeHtml(opt) + '</span></button>';
+      }).join("") +
+      '</div><div class="feedback" id="fb"></div>' +
+      '<div class="quiz-actions"><button class="btn" id="validate" disabled>Valider</button></div></div>';
+    quizRoot.innerHTML = html;
+
+    var selected = null;
+    var opts = quizRoot.querySelectorAll(".opt");
+    var btn = document.getElementById("validate");
+    opts.forEach(function (b) {
+      b.onclick = function () {
+        opts.forEach(function (x) { x.classList.remove("selected"); });
+        b.classList.add("selected");
+        selected = +b.dataset.i;
+        btn.disabled = false;
+      };
+    });
+    btn.onclick = function () {
+      if (btn.dataset.next) { next(); return; }
+      var ok = selected === item.a;
+      quiz.answers.push(selected);
+      opts.forEach(function (x, i) {
+        x.disabled = true;
+        x.classList.remove("selected");
+        if (i === item.a) x.classList.add("correct");
+        else if (i === selected) x.classList.add("wrong");
+      });
+      var fb = document.getElementById("fb");
+      fb.className = "feedback show " + (ok ? "good" : "bad");
+      fb.innerHTML = "<strong>" + (ok ? "✅ Bonne réponse" : "❌ Mauvaise réponse") + "</strong><br>" + escapeHtml(item.e);
+      btn.textContent = quiz.idx + 1 < quiz.items.length ? "Question suivante →" : "Voir mes résultats";
+      btn.dataset.next = "1";
+      btn.focus();
+    };
+  }
+
+  function next() {
+    quiz.idx++;
+    if (quiz.idx < quiz.items.length) renderQuestion(); else renderResult();
+    window.scrollTo(0, 0);
+  }
+
+  function renderResult() {
+    var total = quiz.items.length;
+    var good = quiz.items.filter(function (it, i) { return quiz.answers[i] === it.a; }).length;
+    var pct = Math.round(good / total * 100);
+    var passed = good / total >= PASS;
+    state.best = Math.max(state.best || 0, pct);
+    if (passed) state.passed = true;
+    save(state);
+    show();
+
+    var themes = {};
+    quiz.items.forEach(function (it, i) {
+      themes[it.t] = themes[it.t] || { g: 0, n: 0 };
+      themes[it.t].n++;
+      if (quiz.answers[i] === it.a) themes[it.t].g++;
+    });
+
+    var r = 64, c = 2 * Math.PI * r;
+    var color = passed ? "var(--ok)" : "var(--ko)";
+    var html =
+      '<div class="card qcard result">' +
+      '<svg class="score-ring" viewBox="0 0 160 160"><circle cx="80" cy="80" r="' + r + '" fill="none" stroke="var(--surface-2)" stroke-width="14"/>' +
+      '<circle cx="80" cy="80" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + (c * pct / 100) + ' ' + c + '" transform="rotate(-90 80 80)"/>' +
+      '<text x="80" y="88" text-anchor="middle" font-size="30" font-weight="700" fill="var(--text)">' + pct + '%</text></svg>' +
+      '<div class="verdict" style="color:' + color + '">' + (passed ? "🎉 Formation validée !" : "Pas encore validée") + '</div>' +
+      '<p>' + good + ' bonnes réponses sur ' + total + '. ' +
+      (passed ? "Vous maîtrisez la surveillance synthétique. Prochaine étape : la partie 4, administration et automatisation."
+              : "Il faut au moins " + Math.round(PASS * 100) + " %. Revoyez les thèmes les plus faibles ci-dessous puis réessayez.") + '</p>' +
+      '<div class="themes"><h3>Résultats par thème</h3>' +
+      Object.keys(themes).map(function (k) {
+        var p = Math.round(themes[k].g / themes[k].n * 100);
+        var col = p >= 80 ? "var(--ok)" : p >= 50 ? "var(--warn)" : "var(--ko)";
+        return '<div class="theme-row"><span>' + escapeHtml(k) + '</span><div class="theme-bar"><div style="width:' + p + '%;background:' + col + '"></div></div><span>' + themes[k].g + '/' + themes[k].n + '</span></div>';
+      }).join("") + '</div>' +
+      '<div class="quiz-actions" style="justify-content:center;flex-wrap:wrap">' +
+      '<button class="btn ghost" id="toggleReview">Voir la correction détaillée</button>' +
+      '<button class="btn" id="retry">Recommencer le quiz</button></div>' +
+      '<div id="review" style="display:none;margin-top:20px"></div></div>';
+    quizRoot.innerHTML = html;
+
+    document.getElementById("retry").onclick = startQuiz;
+    document.getElementById("toggleReview").onclick = function () {
+      var rv = document.getElementById("review");
+      rv.style.display = rv.style.display === "none" ? "block" : "none";
+    };
+    document.getElementById("review").innerHTML = quiz.items.map(function (it, i) {
+      var ok = quiz.answers[i] === it.a;
+      return '<div class="review-item"><div><span class="' + (ok ? "badge-ok" : "badge-ko") + '">' + (ok ? "✓" : "✗") + '</span> <strong>' + (i + 1) + '. ' + escapeHtml(it.q) + '</strong></div>' +
+        (ok ? "" : '<div class="ans">Votre réponse : ' + escapeHtml(it.o[quiz.answers[i]]) + '</div>') +
+        '<div class="ans">Bonne réponse : <strong>' + escapeHtml(it.o[it.a]) + '</strong></div>' +
+        '<div class="ans">' + escapeHtml(it.e) + '</div></div>';
+    }).join("");
+  }
+
+  renderIntro();
+  window.addEventListener("hashchange", function () { if (location.hash === "#quiz" && !quiz) renderIntro(); });
+  show();
+})();
+</script>
+</body>
+</html>

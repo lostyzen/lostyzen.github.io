@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kubernetes 2 : production</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface-2: #eef1f8;
+    --text: #1b1f2a;
+    --muted: #5a6275;
+    --border: #d9deea;
+    --accent: #b45309;
+    --accent-2: #7c2d12;
+    --accent-soft: #fdf0e1;
+    --ok: #1a8f4c;
+    --ok-soft: #e2f6ea;
+    --ko: #c62f3a;
+    --ko-soft: #fbe5e7;
+    --warn: #b56a00;
+    --warn-soft: #fff1d9;
+    --code-bg: #1e2230;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(20, 30, 60, .08), 0 6px 20px rgba(20, 30, 60, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141c;
+      --surface: #1a1e29;
+      --surface-2: #232838;
+      --text: #e7eaf2;
+      --muted: #9aa3b8;
+      --border: #2e3446;
+      --accent: #f5a524;
+      --accent-2: #fbbf6b;
+      --accent-soft: #3a2710;
+      --ok: #4cc583;
+      --ok-soft: #133524;
+      --ko: #ff6b76;
+      --ko-soft: #3d1a1e;
+      --warn: #f0b04c;
+      --warn-soft: #3a2c12;
+      --code-bg: #0b0d13;
+      --code-text: #e6e9f2;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141c;
+    --surface: #1a1e29;
+    --surface-2: #232838;
+    --text: #e7eaf2;
+    --muted: #9aa3b8;
+    --border: #2e3446;
+    --accent: #f5a524;
+    --accent-2: #fbbf6b;
+    --accent-soft: #3a2710;
+    --ok: #4cc583;
+    --ok-soft: #133524;
+    --ko: #ff6b76;
+    --ko-soft: #3d1a1e;
+    --warn: #f0b04c;
+    --warn-soft: #3a2c12;
+    --code-bg: #0b0d13;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+  code, pre { font-family: "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace; font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+  code { background: var(--surface-2); padding: .1em .35em; border-radius: 4px; font-size: .9em; }
+  pre {
+    background: var(--code-bg); color: var(--code-text);
+    padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: .88em; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  .kw { color: #ff9e64; } .fn { color: #7aa2f7; } .str { color: #9ece6a; } .cm { color: #7a8299; font-style: italic; }
+
+  /* ---------- Layout ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; color: #fff; font-size: .9rem;
+  }
+  .progress-wrap { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .progress { flex: 1; height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; max-width: 360px; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s; }
+  .progress-label { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+  .icon-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: .9rem;
+  }
+  .icon-btn:hover { background: var(--surface-2); }
+  #menuBtn { display: none; }
+
+  .layout { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100vh - 53px); }
+  nav.side {
+    border-right: 1px solid var(--border); background: var(--surface);
+    padding: 18px 12px; position: sticky; top: 53px; height: calc(100vh - 53px); overflow-y: auto;
+  }
+  .back-link { display: block; margin: 0 10px 14px; font-size: .88rem; color: var(--muted); text-decoration: none; }
+  .back-link:hover { color: var(--accent); }
+  nav.side h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 6px 10px 10px; }
+  nav.side ol { list-style: none; margin: 0; padding: 0; }
+  nav.side li a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px; text-decoration: none; color: var(--text); font-size: .93rem;
+  }
+  nav.side li a:hover { background: var(--surface-2); }
+  nav.side li a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .num {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center; font-size: .75rem; font-weight: 700;
+    background: var(--surface-2); color: var(--muted);
+  }
+  a.done .num { background: var(--ok); color: #fff; }
+  a.active .num { background: var(--accent); color: #fff; }
+
+  main { padding: 32px 40px 80px; max-width: 980px; width: 100%; }
+  section.module { display: none; animation: fade .25s ease; scroll-margin-top: 70px; }
+  section.module.visible { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .eyebrow { color: var(--accent); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 6px 0 12px; }
+  h2.h { font-size: 1.6rem; margin: 4px 0 16px; line-height: 1.25; }
+  h3 { font-size: 1.15rem; margin: 28px 0 10px; }
+  .lead { font-size: 1.1rem; color: var(--muted); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 16px 0; }
+  .grid .card h4 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+  .grid .card p { margin: 0; color: var(--muted); font-size: .93rem; }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap;
+    background: var(--accent-soft); color: var(--accent);
+  }
+
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .callout strong:first-child { display: block; margin-bottom: 2px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .93rem; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 600; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .table-wrap table { margin: 0; }
+
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 10px 0; }
+  details summary { cursor: pointer; font-weight: 600; }
+
+  .diagram { width: 100%; height: auto; margin: 10px 0; }
+  .diagram text { fill: var(--text); font-family: inherit; }
+  .diagram .muted { fill: var(--muted); }
+  .diagram .box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  .diagram .box-a { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .diagram .line { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .diagram .bar1 { fill: var(--accent); } .diagram .bar2 { fill: var(--accent-2); } .diagram .bar3 { fill: var(--ok); } .diagram .bar4 { fill: var(--warn); }
+
+  .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .btn {
+    border: 0; border-radius: 9px; padding: 10px 18px; font-weight: 600; cursor: pointer; font-size: .95rem;
+    background: var(--accent); color: #fff;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .keypoints { background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; padding: 14px 20px; margin-top: 26px; }
+  .keypoints h4 { margin: 0 0 6px; color: var(--accent); }
+  .keypoints ul { margin: 0; padding-left: 20px; }
+
+  /* ---------- Quiz ---------- */
+  .quiz-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; color: var(--muted); font-size: .9rem; }
+  .qcard { padding: 24px; }
+  .qcard h3 { margin-top: 0; font-size: 1.2rem; }
+  .options { display: grid; gap: 10px; margin: 16px 0; }
+  .opt {
+    display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%;
+    padding: 12px 14px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 10px; cursor: pointer; font-size: .97rem; font-family: inherit; line-height: 1.45;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt .letter {
+    flex: none; width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center;
+    background: var(--surface-2); font-weight: 700; font-size: .82rem;
+  }
+  .opt.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .opt.correct { border-color: var(--ok); background: var(--ok-soft); }
+  .opt.correct .letter { background: var(--ok); color: #fff; }
+  .opt.wrong { border-color: var(--ko); background: var(--ko-soft); }
+  .opt.wrong .letter { background: var(--ko); color: #fff; }
+  .opt:disabled { cursor: default; }
+  .feedback { display: none; padding: 12px 16px; border-radius: 10px; margin-top: 4px; }
+  .feedback.show { display: block; }
+  .feedback.good { background: var(--ok-soft); border-left: 4px solid var(--ok); }
+  .feedback.bad { background: var(--ko-soft); border-left: 4px solid var(--ko); }
+  .quiz-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+  .score-ring { width: 160px; height: 160px; margin: 0 auto 10px; display: block; }
+  .result { text-align: center; }
+  .result .verdict { font-size: 1.4rem; font-weight: 700; margin: 6px 0; }
+  .themes { text-align: left; margin-top: 24px; }
+  .theme-row { display: grid; grid-template-columns: minmax(140px, 1fr) 2fr 60px; gap: 12px; align-items: center; margin: 8px 0; font-size: .93rem; }
+  .theme-bar { height: 10px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .theme-bar > div { height: 100%; border-radius: 99px; }
+  .review-item { text-align: left; border-bottom: 1px solid var(--border); padding: 12px 0; }
+  .review-item:last-child { border: 0; }
+  .review-item .ans { font-size: .9rem; color: var(--muted); }
+  .badge-ok { color: var(--ok); font-weight: 700; } .badge-ko { color: var(--ko); font-weight: 700; }
+
+  @media (max-width: 860px) {
+    #menuBtn { display: inline-block; }
+    .layout { grid-template-columns: 1fr; }
+    nav.side {
+      position: fixed; top: 53px; left: 0; width: 290px; max-width: 85vw; z-index: 30;
+      transform: translateX(-100%); transition: transform .25s; box-shadow: var(--shadow);
+    }
+    nav.side.open { transform: none; }
+    main { padding: 22px 16px 60px; }
+    h1 { font-size: 1.6rem; }
+    .brand span.full { display: none; }
+    .progress-label { display: none; }
+    .theme-row { grid-template-columns: 1fr 1.4fr 48px; }
+  }
+  @media print {
+    header.top, nav.side, .pager, .quiz-actions { display: none !important; }
+    .layout { display: block; }
+    section.module { display: block !important; page-break-after: always; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="icon-btn" id="menuBtn" aria-label="Ouvrir le menu">☰</button>
+  <div class="brand"><div class="brand-mark">◆</div><span class="full">Kubernetes &amp; EKS · Partie 2 : en production</span></div>
+  <div class="progress-wrap">
+    <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+    <span class="progress-label" id="progressLabel">0 / 9 modules</span>
+  </div>
+  <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Changer de thème">◐</button>
+</header>
+
+<div class="layout">
+  <nav class="side" id="sidebar" aria-label="Sommaire">
+    <a class="back-link" href="../index.html">← Toutes les self-trainings</a>
+    <h2>Parcours</h2>
+    <ol id="navList"></ol>
+  </nav>
+
+  <main id="main">
+
+<!-- ===================================================== MODULE 0 -->
+<section class="module" id="m0" data-title="Introduction">
+  <div class="eyebrow">Partie 2 sur 3 · Bienvenue</div>
+  <h1>Kubernetes en production</h1>
+  <p class="lead">Cette deuxième partie aborde ce qu'il faut maîtriser pour faire tourner des applications de façon fiable, sûre et économique : ressources, santé, placement, réseau, stockage, sécurité, autoscaling, déploiement continu et dépannage. Elle se termine par un quiz de validation.</p>
+
+  <div class="grid">
+    <div class="card"><h4>⏱️ Durée</h4><p>Environ 1 h 30 de lecture, plus 15 minutes de quiz.</p></div>
+    <div class="card"><h4>🎯 Prérequis</h4><p>Avoir suivi la <a href="1-fondamentaux.html">partie 1 : fondamentaux</a> ou en maîtriser le contenu.</p></div>
+    <div class="card"><h4>✅ Validation</h4><p>Un quiz de 15 questions. Seuil de réussite : <strong>80 %</strong>.</p></div>
+  </div>
+
+  <h3>Le parcours Kubernetes &amp; EKS</h3>
+  <div class="grid">
+    <div class="card"><h4><span class="tag">Partie 1</span> <a href="1-fondamentaux.html">Fondamentaux</a></h4><p>Architecture, pods, workloads, services, configuration, kubectl.</p></div>
+    <div class="card"><h4><span class="tag">Partie 2</span> En production</h4><p><strong>Vous êtes ici.</strong> Ressources, ordonnancement, réseau, stockage, sécurité, autoscaling, GitOps, dépannage.</p></div>
+    <div class="card"><h4><span class="tag">Partie 3</span> <a href="3-eks.html">Amazon EKS</a></h4><p>Kubernetes managé sur AWS : calcul, réseau VPC, IAM, stockage, mises à jour, coûts.</p></div>
+  </div>
+
+  <h3>Objectifs pédagogiques</h3>
+  <ul>
+    <li>dimensionner les conteneurs avec <strong>requests et limits</strong> et configurer les <strong>sondes</strong> de santé ;</li>
+    <li>contrôler le <strong>placement</strong> des pods et garantir la <strong>haute disponibilité</strong> ;</li>
+    <li>exposer des applications avec <strong>Ingress / Gateway API</strong> et filtrer le trafic avec les <strong>NetworkPolicies</strong> ;</li>
+    <li>gérer le <strong>stockage persistant</strong> ;</li>
+    <li>sécuriser un cluster : <strong>RBAC</strong>, <strong>Pod Security Standards</strong>, chaîne d'approvisionnement ;</li>
+    <li>mettre en place l'<strong>autoscaling</strong>, le packaging (<strong>Helm, Kustomize</strong>) et le <strong>GitOps</strong> ;</li>
+    <li>appliquer une méthode de <strong>dépannage</strong>.</li>
+  </ul>
+</section>
+
+<!-- ===================================================== MODULE 1 -->
+<section class="module" id="m1" data-title="Ressources & santé">
+  <div class="eyebrow">Module 1</div>
+  <h2 class="h">Ressources et sondes de santé</h2>
+
+  <h3>Requests et limits</h3>
+<pre><code>containers:
+  - name: api
+    image: ghcr.io/acme/api:1.4.0
+    resources:
+      requests:          <span class="cm"># réservé : utilisé par le scheduler pour placer le pod</span>
+        cpu: <span class="str">"250m"</span>       <span class="cm"># 0,25 cœur</span>
+        memory: <span class="str">"256Mi"</span>
+      limits:            <span class="cm"># plafond appliqué à l'exécution</span>
+        memory: <span class="str">"512Mi"</span></code></pre>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>Requests</th><th>Limits</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Rôle</strong></td><td>Quantité <strong>réservée</strong> ; sert au placement par le scheduler</td><td>Quantité <strong>maximale</strong> utilisable</td></tr>
+      <tr><td><strong>Dépassement CPU</strong></td><td>Autorisé si le nœud a du CPU libre</td><td>Le conteneur est <strong>ralenti</strong> (<em>throttling</em>), pas tué</td></tr>
+      <tr><td><strong>Dépassement mémoire</strong></td><td>Autorisé, mais le pod devient candidat à l'éviction si le nœud manque de mémoire</td><td>Le conteneur est <strong>tué</strong> : <code>OOMKilled</code> (code 137)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout">
+    <strong>Pratique courante</strong>
+    Toujours définir des <strong>requests</strong> réalistes (mesurées, pas devinées). Pour la mémoire, une <strong>limit</strong> égale ou proche de la request évite les mauvaises surprises. Pour le CPU, beaucoup d'équipes ne mettent pas de limit pour éviter le throttling, à condition que les requests soient correctes.
+  </div>
+
+  <h3>Les classes de qualité de service (QoS)</h3>
+  <ul>
+    <li><strong>Guaranteed</strong> : requests = limits pour le CPU et la mémoire de tous les conteneurs. Dernier pod évincé en cas de pénurie.</li>
+    <li><strong>Burstable</strong> : au moins une request ou une limit définie, sans remplir les conditions de Guaranteed.</li>
+    <li><strong>BestEffort</strong> : ni request ni limit. Premier évincé ; à éviter en production.</li>
+  </ul>
+  <p>Au niveau d'un namespace, <strong>ResourceQuota</strong> plafonne la consommation totale (CPU, mémoire, nombre d'objets) et <strong>LimitRange</strong> impose des valeurs par défaut et des bornes aux conteneurs.</p>
+
+  <h3>Les sondes (probes)</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Sonde</th><th>Question posée</th><th>En cas d'échec</th></tr></thead>
+    <tbody>
+      <tr><td><strong>startupProbe</strong></td><td>L'application a-t-elle fini de démarrer ?</td><td>Les autres sondes attendent ; après trop d'échecs, le conteneur est redémarré</td></tr>
+      <tr><td><strong>readinessProbe</strong></td><td>L'application est-elle prête à recevoir du trafic ?</td><td>Le pod est <strong>retiré des Services</strong> (plus de trafic), mais n'est pas redémarré</td></tr>
+      <tr><td><strong>livenessProbe</strong></td><td>L'application est-elle encore vivante (pas bloquée) ?</td><td>Le conteneur est <strong>redémarré</strong></td></tr>
+    </tbody>
+  </table>
+  </div>
+<pre><code>    readinessProbe:
+      httpGet: { path: /health/ready, port: 8080 }
+      periodSeconds: 5
+    livenessProbe:
+      httpGet: { path: /health/live, port: 8080 }
+      periodSeconds: 10
+      failureThreshold: 3</code></pre>
+  <div class="callout warn">
+    <strong>Piège classique</strong>
+    Une <strong>liveness</strong> qui vérifie les dépendances (base de données, API externe) est dangereuse : si la base tombe, <em>tous</em> les pods sont redémarrés en boucle, ce qui aggrave l'incident. La liveness ne doit tester que le processus lui-même ; les dépendances relèvent éventuellement de la readiness.
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Requests = réservation et placement ; limits = plafond.</li>
+      <li>CPU dépassé → throttling ; mémoire dépassée → OOMKilled.</li>
+      <li>Readiness retire du trafic ; liveness redémarre ; startup protège les démarrages lents.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 2 -->
+<section class="module" id="m2" data-title="Ordonnancement & haute dispo">
+  <div class="eyebrow">Module 2</div>
+  <h2 class="h">Ordonnancement et haute disponibilité</h2>
+
+  <h3>Contrôler le placement</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Mécanisme</th><th>Principe</th><th>Exemple</th></tr></thead>
+    <tbody>
+      <tr><td><code>nodeSelector</code></td><td>Le pod ne va que sur les nœuds portant un label</td><td>Uniquement sur des nœuds <code>disktype=ssd</code></td></tr>
+      <tr><td><strong>Node affinity</strong></td><td>Version plus riche : règles obligatoires (<em>required</em>) ou préférences (<em>preferred</em>)</td><td>De préférence sur des instances Graviton</td></tr>
+      <tr><td><strong>Pod affinity / anti-affinity</strong></td><td>Placer un pod près de, ou loin de, certains autres pods</td><td>Ne pas mettre deux réplicas de la base sur le même nœud</td></tr>
+      <tr><td><strong>Taints et tolerations</strong></td><td>Un nœud « repousse » les pods (<em>taint</em>), sauf ceux qui le tolèrent (<em>toleration</em>)</td><td>Nœuds GPU réservés aux pods de calcul</td></tr>
+      <tr><td><strong>Topology spread constraints</strong></td><td>Répartir les réplicas équitablement entre zones ou nœuds</td><td>Réplicas équilibrés sur 3 zones de disponibilité</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout">
+    <strong>Ne pas confondre</strong>
+    L'<em>affinity</em> <strong>attire</strong> un pod vers des nœuds ; le <em>taint</em> <strong>repousse</strong> les pods d'un nœud. Pour réserver des nœuds à une charge précise, on combine les deux : un taint sur les nœuds, et une toleration + une affinity sur les pods concernés.
+  </div>
+
+  <h3>Répartir sur plusieurs zones</h3>
+<pre><code>    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels: { app: web }</code></pre>
+  <p>Avec 3 réplicas et 3 zones, chaque zone reçoit un réplica : la perte d'une zone entière n'emporte qu'un tiers de la capacité.</p>
+
+  <h3>Survivre aux maintenances : PodDisruptionBudget</h3>
+  <p>Les nœuds sont régulièrement vidés (<code>kubectl drain</code>) pour des mises à jour, du remplacement de machines ou de l'optimisation de coûts. Ces interruptions <strong>volontaires</strong> respectent le <strong>PodDisruptionBudget</strong> (PDB) :</p>
+<pre><code><span class="kw">apiVersion</span>: policy/v1
+<span class="kw">kind</span>: PodDisruptionBudget
+<span class="kw">metadata</span>:
+  name: web
+<span class="kw">spec</span>:
+  minAvailable: 2          <span class="cm"># ou maxUnavailable: 1</span>
+  selector:
+    matchLabels: { app: web }</code></pre>
+  <p>Le drain attend alors qu'au moins 2 pods <code>web</code> restent disponibles avant d'en évincer un autre. Attention : un PDB trop strict (par exemple <code>minAvailable</code> égal au nombre de réplicas) <strong>bloque</strong> les drains et donc les mises à jour de nœuds.</p>
+
+  <h3>Check-list de haute disponibilité</h3>
+  <ul>
+    <li>Au moins <strong>2 réplicas</strong>, idéalement 3, pour les services critiques.</li>
+    <li>Répartition <strong>multi-zones</strong> (topology spread ou anti-affinity).</li>
+    <li>Un <strong>PDB</strong> raisonnable.</li>
+    <li>Des <strong>sondes readiness</strong> correctes pour ne router que vers des pods prêts.</li>
+    <li>Un <strong>arrêt propre</strong> : l'application gère le signal <code>SIGTERM</code> et termine ses requêtes en cours dans le délai <code>terminationGracePeriodSeconds</code> (30 s par défaut).</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>nodeSelector / affinity attirent ; taints repoussent, tolerations autorisent.</li>
+      <li>Topology spread constraints pour répartir les réplicas entre zones.</li>
+      <li>PDB pour limiter l'impact des maintenances, sans bloquer les drains.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 3 -->
+<section class="module" id="m3" data-title="Réseau">
+  <div class="eyebrow">Module 3</div>
+  <h2 class="h">Le réseau dans Kubernetes</h2>
+
+  <h3>Le modèle réseau</h3>
+  <p>Kubernetes impose un modèle simple : <strong>chaque pod a sa propre IP</strong>, et <strong>tous les pods peuvent se joindre directement</strong>, sur tous les nœuds, sans traduction d'adresse. Ce modèle est mis en œuvre par un <strong>plugin CNI</strong> (<em>Container Network Interface</em>) : Calico, Cilium, Flannel, ou le VPC CNI d'AWS sur EKS (partie 3).</p>
+
+  <h3>Exposer des applications HTTP : Ingress</h3>
+  <p>Créer un Service <code>LoadBalancer</code> par application coûte cher (un load balancer chacun) et complique la gestion des certificats. Un <strong>Ingress</strong> décrit des règles de routage HTTP(S) par <strong>nom d'hôte</strong> et par <strong>chemin</strong> vers des Services, derrière un point d'entrée commun.</p>
+<pre><code><span class="kw">apiVersion</span>: networking.k8s.io/v1
+<span class="kw">kind</span>: Ingress
+<span class="kw">metadata</span>:
+  name: boutique
+<span class="kw">spec</span>:
+  ingressClassName: traefik       <span class="cm"># contrôleur installé dans le cluster</span>
+  tls:
+    - hosts: [shop.example.com]
+      secretName: shop-tls        <span class="cm"># certificat TLS, par exemple géré par cert-manager</span>
+  rules:
+    - host: shop.example.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend: { service: { name: api, port: { number: 80 } } }
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: web, port: { number: 80 } } }</code></pre>
+  <p>Un objet Ingress ne fait rien seul : il faut un <strong>contrôleur d'Ingress</strong> qui le met en œuvre (AWS Load Balancer Controller, Traefik, HAProxy, NGINX Inc., etc.). <strong>cert-manager</strong> automatise l'obtention et le renouvellement des certificats TLS (Let's Encrypt, PKI interne).</p>
+  <div class="callout">
+    <strong>Le TLS dépend du contrôleur</strong>
+    Les contrôleurs qui tournent dans le cluster (Traefik, HAProxy…) terminent le TLS avec le Secret indiqué par <code>secretName</code>. L'<strong>AWS Load Balancer Controller</strong> fonctionne autrement : le certificat est un certificat <strong>ACM</strong>, déclaré par annotations sur l'Ingress, avec un écouteur HTTPS (voir la <a href="3-eks.html">partie 3 : Amazon EKS</a>).
+  </div>
+
+  <h3>Gateway API</h3>
+  <p><strong>Gateway API</strong> est le successeur d'Ingress, stable depuis 2023. Il sépare les responsabilités en plusieurs objets :</p>
+  <ul>
+    <li><strong>GatewayClass</strong> : le type d'implémentation (géré par l'équipe plateforme) ;</li>
+    <li><strong>Gateway</strong> : le point d'entrée, ses ports et certificats (équipe plateforme ou ops) ;</li>
+    <li><strong>HTTPRoute</strong>, <strong>GRPCRoute</strong>… : les règles de routage (équipes applicatives).</li>
+  </ul>
+  <p>Il gère nativement ce qu'Ingress laissait à des annotations propres à chaque contrôleur : répartition pondérée du trafic (déploiements canary), réécriture d'en-têtes, routage entre namespaces, autres protocoles que HTTP.</p>
+  <div class="callout warn">
+    <strong>Fin de ingress-nginx</strong>
+    Le projet communautaire <code>ingress-nginx</code>, longtemps le contrôleur d'Ingress le plus répandu, a été retiré par le projet Kubernetes en 2026 (plus de correctifs, y compris de sécurité). Pour les nouveaux projets, privilégiez <strong>Gateway API</strong> ou un contrôleur maintenu ; pour l'existant, planifiez une migration.
+  </div>
+
+  <h3>Filtrer le trafic : NetworkPolicy</h3>
+  <p>Par défaut, <strong>tout pod peut parler à tout pod</strong>. Une <strong>NetworkPolicy</strong> restreint les flux entrants (<em>ingress</em>) et sortants (<em>egress</em>) des pods sélectionnés.</p>
+<pre><code><span class="cm"># 1. Tout interdire en entrée dans le namespace</span>
+<span class="kw">apiVersion</span>: networking.k8s.io/v1
+<span class="kw">kind</span>: NetworkPolicy
+<span class="kw">metadata</span>: { name: default-deny-ingress, namespace: boutique }
+<span class="kw">spec</span>:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+<span class="cm"># 2. Autoriser uniquement web → api sur le port 8080</span>
+<span class="kw">apiVersion</span>: networking.k8s.io/v1
+<span class="kw">kind</span>: NetworkPolicy
+<span class="kw">metadata</span>: { name: allow-web-to-api, namespace: boutique }
+<span class="kw">spec</span>:
+  podSelector: { matchLabels: { app: api } }
+  ingress:
+    - from: [ { podSelector: { matchLabels: { app: web } } } ]
+      ports: [ { port: 8080 } ]</code></pre>
+  <div class="callout">
+    <strong>Le CNI doit les prendre en charge</strong>
+    Les NetworkPolicies sont appliquées par le plugin réseau. Avec un CNI qui ne les gère pas, elles sont acceptées par l'API mais <strong>sans aucun effet</strong>.
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Une IP par pod, réseau à plat, mis en œuvre par un plugin CNI.</li>
+      <li>Ingress (ou Gateway API, son successeur) route le HTTP par hôte et chemin ; il faut un contrôleur.</li>
+      <li>Par défaut tout est ouvert : NetworkPolicy « deny all » puis autorisations explicites.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 4 -->
+<section class="module" id="m4" data-title="Stockage">
+  <div class="eyebrow">Module 4</div>
+  <h2 class="h">Le stockage persistant</h2>
+  <p>Le système de fichiers d'un conteneur disparaît avec lui. Pour conserver des données, on utilise des <strong>volumes</strong>. Certains sont temporaires (<code>emptyDir</code>, qui vit le temps du pod), d'autres sont <strong>persistants</strong>.</p>
+
+  <h3>PV, PVC et StorageClass</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Objet</th><th>Rôle</th><th>Qui le crée ?</th></tr></thead>
+    <tbody>
+      <tr><td><strong>PersistentVolumeClaim</strong> (PVC)</td><td>Une <strong>demande</strong> de stockage : taille, mode d'accès, classe</td><td>L'équipe applicative</td></tr>
+      <tr><td><strong>PersistentVolume</strong> (PV)</td><td>Un volume réel (disque cloud, partage NFS…) rattaché au cluster</td><td>Créé automatiquement (provisionnement dynamique) ou par un administrateur</td></tr>
+      <tr><td><strong>StorageClass</strong></td><td>Un « type » de stockage et la façon de le créer (driver CSI, performances, chiffrement)</td><td>L'équipe plateforme</td></tr>
+    </tbody>
+  </table>
+  </div>
+<pre><code><span class="kw">apiVersion</span>: v1
+<span class="kw">kind</span>: PersistentVolumeClaim
+<span class="kw">metadata</span>:
+  name: data
+<span class="kw">spec</span>:
+  storageClassName: gp3
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 20Gi</code></pre>
+  <p>Avec le <strong>provisionnement dynamique</strong>, la création du PVC déclenche automatiquement la création du disque par le driver <strong>CSI</strong> (<em>Container Storage Interface</em>) de la StorageClass.</p>
+
+  <h3>Les modes d'accès</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Mode</th><th>Signification</th><th>Exemples de stockage</th></tr></thead>
+    <tbody>
+      <tr><td><code>ReadWriteOnce</code> (RWO)</td><td>Lecture-écriture par <strong>un seul nœud</strong> à la fois</td><td>Disques en mode bloc : Amazon EBS, Azure Disk</td></tr>
+      <tr><td><code>ReadWriteOncePod</code> (RWOP)</td><td>Lecture-écriture par <strong>un seul pod</strong></td><td>Idem, avec garantie plus stricte</td></tr>
+      <tr><td><code>ReadOnlyMany</code> (ROX)</td><td>Lecture seule par plusieurs nœuds</td><td>Partages de fichiers</td></tr>
+      <tr><td><code>ReadWriteMany</code> (RWX)</td><td>Lecture-écriture par <strong>plusieurs nœuds</strong></td><td>Systèmes de fichiers partagés : Amazon EFS, NFS, Azure Files</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Points d'attention</h3>
+  <ul>
+    <li><strong>reclaimPolicy</strong> : avec <code>Delete</code> (souvent la valeur par défaut), supprimer le PVC <strong>supprime le disque et ses données</strong>. Utilisez <code>Retain</code> pour les données critiques.</li>
+    <li><strong>volumeBindingMode: WaitForFirstConsumer</strong> : le disque est créé seulement quand le pod est placé, dans la même zone que lui. Indispensable pour les disques liés à une zone de disponibilité.</li>
+    <li>Avec un <strong>StatefulSet</strong>, <code>volumeClaimTemplates</code> crée un PVC par pod (<code>data-db-0</code>, <code>data-db-1</code>…), conservé même si le pod est recréé.</li>
+    <li>Un volume persistant <strong>n'est pas une sauvegarde</strong> : prévoyez des snapshots (<code>VolumeSnapshot</code>) ou un outil comme <strong>Velero</strong>.</li>
+    <li>Pour les bases de données en production, un service managé (RDS, Cloud SQL…) est souvent plus simple à opérer que leur hébergement dans le cluster.</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>PVC = demande, PV = volume réel, StorageClass = type et méthode de création (CSI).</li>
+      <li>RWO = un nœud (disques bloc) ; RWX = plusieurs nœuds (systèmes de fichiers partagés).</li>
+      <li>Attention à <code>reclaimPolicy: Delete</code> ; un volume n'est pas une sauvegarde.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 5 -->
+<section class="module" id="m5" data-title="Sécurité">
+  <div class="eyebrow">Module 5</div>
+  <h2 class="h">Sécuriser un cluster</h2>
+
+  <h3>Authentification et autorisation</h3>
+  <p>Chaque requête à l'API server passe par trois étapes : <strong>authentification</strong> (qui êtes-vous ?), <strong>autorisation</strong> (avez-vous le droit ?) et <strong>admission</strong> (la requête respecte-t-elle les règles du cluster ?).</p>
+  <ul>
+    <li>Les <strong>utilisateurs humains</strong> ne sont pas des objets Kubernetes : ils viennent d'un fournisseur d'identité externe (OIDC, IAM sur EKS…).</li>
+    <li>Les <strong>applications</strong> utilisent des <strong>ServiceAccounts</strong> : chaque pod s'exécute sous un ServiceAccount, dont le jeton lui permet d'appeler l'API.</li>
+  </ul>
+
+  <h3>RBAC</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Objet</th><th>Portée</th><th>Rôle</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Role</strong></td><td>Un namespace</td><td>Liste de permissions : verbes (<code>get</code>, <code>list</code>, <code>create</code>…) sur des ressources</td></tr>
+      <tr><td><strong>ClusterRole</strong></td><td>Tout le cluster</td><td>Idem, pour des ressources globales ou tous les namespaces</td></tr>
+      <tr><td><strong>RoleBinding</strong></td><td>Un namespace</td><td>Attribue un Role (ou un ClusterRole) à des utilisateurs, groupes ou ServiceAccounts, dans ce namespace</td></tr>
+      <tr><td><strong>ClusterRoleBinding</strong></td><td>Tout le cluster</td><td>Attribue un ClusterRole sur tout le cluster</td></tr>
+    </tbody>
+  </table>
+  </div>
+<pre><code><span class="cm"># Vérifier un droit</span>
+kubectl auth can-i delete pods -n boutique --as alice@example.com</code></pre>
+  <p>Le RBAC n'accorde que des permissions : <strong>tout ce qui n'est pas autorisé est interdit</strong>. Appliquez le moindre privilège ; méfiez-vous des droits <code>*</code>, de l'accès aux Secrets, de <code>pods/exec</code> et du droit de créer des pods (qui permet souvent d'obtenir les droits d'autres ServiceAccounts).</p>
+
+  <h3>Durcir les pods</h3>
+  <p>Les <strong>Pod Security Standards</strong> définissent trois niveaux : <strong>privileged</strong> (aucune restriction), <strong>baseline</strong> (bloque les élévations de privilèges connues) et <strong>restricted</strong> (bonnes pratiques de durcissement). Le contrôleur intégré <strong>Pod Security Admission</strong> les applique par namespace, via un label :</p>
+<pre><code>kubectl label namespace boutique pod-security.kubernetes.io/enforce=restricted</code></pre>
+  <p>Un pod conforme au niveau <em>restricted</em> ressemble à ceci :</p>
+<pre><code>    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities: { drop: [ALL] }
+      seccompProfile: { type: RuntimeDefault }</code></pre>
+  <p>Pour des règles plus fines (registres autorisés, labels obligatoires, interdiction de <code>latest</code>), on utilise un moteur de politiques : <strong>Kyverno</strong>, <strong>OPA Gatekeeper</strong>, ou les <strong>ValidatingAdmissionPolicies</strong> natives.</p>
+
+  <h3>Chaîne d'approvisionnement et exécution</h3>
+  <ul>
+    <li><strong>Images</strong> minimales (distroless, Alpine), scannées (Trivy, Grype), signées (Sigstore / cosign), issues de registres maîtrisés.</li>
+    <li><strong>Secrets</strong> : chiffrement d'etcd et coffre-fort externe (voir partie 1).</li>
+    <li><strong>Accès à l'API</strong> : endpoint privé ou restreint, journaux d'audit activés.</li>
+    <li><strong>Détection à l'exécution</strong> : Falco, GuardDuty sur EKS, ou les fonctions de sécurité de votre plateforme d'observabilité.</li>
+    <li><strong>Mises à jour</strong> régulières de Kubernetes et des nœuds.</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Requête API : authentification → autorisation (RBAC) → admission.</li>
+      <li>RBAC : Role/ClusterRole + RoleBinding/ClusterRoleBinding, moindre privilège.</li>
+      <li>Pod Security Standards (<em>restricted</em> si possible) via des labels de namespace.</li>
+      <li>Images scannées et signées, secrets externalisés, audit, détection à l'exécution.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 6 -->
+<section class="module" id="m6" data-title="Autoscaling">
+  <div class="eyebrow">Module 6</div>
+  <h2 class="h">L'autoscaling</h2>
+  <p>Kubernetes peut adapter automatiquement la capacité à la charge, à deux niveaux : les <strong>pods</strong> et les <strong>nœuds</strong>.</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Outil</th><th>Ce qu'il ajuste</th><th>Déclencheur</th></tr></thead>
+    <tbody>
+      <tr><td><strong>HPA</strong> (Horizontal Pod Autoscaler)</td><td>Le <strong>nombre de réplicas</strong></td><td>CPU, mémoire, métriques personnalisées ou externes</td></tr>
+      <tr><td><strong>VPA</strong> (Vertical Pod Autoscaler)</td><td>Les <strong>requests / limits</strong> des pods</td><td>Consommation observée dans le temps</td></tr>
+      <tr><td><strong>KEDA</strong></td><td>Le nombre de réplicas, <strong>jusqu'à zéro</strong></td><td>Événements : longueur d'une file SQS ou Kafka, requêtes, planning…</td></tr>
+      <tr><td><strong>Cluster Autoscaler</strong></td><td>Le <strong>nombre de nœuds</strong> d'un groupe de nœuds</td><td>Pods en attente (Pending) faute de place, nœuds sous-utilisés</td></tr>
+      <tr><td><strong>Karpenter</strong></td><td>Les <strong>nœuds</strong>, en choisissant le type d'instance adapté</td><td>Pods en attente ; consolidation des nœuds sous-utilisés</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+<pre><code><span class="kw">apiVersion</span>: autoscaling/v2
+<span class="kw">kind</span>: HorizontalPodAutoscaler
+<span class="kw">metadata</span>:
+  name: api
+<span class="kw">spec</span>:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: api }
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }   <span class="cm"># % des requests</span></code></pre>
+
+  <h3>Comment les niveaux s'enchaînent</h3>
+  <ol>
+    <li>La charge augmente : le <strong>HPA</strong> passe de 3 à 8 réplicas.</li>
+    <li>Les nouveaux pods ne trouvent pas de place : ils restent <strong>Pending</strong>.</li>
+    <li>Le <strong>Cluster Autoscaler</strong> ou <strong>Karpenter</strong> voit ces pods et ajoute des nœuds.</li>
+    <li>La charge baisse : le HPA réduit les réplicas, puis les nœuds vides ou sous-utilisés sont retirés.</li>
+  </ol>
+
+  <div class="callout warn">
+    <strong>Conditions pour que ça marche</strong>
+    <ul style="margin:6px 0 0;padding-left:20px">
+      <li>Le HPA en pourcentage de CPU se calcule <strong>par rapport aux requests</strong> : sans requests, il ne fonctionne pas.</li>
+      <li>Le HPA sur les ressources a besoin de <strong>metrics-server</strong> (ou d'une autre source de métriques).</li>
+      <li>Ne pilotez pas le <strong>même</strong> Deployment avec le HPA et le VPA sur la même métrique (CPU ou mémoire) : ils se contredisent.</li>
+      <li>Des <strong>PDB</strong> et un arrêt propre sont nécessaires pour que la réduction ne provoque pas d'erreurs.</li>
+    </ul>
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>HPA : nombre de pods ; VPA : taille des pods ; KEDA : événements, jusqu'à zéro.</li>
+      <li>Cluster Autoscaler ou Karpenter : nombre de nœuds, déclenché par les pods Pending.</li>
+      <li>Requests correctes et metrics-server indispensables.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 7 -->
+<section class="module" id="m7" data-title="Helm, Kustomize & GitOps">
+  <div class="eyebrow">Module 7</div>
+  <h2 class="h">Packaging et déploiement continu</h2>
+
+  <h3>Helm</h3>
+  <p><strong>Helm</strong> est le gestionnaire de paquets de Kubernetes. Un <strong>chart</strong> regroupe des modèles de manifestes et un fichier <code>values.yaml</code> de paramètres ; chaque installation est une <strong>release</strong> versionnée.</p>
+<pre><code>helm repo add bitnami https://charts.bitnami.com/bitnami
+helm install cache bitnami/redis -n cache --create-namespace -f values-prod.yaml
+helm upgrade cache bitnami/redis -n cache -f values-prod.yaml
+helm rollback cache 1
+helm template ...        <span class="cm"># afficher les manifestes générés sans rien installer</span></code></pre>
+  <p>Helm est idéal pour <strong>installer des logiciels tiers</strong> (bases, outils, opérateurs) et pour distribuer des applications paramétrables. Les charts peuvent aussi être stockés dans des registres OCI.</p>
+
+  <h3>Kustomize</h3>
+  <p><strong>Kustomize</strong>, intégré à kubectl (<code>kubectl apply -k</code>), part de manifestes YAML ordinaires (<strong>base</strong>) et applique des <strong>surcharges</strong> par environnement (<strong>overlays</strong>), sans langage de templates.</p>
+<pre><code>app/
+├── base/                 <span class="cm"># deployment.yaml, service.yaml, kustomization.yaml</span>
+└── overlays/
+    ├── dev/              <span class="cm"># 1 réplica, image de dev</span>
+    └── prod/             <span class="cm"># 3 réplicas, ressources plus élevées</span></code></pre>
+
+  <h3>GitOps</h3>
+  <p>Le <strong>GitOps</strong> fait de Git la <strong>source de vérité</strong> de ce qui tourne dans le cluster. Un agent installé <em>dans</em> le cluster (<strong>Argo CD</strong> ou <strong>Flux</strong>) :</p>
+  <ul>
+    <li><strong>tire</strong> (<em>pull</em>) les manifestes depuis Git et les applique ;</li>
+    <li><strong>détecte la dérive</strong> (une modification manuelle) et la corrige ou la signale ;</li>
+    <li>rend tout changement <strong>traçable</strong> : un déploiement = un commit, un retour arrière = un <code>git revert</code>.</li>
+  </ul>
+  <div class="callout ok">
+    <strong>Pourquoi le mode pull ?</strong>
+    La CI n'a plus besoin d'identifiants d'administration du cluster : c'est le cluster qui va chercher sa configuration. Le pipeline CI construit, teste et publie l'image, puis met à jour le tag dans le dépôt de configuration ; Argo CD ou Flux s'occupent du reste.
+  </div>
+
+  <h3>Stratégies de déploiement avancées</h3>
+  <ul>
+    <li><strong>Blue/green</strong> : deux versions complètes en parallèle, bascule instantanée du trafic.</li>
+    <li><strong>Canary</strong> : une petite part du trafic (5 %, puis 25 %…) va vers la nouvelle version, avec analyse automatique des métriques.</li>
+    <li>Outils : <strong>Argo Rollouts</strong>, <strong>Flagger</strong>, ou la répartition pondérée de Gateway API.</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Helm : charts paramétrables, releases, idéal pour les logiciels tiers.</li>
+      <li>Kustomize : base + overlays, sans templates, intégré à kubectl.</li>
+      <li>GitOps (Argo CD, Flux) : Git comme source de vérité, mode pull, correction de la dérive.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 8 -->
+<section class="module" id="m8" data-title="Observabilité & dépannage">
+  <div class="eyebrow">Module 8</div>
+  <h2 class="h">Observabilité et dépannage</h2>
+
+  <h3>Que surveiller ?</h3>
+  <div class="grid">
+    <div class="card"><h4>📊 Métriques</h4><p><strong>metrics-server</strong> pour <code>kubectl top</code> et le HPA ; <strong>Prometheus</strong> (avec kube-state-metrics et node-exporter) ou une plateforme comme Dynatrace pour l'historique et les alertes.</p></div>
+    <div class="card"><h4>📜 Logs</h4><p>Les conteneurs écrivent sur la sortie standard ; un agent en DaemonSet (Fluent Bit, OpenTelemetry Collector…) les collecte et les envoie vers un backend centralisé.</p></div>
+    <div class="card"><h4>🔗 Traces</h4><p>Instrumentation OpenTelemetry ou agent automatique, pour suivre les requêtes entre services.</p></div>
+    <div class="card"><h4>📣 Événements</h4><p>Les événements Kubernetes (échecs de placement, redémarrages, évictions) ne sont conservés qu'environ une heure : exportez-les.</p></div>
+  </div>
+  <p>Les signaux essentiels à alerter : redémarrages de conteneurs, pods non prêts, pods Pending prolongés, OOMKilled, saturation CPU/mémoire des nœuds, nœuds <code>NotReady</code>, échecs de déploiement, expiration des certificats.</p>
+
+  <h3>Méthode de dépannage</h3>
+  <ol>
+    <li><strong>Où ?</strong> <code>kubectl get pods -A</code> : quels pods sont en erreur, dans quel namespace, sur quel nœud ?</li>
+    <li><strong>Pourquoi ?</strong> <code>kubectl describe pod</code> : lisez les <strong>événements</strong> en bas de la sortie.</li>
+    <li><strong>Que dit l'application ?</strong> <code>kubectl logs</code> (et <code>--previous</code> après un plantage).</li>
+    <li><strong>Le réseau ?</strong> Le Service a-t-il des endpoints ? (<code>kubectl get endpointslices -l kubernetes.io/service-name=web</code>) Les labels du sélecteur correspondent-ils à ceux des pods ? Une NetworkPolicy bloque-t-elle ?</li>
+    <li><strong>Le nœud ?</strong> <code>kubectl describe node</code> : pression mémoire ou disque, capacité allouée.</li>
+    <li><strong>Aller dans le pod</strong> : <code>kubectl exec</code>, ou <code>kubectl debug</code> pour ajouter un conteneur de diagnostic à un pod dont l'image ne contient pas d'outils.</li>
+  </ol>
+
+  <h3>Diagnostic des cas fréquents</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Symptôme</th><th>Pistes</th></tr></thead>
+    <tbody>
+      <tr><td><code>Pending</code></td><td>Requests trop élevées, aucun nœud compatible (taints, affinity), quota atteint, PVC non lié, autoscaler de nœuds absent ou bloqué</td></tr>
+      <tr><td><code>ImagePullBackOff</code></td><td>Nom ou tag faux, registre privé sans <code>imagePullSecrets</code> ou sans droits, limite de téléchargement du registre</td></tr>
+      <tr><td><code>CrashLoopBackOff</code></td><td>Erreur au démarrage (configuration, variable manquante, dépendance absente), liveness trop agressive</td></tr>
+      <tr><td><code>OOMKilled</code></td><td>Limit mémoire trop basse ou fuite mémoire</td></tr>
+      <tr><td>Service qui ne répond pas</td><td>Aucun pod prêt, sélecteur qui ne correspond pas, mauvais <code>targetPort</code>, NetworkPolicy</td></tr>
+      <tr><td><code>Evicted</code></td><td>Le nœud manquait de mémoire ou de disque ; vérifiez les requests et l'espace disque (logs, images)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Métriques, logs, traces et événements : les événements Kubernetes sont éphémères, exportez-les.</li>
+      <li>Réflexes : <code>get</code> → <code>describe</code> (événements) → <code>logs</code> → réseau → nœud.</li>
+      <li><code>kubectl debug</code> pour diagnostiquer des images sans outils.</li>
+    </ul>
+  </div>
+
+  <div class="callout ok">
+    <strong>Prêt pour le quiz ?</strong>
+    Le module suivant contient 15 questions sur cette deuxième partie. Il faut 80 % de bonnes réponses pour la valider. Ensuite, direction la <a href="3-eks.html">partie 3 : Amazon EKS</a>.
+  </div>
+</section>
+
+<!-- ===================================================== QUIZ -->
+<section class="module" id="quiz" data-title="Quiz de validation">
+  <div class="eyebrow">Évaluation finale</div>
+  <h2 class="h">Quiz de validation des connaissances</h2>
+  <div id="quizRoot"></div>
+</section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Stockage local (tolérant aux erreurs) ---------------- */
+  var STORE_KEY = "self-training-k8s2-v1";
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save(s) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* ignoré */ }
+  }
+  var state = load();
+  state.done = state.done || {};
+
+  /* ---------------- Thème ---------------- */
+  var root = document.documentElement;
+  if (state.theme) root.setAttribute("data-theme", state.theme);
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme")
+      ? root.getAttribute("data-theme") === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    state.theme = dark ? "light" : "dark";
+    root.setAttribute("data-theme", state.theme);
+    save(state);
+  });
+
+  /* ---------------- Navigation ---------------- */
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section.module"));
+  var navList = document.getElementById("navList");
+  var learningIds = sections.filter(function (s) { return /^m[1-9]$/.test(s.id); }).map(function (s) { return s.id; });
+
+  sections.forEach(function (s, i) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#" + s.id;
+    a.dataset.id = s.id;
+    var label = s.id === "m0" ? "i" : (s.id === "quiz" ? "?" : s.id.slice(1));
+    a.innerHTML = '<span class="num">' + label + "</span><span></span>";
+    a.lastChild.textContent = s.dataset.title;
+    li.appendChild(a);
+    navList.appendChild(li);
+
+    // Pager
+    var pager = document.createElement("div");
+    pager.className = "pager";
+    var prev = sections[i - 1], next = sections[i + 1];
+    pager.innerHTML =
+      (prev ? '<a class="btn ghost" href="#' + prev.id + '">← ' + escapeHtml(prev.dataset.title) + "</a>" : "<span></span>") +
+      (next ? '<a class="btn" data-complete="' + s.id + '" href="#' + next.id + '">' + escapeHtml(next.dataset.title) + " →</a>" : "");
+    if (s.id !== "quiz") s.appendChild(pager);
+  });
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-complete]");
+    if (t) {
+      var id = t.getAttribute("data-complete");
+      if (learningIds.indexOf(id) !== -1) { state.done[id] = true; save(state); }
+    }
+  });
+
+  function show() {
+    var id = (location.hash || "#m0").slice(1);
+    if (!document.getElementById(id)) id = "m0";
+    sections.forEach(function (s) { s.classList.toggle("visible", s.id === id); });
+    navList.querySelectorAll("a").forEach(function (a) {
+      a.classList.toggle("active", a.dataset.id === id);
+      a.classList.toggle("done", !!state.done[a.dataset.id] || (a.dataset.id === "quiz" && state.passed));
+    });
+    updateProgress();
+    document.getElementById("sidebar").classList.remove("open");
+    window.scrollTo(0, 0);
+  }
+  function updateProgress() {
+    var n = learningIds.filter(function (id) { return state.done[id]; }).length;
+    document.getElementById("progressBar").style.width = (n / learningIds.length * 100) + "%";
+    document.getElementById("progressLabel").textContent = n + " / " + learningIds.length + " modules lus";
+  }
+  window.addEventListener("hashchange", show);
+  document.getElementById("menuBtn").addEventListener("click", function () {
+    document.getElementById("sidebar").classList.toggle("open");
+  });
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------------- Quiz ---------------- */
+  var PASS = 0.8;
+  var QUESTIONS = [
+    { t: "Ressources", q: "Un conteneur dépasse sa limit mémoire. Que se passe-t-il ?",
+      o: ["Il est ralenti", "Il est tué (OOMKilled) puis redémarré", "Rien, la limit est indicative", "Le nœud est redémarré"],
+      a: 1, e: "Le dépassement de la limit mémoire entraîne l'arrêt du conteneur (OOMKilled, code 137). Pour le CPU, le conteneur est seulement ralenti (throttling)." },
+    { t: "Ressources", q: "À quoi servent les requests de CPU et de mémoire ?",
+      o: ["À plafonner la consommation", "À réserver des ressources et à permettre au scheduler de placer le pod sur un nœud qui a la capacité nécessaire", "À facturer les équipes", "À déclencher les sondes"],
+      a: 1, e: "Le scheduler place les pods selon leurs requests. Les limits, elles, plafonnent la consommation à l'exécution." },
+    { t: "Ressources", q: "Quelle sonde, en cas d'échec, retire le pod des Services sans le redémarrer ?",
+      o: ["livenessProbe", "readinessProbe", "startupProbe", "Aucune"],
+      a: 1, e: "La readiness indique si le pod peut recevoir du trafic. La liveness, en échec, provoque un redémarrage du conteneur." },
+    { t: "Ressources", q: "Pourquoi est-il dangereux qu'une livenessProbe vérifie la disponibilité de la base de données ?",
+      o: ["Parce que les sondes ne peuvent pas faire de requêtes réseau", "Parce que si la base tombe, tous les pods sont redémarrés en boucle, ce qui aggrave l'incident", "Parce que cela ralentit la base", "Ce n'est pas dangereux, c'est recommandé"],
+      a: 1, e: "La liveness ne doit tester que l'état du processus lui-même. Une dépendance indisponible ne se règle pas en redémarrant l'application." },
+    { t: "Placement", q: "Vous voulez réserver des nœuds GPU aux seuls pods de calcul. Quel mécanisme empêche les autres pods d'y être placés ?",
+      o: ["Un nodeSelector sur les pods de calcul", "Un taint sur les nœuds GPU, avec une toleration sur les pods de calcul", "Un PodDisruptionBudget", "Un ResourceQuota"],
+      a: 1, e: "Le taint repousse tous les pods qui ne le tolèrent pas. On ajoute en plus une affinity pour que les pods de calcul aillent bien sur ces nœuds." },
+    { t: "Placement", q: "À quoi sert un PodDisruptionBudget ?",
+      o: ["À limiter la consommation CPU", "À limiter le nombre de pods indisponibles en même temps lors des interruptions volontaires (drain de nœud, mise à jour)", "À empêcher les plantages", "À répartir les pods entre zones"],
+      a: 1, e: "Le PDB est respecté par les évictions volontaires. Un PDB trop strict peut cependant bloquer les drains et les mises à jour de nœuds." },
+    { t: "Placement", q: "Comment répartir équitablement les réplicas d'un Deployment entre trois zones de disponibilité ?",
+      o: ["Avec un DaemonSet", "Avec des topologySpreadConstraints sur la clé topology.kubernetes.io/zone", "Avec un Service LoadBalancer", "Avec un ResourceQuota par zone"],
+      a: 1, e: "Les contraintes de répartition topologique limitent l'écart (maxSkew) du nombre de pods entre zones." },
+    { t: "Réseau", q: "Un objet Ingress est créé, mais aucun trafic n'est routé. Quelle est la cause la plus probable ?",
+      o: ["Il manque un contrôleur d'Ingress pour mettre en œuvre la ressource", "Les Ingress ne fonctionnent qu'en HTTP", "Il faut redémarrer l'API server", "Les Ingress sont dépréciés"],
+      a: 0, e: "Un Ingress n'est qu'une description de règles : un contrôleur (AWS Load Balancer Controller, Traefik…) doit la mettre en œuvre." },
+    { t: "Réseau", q: "Quel est l'apport principal de Gateway API par rapport à Ingress ?",
+      o: ["Il remplace les Services", "Il sépare les responsabilités (GatewayClass, Gateway, Routes) et gère nativement des fonctions avancées comme la répartition pondérée du trafic", "Il ne fonctionne qu'en TCP", "Il supprime le besoin d'un plugin CNI"],
+      a: 1, e: "Gateway API, stable depuis 2023, est le successeur d'Ingress. Il standardise des fonctions qui dépendaient auparavant d'annotations propres à chaque contrôleur." },
+    { t: "Réseau", q: "Sans aucune NetworkPolicy, quels flux réseau sont autorisés entre pods ?",
+      o: ["Aucun", "Uniquement ceux du même namespace", "Tous : tout pod peut joindre tout pod", "Uniquement ceux du même nœud"],
+      a: 2, e: "Par défaut le réseau est entièrement ouvert. On commence généralement par une politique « deny all » puis on autorise les flux nécessaires." },
+    { t: "Stockage", q: "Quel mode d'accès faut-il pour qu'un même volume soit monté en écriture par des pods sur plusieurs nœuds ?",
+      o: ["ReadWriteOnce", "ReadWriteMany", "ReadOnlyMany", "ReadWriteOncePod"],
+      a: 1, e: "RWX nécessite un système de fichiers partagé (EFS, NFS, Azure Files). Les disques bloc comme EBS ne proposent que RWO." },
+    { t: "Stockage", q: "Avec reclaimPolicy: Delete, que se passe-t-il quand on supprime le PVC ?",
+      o: ["Le disque est conservé", "Le disque et ses données sont supprimés", "Le PVC est recréé automatiquement", "Le pod est redémarré"],
+      a: 1, e: "Delete supprime le volume sous-jacent. Pour des données critiques, utilisez Retain et des sauvegardes." },
+    { t: "Sécurité", q: "Comment une application qui tourne dans un pod s'authentifie-t-elle auprès de l'API Kubernetes ?",
+      o: ["Avec le compte de l'administrateur du cluster", "Avec le jeton du ServiceAccount sous lequel le pod s'exécute", "Avec l'adresse IP du pod", "Elle ne peut pas appeler l'API"],
+      a: 1, e: "Chaque pod s'exécute sous un ServiceAccount ; ses droits sont définis par RBAC (Role/ClusterRole + binding)." },
+    { t: "Sécurité", q: "Quelle est la différence entre un RoleBinding et un ClusterRoleBinding ?",
+      o: ["Aucune", "Le RoleBinding accorde des droits dans un namespace ; le ClusterRoleBinding sur tout le cluster", "Le RoleBinding est réservé aux humains", "Le ClusterRoleBinding est déprécié"],
+      a: 1, e: "Un RoleBinding peut même référencer un ClusterRole, mais les droits ne s'appliquent alors que dans le namespace du binding." },
+    { t: "Sécurité", q: "Comment imposer le niveau « restricted » des Pod Security Standards à un namespace ?",
+      o: ["En installant un PodSecurityPolicy", "Avec le label pod-security.kubernetes.io/enforce=restricted sur le namespace", "Avec une NetworkPolicy", "Avec un ResourceQuota"],
+      a: 1, e: "Le contrôleur intégré Pod Security Admission lit ce label. PodSecurityPolicy a été supprimé dans Kubernetes 1.25." },
+    { t: "Autoscaling", q: "Un HPA ciblant 70 % d'utilisation CPU ne fonctionne pas. Quelle est une cause fréquente ?",
+      o: ["Le Deployment a trop de réplicas", "Les conteneurs n'ont pas de request CPU (ou metrics-server est absent)", "Le HPA ne gère que la mémoire", "Le cluster n'a qu'un namespace"],
+      a: 1, e: "Le pourcentage est calculé par rapport aux requests. Sans requests ni source de métriques, le HPA ne peut rien calculer." },
+    { t: "Autoscaling", q: "Qu'est-ce qui déclenche l'ajout de nœuds par Karpenter ou le Cluster Autoscaler ?",
+      o: ["Une utilisation CPU des nœuds supérieure à 80 %", "Des pods restés Pending faute de place", "Un nombre d'utilisateurs connectés", "Une planification horaire uniquement"],
+      a: 1, e: "Les autoscalers de nœuds réagissent aux pods non placés, puis retirent ou consolident les nœuds sous-utilisés." },
+    { t: "GitOps", q: "Quel est le principe du GitOps avec Argo CD ou Flux ?",
+      o: ["La CI se connecte au cluster avec des droits administrateur pour appliquer les manifestes", "Un agent dans le cluster tire la configuration depuis Git, l'applique et corrige la dérive", "Les développeurs appliquent les manifestes depuis leur poste", "Git est remplacé par une base de données"],
+      a: 1, e: "Git est la source de vérité ; le mode pull évite de donner à la CI des identifiants d'administration du cluster." },
+    { t: "GitOps", q: "Quelle est la différence principale entre Helm et Kustomize ?",
+      o: ["Helm utilise des modèles paramétrés (charts + values) ; Kustomize applique des surcharges sur des YAML ordinaires, sans templates", "Kustomize est réservé aux logiciels tiers", "Helm est intégré à kubectl, pas Kustomize", "Il n'y a aucune différence"],
+      a: 0, e: "Kustomize est intégré à kubectl (apply -k). Helm est particulièrement adapté à l'installation de logiciels tiers paramétrables." },
+    { t: "Dépannage", q: "Un Service ne répond pas alors que les pods sont Running. Quelle vérification faire en premier ?",
+      o: ["Redémarrer le cluster", "Vérifier que le Service a des endpoints : le sélecteur correspond-il aux labels des pods, et ceux-ci sont-ils Ready ?", "Augmenter les limits", "Supprimer le namespace"],
+      a: 1, e: "Un sélecteur erroné ou des pods non prêts laissent le Service sans destination. Vérifiez aussi le targetPort et les NetworkPolicies." }
+  ];
+  var QUIZ_SIZE = 15;
+
+  var quizRoot = document.getElementById("quizRoot");
+  var quiz = null;
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function renderIntro() {
+    var unread = learningIds.length - learningIds.filter(function (id) { return state.done[id]; }).length;
+    var best = state.best != null ? '<p>Votre meilleur score : <strong>' + state.best + ' %</strong>' + (state.passed ? ' ✅ quiz validé' : '') + '</p>' : '';
+    quizRoot.innerHTML =
+      '<div class="card qcard">' +
+        '<p class="lead" style="margin-top:0">' + QUIZ_SIZE + ' questions tirées au hasard parmi ' + QUESTIONS.length + ', ordre des réponses mélangé. Une explication s\'affiche après chaque réponse.</p>' +
+        '<ul><li>Seuil de réussite : <strong>' + Math.round(PASS * 100) + ' %</strong> (' + Math.ceil(PASS * QUIZ_SIZE) + ' bonnes réponses sur ' + QUIZ_SIZE + ')</li>' +
+        '<li>Vous pouvez recommencer autant de fois que vous le souhaitez.</li></ul>' +
+        (unread > 0 ? '<div class="callout warn"><strong>Conseil</strong>Il vous reste ' + unread + ' module(s) non lu(s). Vous pouvez quand même commencer le quiz.</div>' : '') +
+        best +
+        '<div class="quiz-actions"><button class="btn" id="startQuiz">Commencer le quiz</button></div>' +
+      '</div>';
+    document.getElementById("startQuiz").onclick = startQuiz;
+  }
+
+  function startQuiz() {
+    var picked = shuffle(QUESTIONS).slice(0, QUIZ_SIZE).map(function (q) {
+      var order = shuffle(q.o.map(function (_, i) { return i; }));
+      return { t: q.t, q: q.q, e: q.e, o: order.map(function (i) { return q.o[i]; }), a: order.indexOf(q.a) };
+    });
+    quiz = { items: picked, idx: 0, answers: [] };
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    var item = quiz.items[quiz.idx];
+    var letters = "ABCD";
+    var html =
+      '<div class="quiz-head"><span>Question ' + (quiz.idx + 1) + ' / ' + quiz.items.length + '</span><span class="tag">' + escapeHtml(item.t) + '</span></div>' +
+      '<div class="progress" style="max-width:none;margin-bottom:16px"><div style="width:' + (quiz.idx / quiz.items.length * 100) + '%"></div></div>' +
+      '<div class="card qcard"><h3>' + escapeHtml(item.q).replace(/\n/g, '<br><code>').replace(/(<code>.*)$/, '$1</code>') + '</h3>' +
+      '<div class="options">' +
+      item.o.map(function (opt, i) {
+        return '<button class="opt" data-i="' + i + '"><span class="letter">' + letters[i] + '</span><span>' + escapeHtml(opt) + '</span></button>';
+      }).join("") +
+      '</div><div class="feedback" id="fb"></div>' +
+      '<div class="quiz-actions"><button class="btn" id="validate" disabled>Valider</button></div></div>';
+    quizRoot.innerHTML = html;
+
+    var selected = null;
+    var opts = quizRoot.querySelectorAll(".opt");
+    var btn = document.getElementById("validate");
+    opts.forEach(function (b) {
+      b.onclick = function () {
+        opts.forEach(function (x) { x.classList.remove("selected"); });
+        b.classList.add("selected");
+        selected = +b.dataset.i;
+        btn.disabled = false;
+      };
+    });
+    btn.onclick = function () {
+      if (btn.dataset.next) { next(); return; }
+      var ok = selected === item.a;
+      quiz.answers.push(selected);
+      opts.forEach(function (x, i) {
+        x.disabled = true;
+        x.classList.remove("selected");
+        if (i === item.a) x.classList.add("correct");
+        else if (i === selected) x.classList.add("wrong");
+      });
+      var fb = document.getElementById("fb");
+      fb.className = "feedback show " + (ok ? "good" : "bad");
+      fb.innerHTML = "<strong>" + (ok ? "✅ Bonne réponse" : "❌ Mauvaise réponse") + "</strong><br>" + escapeHtml(item.e);
+      btn.textContent = quiz.idx + 1 < quiz.items.length ? "Question suivante →" : "Voir mes résultats";
+      btn.dataset.next = "1";
+      btn.focus();
+    };
+  }
+
+  function next() {
+    quiz.idx++;
+    if (quiz.idx < quiz.items.length) renderQuestion(); else renderResult();
+    window.scrollTo(0, 0);
+  }
+
+  function renderResult() {
+    var total = quiz.items.length;
+    var good = quiz.items.filter(function (it, i) { return quiz.answers[i] === it.a; }).length;
+    var pct = Math.round(good / total * 100);
+    var passed = good / total >= PASS;
+    state.best = Math.max(state.best || 0, pct);
+    if (passed) state.passed = true;
+    save(state);
+    show();
+
+    var themes = {};
+    quiz.items.forEach(function (it, i) {
+      themes[it.t] = themes[it.t] || { g: 0, n: 0 };
+      themes[it.t].n++;
+      if (quiz.answers[i] === it.a) themes[it.t].g++;
+    });
+
+    var r = 64, c = 2 * Math.PI * r;
+    var color = passed ? "var(--ok)" : "var(--ko)";
+    var html =
+      '<div class="card qcard result">' +
+      '<svg class="score-ring" viewBox="0 0 160 160"><circle cx="80" cy="80" r="' + r + '" fill="none" stroke="var(--surface-2)" stroke-width="14"/>' +
+      '<circle cx="80" cy="80" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + (c * pct / 100) + ' ' + c + '" transform="rotate(-90 80 80)"/>' +
+      '<text x="80" y="88" text-anchor="middle" font-size="30" font-weight="700" fill="var(--text)">' + pct + '%</text></svg>' +
+      '<div class="verdict" style="color:' + color + '">' + (passed ? "🎉 Formation validée !" : "Pas encore validée") + '</div>' +
+      '<p>' + good + ' bonnes réponses sur ' + total + '. ' +
+      (passed ? "Vous maîtrisez l'exploitation de Kubernetes en production. Prochaine étape : la partie 3, Amazon EKS."
+              : "Il faut au moins " + Math.round(PASS * 100) + " %. Revoyez les thèmes les plus faibles ci-dessous puis réessayez.") + '</p>' +
+      '<div class="themes"><h3>Résultats par thème</h3>' +
+      Object.keys(themes).map(function (k) {
+        var p = Math.round(themes[k].g / themes[k].n * 100);
+        var col = p >= 80 ? "var(--ok)" : p >= 50 ? "var(--warn)" : "var(--ko)";
+        return '<div class="theme-row"><span>' + escapeHtml(k) + '</span><div class="theme-bar"><div style="width:' + p + '%;background:' + col + '"></div></div><span>' + themes[k].g + '/' + themes[k].n + '</span></div>';
+      }).join("") + '</div>' +
+      '<div class="quiz-actions" style="justify-content:center;flex-wrap:wrap">' +
+      '<button class="btn ghost" id="toggleReview">Voir la correction détaillée</button>' +
+      '<button class="btn" id="retry">Recommencer le quiz</button></div>' +
+      '<div id="review" style="display:none;margin-top:20px"></div></div>';
+    quizRoot.innerHTML = html;
+
+    document.getElementById("retry").onclick = startQuiz;
+    document.getElementById("toggleReview").onclick = function () {
+      var rv = document.getElementById("review");
+      rv.style.display = rv.style.display === "none" ? "block" : "none";
+    };
+    document.getElementById("review").innerHTML = quiz.items.map(function (it, i) {
+      var ok = quiz.answers[i] === it.a;
+      return '<div class="review-item"><div><span class="' + (ok ? "badge-ok" : "badge-ko") + '">' + (ok ? "✓" : "✗") + '</span> <strong>' + (i + 1) + '. ' + escapeHtml(it.q) + '</strong></div>' +
+        (ok ? "" : '<div class="ans">Votre réponse : ' + escapeHtml(it.o[quiz.answers[i]]) + '</div>') +
+        '<div class="ans">Bonne réponse : <strong>' + escapeHtml(it.o[it.a]) + '</strong></div>' +
+        '<div class="ans">' + escapeHtml(it.e) + '</div></div>';
+    }).join("");
+  }
+
+  renderIntro();
+  window.addEventListener("hashchange", function () { if (location.hash === "#quiz" && !quiz) renderIntro(); });
+  show();
+})();
+</script>
+</body>
+</html>
