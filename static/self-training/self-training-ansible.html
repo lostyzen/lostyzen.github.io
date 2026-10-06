@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formation Ansible</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface-2: #eef1f8;
+    --text: #1b1f2a;
+    --muted: #5a6275;
+    --border: #d9deea;
+    --accent: #0f7c8c;
+    --accent-2: #1f4e8c;
+    --accent-soft: #dff3f5;
+    --ok: #1a8f4c;
+    --ok-soft: #e2f6ea;
+    --ko: #c62f3a;
+    --ko-soft: #fbe5e7;
+    --warn: #b56a00;
+    --warn-soft: #fff1d9;
+    --code-bg: #1e2230;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(20, 30, 60, .08), 0 6px 20px rgba(20, 30, 60, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141c;
+      --surface: #1a1e29;
+      --surface-2: #232838;
+      --text: #e7eaf2;
+      --muted: #9aa3b8;
+      --border: #2e3446;
+      --accent: #3cc4d4;
+      --accent-2: #7aa5e8;
+      --accent-soft: #0f3338;
+      --ok: #4cc583;
+      --ok-soft: #133524;
+      --ko: #ff6b76;
+      --ko-soft: #3d1a1e;
+      --warn: #f0b04c;
+      --warn-soft: #3a2c12;
+      --code-bg: #0b0d13;
+      --code-text: #e6e9f2;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141c;
+    --surface: #1a1e29;
+    --surface-2: #232838;
+    --text: #e7eaf2;
+    --muted: #9aa3b8;
+    --border: #2e3446;
+    --accent: #3cc4d4;
+    --accent-2: #7aa5e8;
+    --accent-soft: #0f3338;
+    --ok: #4cc583;
+    --ok-soft: #133524;
+    --ko: #ff6b76;
+    --ko-soft: #3d1a1e;
+    --warn: #f0b04c;
+    --warn-soft: #3a2c12;
+    --code-bg: #0b0d13;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+  code, pre { font-family: "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace; font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+  code { background: var(--surface-2); padding: .1em .35em; border-radius: 4px; font-size: .9em; }
+  pre {
+    background: var(--code-bg); color: var(--code-text);
+    padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: .88em; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  .kw { color: #ff9e64; } .fn { color: #7aa2f7; } .str { color: #9ece6a; } .cm { color: #7a8299; font-style: italic; }
+
+  /* ---------- Layout ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; color: #fff; font-size: .9rem;
+  }
+  .progress-wrap { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .progress { flex: 1; height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; max-width: 360px; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s; }
+  .progress-label { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+  .icon-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: .9rem;
+  }
+  .icon-btn:hover { background: var(--surface-2); }
+  #menuBtn { display: none; }
+
+  .layout { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100vh - 53px); }
+  nav.side {
+    border-right: 1px solid var(--border); background: var(--surface);
+    padding: 18px 12px; position: sticky; top: 53px; height: calc(100vh - 53px); overflow-y: auto;
+  }
+  nav.side h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 6px 10px 10px; }
+  nav.side ol { list-style: none; margin: 0; padding: 0; }
+  nav.side li a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px; text-decoration: none; color: var(--text); font-size: .93rem;
+  }
+  nav.side li a:hover { background: var(--surface-2); }
+  nav.side li a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .num {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center; font-size: .75rem; font-weight: 700;
+    background: var(--surface-2); color: var(--muted);
+  }
+  a.done .num { background: var(--ok); color: #fff; }
+  a.active .num { background: var(--accent); color: #fff; }
+
+  main { padding: 32px 40px 80px; max-width: 980px; width: 100%; }
+  section.module { display: none; animation: fade .25s ease; scroll-margin-top: 70px; }
+  section.module.visible { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .eyebrow { color: var(--accent); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 6px 0 12px; }
+  h2.h { font-size: 1.6rem; margin: 4px 0 16px; line-height: 1.25; }
+  h3 { font-size: 1.15rem; margin: 28px 0 10px; }
+  .lead { font-size: 1.1rem; color: var(--muted); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 16px 0; }
+  .grid .card h4 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+  .grid .card p { margin: 0; color: var(--muted); font-size: .93rem; }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px;
+    background: var(--accent-soft); color: var(--accent);
+  }
+
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .callout strong:first-child { display: block; margin-bottom: 2px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .93rem; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 600; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .table-wrap table { margin: 0; }
+
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 10px 0; }
+  details summary { cursor: pointer; font-weight: 600; }
+
+  .diagram { width: 100%; height: auto; margin: 10px 0; }
+  .diagram text { fill: var(--text); font-family: inherit; }
+  .diagram .muted { fill: var(--muted); }
+  .diagram .box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  .diagram .box-a { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .diagram .line { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .diagram .bar1 { fill: var(--accent); } .diagram .bar2 { fill: var(--accent-2); } .diagram .bar3 { fill: var(--ok); } .diagram .bar4 { fill: var(--warn); }
+
+  .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .btn {
+    border: 0; border-radius: 9px; padding: 10px 18px; font-weight: 600; cursor: pointer; font-size: .95rem;
+    background: var(--accent); color: #fff;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .keypoints { background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; padding: 14px 20px; margin-top: 26px; }
+  .keypoints h4 { margin: 0 0 6px; color: var(--accent); }
+  .keypoints ul { margin: 0; padding-left: 20px; }
+
+  /* ---------- Quiz ---------- */
+  .quiz-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; color: var(--muted); font-size: .9rem; }
+  .qcard { padding: 24px; }
+  .qcard h3 { margin-top: 0; font-size: 1.2rem; }
+  .options { display: grid; gap: 10px; margin: 16px 0; }
+  .opt {
+    display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%;
+    padding: 12px 14px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 10px; cursor: pointer; font-size: .97rem; font-family: inherit; line-height: 1.45;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt .letter {
+    flex: none; width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center;
+    background: var(--surface-2); font-weight: 700; font-size: .82rem;
+  }
+  .opt.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .opt.correct { border-color: var(--ok); background: var(--ok-soft); }
+  .opt.correct .letter { background: var(--ok); color: #fff; }
+  .opt.wrong { border-color: var(--ko); background: var(--ko-soft); }
+  .opt.wrong .letter { background: var(--ko); color: #fff; }
+  .opt:disabled { cursor: default; }
+  .feedback { display: none; padding: 12px 16px; border-radius: 10px; margin-top: 4px; }
+  .feedback.show { display: block; }
+  .feedback.good { background: var(--ok-soft); border-left: 4px solid var(--ok); }
+  .feedback.bad { background: var(--ko-soft); border-left: 4px solid var(--ko); }
+  .quiz-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+  .score-ring { width: 160px; height: 160px; margin: 0 auto 10px; display: block; }
+  .result { text-align: center; }
+  .result .verdict { font-size: 1.4rem; font-weight: 700; margin: 6px 0; }
+  .themes { text-align: left; margin-top: 24px; }
+  .theme-row { display: grid; grid-template-columns: minmax(140px, 1fr) 2fr 60px; gap: 12px; align-items: center; margin: 8px 0; font-size: .93rem; }
+  .theme-bar { height: 10px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .theme-bar > div { height: 100%; border-radius: 99px; }
+  .review-item { text-align: left; border-bottom: 1px solid var(--border); padding: 12px 0; }
+  .review-item:last-child { border: 0; }
+  .review-item .ans { font-size: .9rem; color: var(--muted); }
+  .badge-ok { color: var(--ok); font-weight: 700; } .badge-ko { color: var(--ko); font-weight: 700; }
+
+  .cert {
+    border: 2px solid var(--accent); border-radius: 14px; padding: 24px; margin-top: 24px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--surface));
+  }
+  .cert input {
+    padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); font-size: 1rem; width: 100%; max-width: 320px;
+  }
+
+  @media (max-width: 860px) {
+    #menuBtn { display: inline-block; }
+    .layout { grid-template-columns: 1fr; }
+    nav.side {
+      position: fixed; top: 53px; left: 0; width: 290px; max-width: 85vw; z-index: 30;
+      transform: translateX(-100%); transition: transform .25s; box-shadow: var(--shadow);
+    }
+    nav.side.open { transform: none; }
+    main { padding: 22px 16px 60px; }
+    h1 { font-size: 1.6rem; }
+    .brand span.full { display: none; }
+    .progress-label { display: none; }
+    .theme-row { grid-template-columns: 1fr 1.4fr 48px; }
+  }
+  @media print {
+    header.top, nav.side, .pager, .quiz-actions { display: none !important; }
+    .layout { display: block; }
+    section.module { display: block !important; page-break-after: always; }
+    body.print-cert section.module:not(#quiz), body.print-cert #quiz > :not(#quizRoot),
+    body.print-cert .result > :not(.cert), body.print-cert .cert input, body.print-cert .cert p:not(#certText) { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="icon-btn" id="menuBtn" aria-label="Ouvrir le menu">☰</button>
+  <div class="brand"><div class="brand-mark">◆</div><span class="full">Formation Ansible &amp; automatisation</span></div>
+  <div class="progress-wrap">
+    <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+    <span class="progress-label" id="progressLabel">0 / 9 modules</span>
+  </div>
+  <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Changer de thème">◐</button>
+</header>
+
+<div class="layout">
+  <nav class="side" id="sidebar" aria-label="Sommaire">
+    <h2>Parcours</h2>
+    <ol id="navList"></ol>
+  </nav>
+
+  <main id="main">
+
+<!-- ===================================================== MODULE 0 -->
+<section class="module" id="m0" data-title="Introduction">
+  <div class="eyebrow">Bienvenue</div>
+  <h1>Ansible et l'automatisation de configuration</h1>
+  <p class="lead">Cette formation présente la gestion de configuration et l'utilisation d'Ansible pour automatiser l'installation, la configuration et le déploiement sur des parcs de serveurs. Elle se termine par un quiz de validation des connaissances.</p>
+
+  <div class="grid">
+    <div class="card"><h4>⏱️ Durée</h4><p>Environ 1 h 30 de lecture, plus 20 minutes de quiz.</p></div>
+    <div class="card"><h4>🎯 Public</h4><p>Administrateurs système, développeurs, ops, SRE et toute personne qui gère des serveurs.</p></div>
+    <div class="card"><h4>✅ Validation</h4><p>Un quiz de 20 questions. Seuil de réussite : <strong>80 %</strong>.</p></div>
+  </div>
+
+  <h3>Objectifs pédagogiques</h3>
+  <p>À l'issue de cette formation, vous saurez :</p>
+  <ul>
+    <li>expliquer le principe de la <strong>gestion de configuration</strong> et le fonctionnement <strong>sans agent</strong> d'Ansible ;</li>
+    <li>écrire un <strong>inventaire</strong> et lancer des <strong>commandes ad hoc</strong> ;</li>
+    <li>écrire des <strong>playbooks</strong> idempotents avec tâches, modules et <strong>handlers</strong> ;</li>
+    <li>utiliser les <strong>variables, facts et templates Jinja2</strong> ;</li>
+    <li>organiser le code en <strong>rôles</strong> et utiliser les <strong>collections</strong> ;</li>
+    <li>protéger les secrets avec <strong>Ansible Vault</strong> ;</li>
+    <li>tester et exécuter Ansible à l'échelle (ansible-lint, Molecule, AWX / Automation Platform).</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Comment utiliser cette page</strong>
+    Naviguez avec le sommaire ou les boutons en bas de chaque module. Un module est marqué comme lu quand vous passez au suivant. Votre progression est conservée dans ce navigateur. La page fonctionne entièrement hors ligne.
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 1 -->
+<section class="module" id="m1" data-title="Gestion de configuration">
+  <div class="eyebrow">Module 1</div>
+  <h2 class="h">La gestion de configuration et les principes d'Ansible</h2>
+
+  <p>La <strong>gestion de configuration</strong> consiste à décrire dans du code l'état attendu des serveurs (paquets installés, fichiers de configuration, services démarrés, utilisateurs…) et à laisser un outil appliquer cet état de façon <strong>automatique, reproductible et traçable</strong>. On évite ainsi les procédures manuelles et les serveurs qui divergent avec le temps.</p>
+
+  <h3>Les atouts d'Ansible</h3>
+  <div class="grid">
+    <div class="card"><h4>🚫 Sans agent</h4><p>Rien à installer sur les machines gérées : Ansible se connecte en <strong>SSH</strong> (ou WinRM / SSH pour Windows). Il faut seulement Python sur les hôtes Linux.</p></div>
+    <div class="card"><h4>📄 YAML lisible</h4><p>Les playbooks sont écrits en YAML : ils se lisent presque comme une procédure, y compris par des non-développeurs.</p></div>
+    <div class="card"><h4>📤 Mode push</h4><p>Le poste de contrôle envoie les instructions au moment voulu, sans serveur central obligatoire.</p></div>
+    <div class="card"><h4>🧩 Très large couverture</h4><p>Des milliers de modules : Linux, Windows, réseau, cloud, bases de données, conteneurs.</p></div>
+  </div>
+
+  <h3>Idempotence</h3>
+  <p>Comme Terraform, Ansible est conçu pour être <strong>idempotent</strong> : on décrit un état (« le paquet nginx doit être présent »), pas une action (« installe nginx »). Si l'état est déjà atteint, la tâche ne fait rien et renvoie <code>ok</code> ; sinon elle agit et renvoie <code>changed</code>. On peut donc relancer un playbook autant de fois que l'on veut.</p>
+  <div class="callout warn">
+    <strong>Attention aux modules command et shell</strong>
+    <code>command</code> et <code>shell</code> exécutent une commande à chaque fois et renvoient toujours <code>changed</code> : ils ne sont <strong>pas idempotents</strong> par nature. Utilisez un module dédié dès qu'il en existe un. Sinon, rendez la tâche idempotente avec <code>creates</code>, <code>removes</code> ou <code>changed_when</code>.
+  </div>
+
+  <h3>Ansible face aux autres outils</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>Ansible</th><th>Puppet / Chef</th><th>Terraform</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Usage principal</strong></td><td>Configuration, déploiement, orchestration</td><td>Configuration</td><td>Provisioning d'infrastructure</td></tr>
+      <tr><td><strong>Agent</strong></td><td>Non (SSH)</td><td>Oui (agent sur chaque nœud)</td><td>Non (appels d'API)</td></tr>
+      <tr><td><strong>Modèle</strong></td><td>Push</td><td>Pull (l'agent interroge un serveur)</td><td>Push</td></tr>
+      <tr><td><strong>State</strong></td><td>Aucun : l'état est relu sur les machines à chaque exécution</td><td>Sur le serveur central</td><td>Fichier de state</td></tr>
+      <tr><td><strong>Langage</strong></td><td>YAML + Jinja2</td><td>DSL dédié / Ruby</td><td>HCL</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout ok">
+    <strong>Terraform et Ansible sont complémentaires</strong>
+    Terraform crée les machines, réseaux et services cloud ; Ansible configure ce qui tourne <em>à l'intérieur</em> des machines. Le module 9 montre comment les combiner.
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Ansible : sans agent, via SSH, en mode push, en YAML.</li>
+      <li>Idempotence : on décrit un état ; <code>ok</code> = rien à faire, <code>changed</code> = modifié.</li>
+      <li><code>command</code> et <code>shell</code> ne sont pas idempotents par défaut.</li>
+      <li>Ansible configure ; Terraform provisionne.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 2 -->
+<section class="module" id="m2" data-title="Architecture & inventaire">
+  <div class="eyebrow">Module 2</div>
+  <h2 class="h">Architecture et inventaire</h2>
+
+  <svg class="diagram" viewBox="0 0 760 260" role="img" aria-label="Architecture Ansible : nœud de contrôle et nœuds gérés">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color:var(--muted)"/>
+      </marker>
+    </defs>
+    <rect class="box-a" x="10" y="20" width="260" height="220" rx="10"/>
+    <text x="26" y="46" font-size="13" font-weight="700">Nœud de contrôle</text>
+    <text class="muted" x="26" y="64" font-size="11">ansible-core + Python</text>
+    <rect class="box" x="26" y="78" width="228" height="34" rx="6"/><text x="38" y="100" font-size="12">Inventaire (hôtes, groupes)</text>
+    <rect class="box" x="26" y="120" width="228" height="34" rx="6"/><text x="38" y="142" font-size="12">Playbooks, rôles</text>
+    <rect class="box" x="26" y="162" width="228" height="34" rx="6"/><text x="38" y="184" font-size="12">Collections (modules)</text>
+    <text class="muted" x="26" y="222" font-size="11">ansible.cfg</text>
+
+    <rect class="box" x="480" y="20" width="270" height="56" rx="8"/>
+    <text x="494" y="44" font-size="12" font-weight="600">Serveurs Linux (webservers, dbservers)</text>
+    <text class="muted" x="494" y="62" font-size="11">SSH + Python, aucun agent</text>
+    <rect class="box" x="480" y="98" width="270" height="56" rx="8"/>
+    <text x="494" y="122" font-size="12" font-weight="600">Serveurs Windows</text>
+    <text class="muted" x="494" y="140" font-size="11">WinRM ou SSH + PowerShell</text>
+    <rect class="box" x="480" y="176" width="270" height="56" rx="8"/>
+    <text x="494" y="200" font-size="12" font-weight="600">Équipements réseau, cloud, API</text>
+    <text class="muted" x="494" y="218" font-size="11">network_cli, NETCONF, HTTPS</text>
+
+    <path class="line" d="M270 80 H380 V48 H478" marker-end="url(#arr)"/>
+    <path class="line" d="M270 126 H478" marker-end="url(#arr)"/>
+    <path class="line" d="M270 170 H380 V204 H478" marker-end="url(#arr)"/>
+    <text class="muted" x="300" y="118" font-size="11">exécution en parallèle</text>
+  </svg>
+
+  <ul>
+    <li><strong>Nœud de contrôle</strong> (<em>control node</em>) : la machine où Ansible est installé et d'où on lance les commandes (un poste Linux ou macOS, un conteneur, un serveur d'automatisation). Windows ne peut pas servir de nœud de contrôle, sauf via WSL.</li>
+    <li><strong>Nœuds gérés</strong> (<em>managed nodes</em>) : les machines que l'on configure.</li>
+    <li>Pour chaque tâche, Ansible envoie un petit programme (le module) sur l'hôte, l'exécute avec Python, récupère le résultat en JSON, puis le supprime.</li>
+  </ul>
+
+  <h3>L'inventaire</h3>
+  <p>L'<strong>inventaire</strong> liste les hôtes gérés et les range en <strong>groupes</strong>. Il peut être écrit en INI ou en YAML.</p>
+<pre><code><span class="cm"># inventory.ini</span>
+[webservers]
+web[1:3].example.com
+
+[dbservers]
+db1.example.com  ansible_user=admin
+
+[prod:children]
+webservers
+dbservers</code></pre>
+<pre><code><span class="cm"># inventory.yml : équivalent en YAML</span>
+all:
+  children:
+    webservers:
+      hosts:
+        web1.example.com:
+        web2.example.com:
+        web3.example.com:
+    dbservers:
+      hosts:
+        db1.example.com:
+          ansible_user: admin</code></pre>
+  <ul>
+    <li>Deux groupes existent toujours implicitement : <code>all</code> (tous les hôtes) et <code>ungrouped</code>.</li>
+    <li>Des variables de connexion spéciales règlent l'accès : <code>ansible_host</code>, <code>ansible_user</code>, <code>ansible_port</code>, <code>ansible_connection</code>…</li>
+    <li>Les variables d'inventaire se rangent de préférence dans les répertoires <code>group_vars/</code> et <code>host_vars/</code>.</li>
+  </ul>
+
+  <h3>Les inventaires dynamiques</h3>
+  <p>Dans le cloud, les serveurs apparaissent et disparaissent en permanence. Un <strong>inventaire dynamique</strong> (plugin d'inventaire) interroge une source à jour (AWS, Azure, GCP, VMware, une CMDB…) et construit les groupes automatiquement, par exemple à partir des tags des machines.</p>
+<pre><code><span class="cm"># aws_ec2.yml : plugin d'inventaire de la collection amazon.aws</span>
+plugin: amazon.aws.aws_ec2
+regions:
+  - eu-west-3
+keyed_groups:
+  - key: tags.role       <span class="cm"># crée les groupes role_web, role_db...</span>
+    prefix: role</code></pre>
+  <p>La commande <code>ansible-inventory -i inventory.yml --graph</code> affiche l'arborescence des groupes et des hôtes.</p>
+
+  <h3>Le fichier ansible.cfg</h3>
+  <p>Il fixe les réglages par défaut du projet : chemin de l'inventaire, utilisateur distant, nombre de connexions parallèles (<code>forks</code>, 5 par défaut), chemin des rôles… Ansible le cherche dans cet ordre : variable <code>ANSIBLE_CONFIG</code>, <code>./ansible.cfg</code> (répertoire courant), <code>~/.ansible.cfg</code>, puis <code>/etc/ansible/ansible.cfg</code>.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Nœud de contrôle → SSH → nœuds gérés, en parallèle (<code>forks</code>).</li>
+      <li>Inventaire = hôtes rangés en groupes, en INI ou en YAML.</li>
+      <li>Inventaire dynamique pour le cloud et les environnements qui changent.</li>
+      <li><code>ansible.cfg</code> du projet pour des réglages partagés.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 3 -->
+<section class="module" id="m3" data-title="Commandes ad hoc & modules">
+  <div class="eyebrow">Module 3</div>
+  <h2 class="h">Commandes ad hoc et modules</h2>
+
+  <h3>Les commandes ad hoc</h3>
+  <p>Une <strong>commande ad hoc</strong> exécute <strong>un seul module</strong> sur un ensemble d'hôtes, directement depuis la ligne de commande. C'est pratique pour une action ponctuelle ; pour tout ce qui doit être rejoué ou relu, on écrit un playbook.</p>
+<pre><code><span class="cm"># Tester la connexion et la présence de Python sur tous les hôtes</span>
+ansible all -i inventory.ini -m ansible.builtin.ping
+
+<span class="cm"># Installer un paquet sur le groupe webservers, avec élévation de privilèges</span>
+ansible webservers -m ansible.builtin.package -a <span class="str">"name=htop state=present"</span> --become
+
+<span class="cm"># Redémarrer un service</span>
+ansible dbservers -m ansible.builtin.service -a <span class="str">"name=postgresql state=restarted"</span> --become
+
+<span class="cm"># Collecter des informations (facts) sur les hôtes</span>
+ansible all -m ansible.builtin.setup -a <span class="str">"filter=ansible_distribution*"</span></code></pre>
+  <div class="callout">
+    <strong>Le module ping n'est pas un ping réseau</strong>
+    <code>ansible.builtin.ping</code> n'envoie pas de paquet ICMP : il vérifie qu'Ansible peut <strong>se connecter</strong> à l'hôte (SSH, authentification) et y <strong>exécuter Python</strong>. Il répond <code>pong</code> en cas de succès.
+  </div>
+
+  <h3>Les modules les plus utilisés</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Module</th><th>Rôle</th></tr></thead>
+    <tbody>
+      <tr><td><code>ansible.builtin.package</code>, <code>apt</code>, <code>dnf</code></td><td>Installer ou supprimer des paquets</td></tr>
+      <tr><td><code>ansible.builtin.copy</code></td><td>Copier un fichier tel quel vers les hôtes</td></tr>
+      <tr><td><code>ansible.builtin.template</code></td><td>Générer un fichier à partir d'un modèle Jinja2 et de variables</td></tr>
+      <tr><td><code>ansible.builtin.file</code></td><td>Gérer fichiers, répertoires, liens et permissions</td></tr>
+      <tr><td><code>ansible.builtin.lineinfile</code></td><td>Garantir la présence (ou l'absence) d'une ligne dans un fichier</td></tr>
+      <tr><td><code>ansible.builtin.service</code> / <code>systemd_service</code></td><td>Démarrer, arrêter, activer des services</td></tr>
+      <tr><td><code>ansible.builtin.user</code> / <code>group</code></td><td>Gérer les comptes et les groupes</td></tr>
+      <tr><td><code>ansible.builtin.command</code> / <code>shell</code></td><td>Exécuter une commande (dernier recours, voir module 1)</td></tr>
+      <tr><td><code>ansible.builtin.uri</code></td><td>Appeler une API HTTP</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><code>command</code> exécute directement le programme, sans passer par un shell : pas de pipes, de redirections ni de variables d'environnement. <code>shell</code> passe par <code>/bin/sh</code> et accepte tout cela, mais il expose davantage aux erreurs d'échappement et aux injections. Préférez <code>command</code> quand le shell n'est pas nécessaire.</p>
+
+  <h3>Les noms complets (FQCN)</h3>
+  <p>Depuis Ansible 2.10, les modules sont distribués dans des <strong>collections</strong>. On les désigne par leur <strong>nom complet</strong> (FQCN, <em>Fully Qualified Collection Name</em>) : <code>espace_de_noms.collection.module</code>, par exemple <code>ansible.builtin.copy</code> ou <code>community.general.timezone</code>. Le nom court (<code>copy</code>) fonctionne encore, mais le FQCN évite toute ambiguïté entre modules homonymes et c'est la pratique recommandée.</p>
+
+  <p>La documentation de chaque module est disponible hors ligne : <code>ansible-doc ansible.builtin.template</code>.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Ad hoc = un module, une fois, depuis la ligne de commande.</li>
+      <li><code>ping</code> teste la connexion et Python, pas le réseau ICMP.</li>
+      <li>Utilisez un module dédié plutôt que <code>command</code> / <code>shell</code>.</li>
+      <li>Utilisez les noms complets (FQCN) : <code>ansible.builtin.copy</code>.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 4 -->
+<section class="module" id="m4" data-title="Playbooks & handlers">
+  <div class="eyebrow">Module 4</div>
+  <h2 class="h">Les playbooks</h2>
+
+  <p>Un <strong>playbook</strong> est un fichier YAML qui contient un ou plusieurs <strong>plays</strong>. Un play associe un groupe d'hôtes (<code>hosts</code>) à une liste de <strong>tâches</strong> exécutées dans l'ordre. Chaque tâche appelle un module.</p>
+<pre><code><span class="cm"># site.yml</span>
+- name: Installer et configurer nginx
+  hosts: webservers
+  become: true                <span class="cm"># élévation de privilèges (sudo)</span>
+  vars:
+    http_port: 80
+
+  tasks:
+    - name: Installer nginx
+      ansible.builtin.package:
+        name: nginx
+        state: present
+
+    - name: Déployer la configuration
+      ansible.builtin.template:
+        src: templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        mode: <span class="str">"0644"</span>
+      notify: Recharger nginx   <span class="cm"># déclenche le handler si changed</span>
+
+    - name: Démarrer nginx et l'activer au boot
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Recharger nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded</code></pre>
+
+  <h3>Exécution</h3>
+<pre><code>ansible-playbook -i inventory.ini site.yml
+
+<span class="cm"># Simulation : affiche ce qui changerait, sans rien modifier</span>
+ansible-playbook -i inventory.ini site.yml --check --diff
+
+<span class="cm"># Limiter à un hôte, n'exécuter que certaines tâches</span>
+ansible-playbook site.yml --limit web1.example.com --tags config</code></pre>
+
+  <h3>Lire le résultat</h3>
+<pre><code>PLAY RECAP *********************************************************
+web1.example.com : <span class="str">ok=4</span>  <span class="fn">changed=1</span>  unreachable=0  <span class="kw">failed=0</span>  skipped=0
+web2.example.com : <span class="str">ok=4</span>  <span class="fn">changed=0</span>  unreachable=0  <span class="kw">failed=0</span>  skipped=0</code></pre>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Statut</th><th>Signification</th></tr></thead>
+    <tbody>
+      <tr><td><code>ok</code></td><td>La tâche a réussi ; l'état était déjà conforme, rien n'a changé</td></tr>
+      <tr><td><code>changed</code></td><td>La tâche a modifié quelque chose sur l'hôte</td></tr>
+      <tr><td><code>failed</code></td><td>La tâche a échoué ; par défaut, l'hôte est retiré du reste du play</td></tr>
+      <tr><td><code>skipped</code></td><td>La tâche n'a pas été exécutée (condition <code>when</code> fausse)</td></tr>
+      <tr><td><code>unreachable</code></td><td>Ansible n'a pas pu se connecter à l'hôte</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout ok">
+    <strong>Le test d'idempotence</strong>
+    Lancez le playbook deux fois : au second passage, toutes les tâches doivent être en <code>ok</code>, avec <code>changed=0</code>. Sinon, une tâche n'est pas idempotente.
+  </div>
+
+  <h3>Les handlers</h3>
+  <p>Un <strong>handler</strong> est une tâche qui ne s'exécute que si une autre tâche l'a <strong>notifiée</strong> (<code>notify</code>) <strong>et</strong> a renvoyé <code>changed</code>. Les handlers s'exécutent <strong>à la fin du play</strong> et <strong>une seule fois</strong>, même s'ils ont été notifiés par plusieurs tâches. Usage type : recharger un service uniquement si sa configuration a changé. Pour les déclencher plus tôt, on utilise <code>ansible.builtin.meta: flush_handlers</code>.</p>
+
+  <h3>Autres notions utiles</h3>
+  <ul>
+    <li><strong><code>become</code></strong> : exécuter avec des droits élevés (sudo par défaut), au niveau du play ou d'une tâche, avec <code>become_user</code> pour choisir l'utilisateur.</li>
+    <li><strong><code>tags</code></strong> : étiqueter des tâches pour n'en exécuter qu'une partie (<code>--tags</code>, <code>--skip-tags</code>).</li>
+    <li><strong><code>--check</code></strong> (dry run) et <strong><code>--diff</code></strong> (afficher les différences de fichiers) : indispensables avant d'appliquer en production.</li>
+    <li><strong><code>--start-at-task</code></strong> et <strong><code>--step</code></strong> : reprendre ou avancer pas à pas.</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Playbook → plays → tâches → modules.</li>
+      <li>Handlers : exécutés à la fin du play, une seule fois, uniquement si notifiés par une tâche <code>changed</code>.</li>
+      <li><code>--check --diff</code> pour simuler avant d'appliquer.</li>
+      <li>Second passage = <code>changed=0</code> si le playbook est idempotent.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 5 -->
+<section class="module" id="m5" data-title="Variables, facts & Jinja2">
+  <div class="eyebrow">Module 5</div>
+  <h2 class="h">Variables, facts, templates et logique</h2>
+
+  <h3>Où définir des variables ?</h3>
+<pre><code>projet/
+├── inventory.ini
+├── group_vars/
+│   ├── all.yml          <span class="cm"># tous les hôtes</span>
+│   └── webservers.yml   <span class="cm"># groupe webservers</span>
+├── host_vars/
+│   └── web1.example.com.yml
+└── site.yml</code></pre>
+
+  <h3>La priorité des variables</h3>
+  <p>Ansible compte plus de 20 niveaux de priorité. Voici une version simplifiée, de la <strong>plus faible</strong> à la <strong>plus forte</strong> :</p>
+  <ol>
+    <li><code>defaults/</code> d'un rôle (prévu pour être surchargé) ;</li>
+    <li>variables d'inventaire : <code>group_vars/all</code>, puis <code>group_vars/&lt;groupe&gt;</code>, puis <code>host_vars/&lt;hôte&gt;</code> ;</li>
+    <li>facts collectés sur l'hôte ;</li>
+    <li><code>vars</code> du play, <code>vars_files</code> ;</li>
+    <li><code>vars/</code> d'un rôle ;</li>
+    <li>variables de tâche, <code>set_fact</code> et <code>register</code> ;</li>
+    <li><strong>extra vars</strong> passées avec <code>-e</code> en ligne de commande : elles <strong>l'emportent toujours</strong>.</li>
+  </ol>
+  <div class="callout">
+    <strong>Règle pratique</strong>
+    Définissez chaque variable à <strong>un seul endroit</strong>, le plus simple possible. Mettez les valeurs par défaut dans <code>defaults/</code> des rôles, et les valeurs propres à un environnement dans <code>group_vars</code>.
+  </div>
+
+  <h3>Les facts</h3>
+  <p>Au début de chaque play, Ansible exécute le module <code>setup</code> pour collecter des <strong>facts</strong> sur chaque hôte : système d'exploitation, version, adresses IP, mémoire, disques… Ils sont accessibles via <code>ansible_facts</code>, par exemple <code>ansible_facts['distribution']</code> ou <code>ansible_facts['default_ipv4']['address']</code>. On peut désactiver la collecte avec <code>gather_facts: false</code> pour gagner du temps quand on n'en a pas besoin.</p>
+
+  <h3>Templates Jinja2</h3>
+  <p>Ansible utilise le moteur <strong>Jinja2</strong> pour insérer des variables (<code>{{ variable }}</code>), écrire des boucles et des conditions (<code>{% ... %}</code>) et appliquer des filtres.</p>
+<pre><code><span class="cm"># templates/nginx.conf.j2</span>
+server {
+    listen {{ http_port }};
+    server_name {{ inventory_hostname }};
+
+{% for backend in backends %}
+    <span class="cm"># backend : {{ backend }}</span>
+{% endfor %}
+    client_max_body_size {{ max_upload | default('10m') }};
+}</code></pre>
+  <p>Quelques filtres courants : <code>default</code>, <code>upper</code>, <code>join</code>, <code>to_nice_yaml</code>, <code>password_hash</code>, <code>bool</code>…</p>
+  <div class="callout warn">
+    <strong>Attention aux guillemets en YAML</strong>
+    Une valeur YAML qui <em>commence</em> par <code>{{</code> doit être entre guillemets : <code>name: "{{ item }}"</code>. Sinon, YAML l'interprète comme un dictionnaire et le playbook échoue.
+  </div>
+
+  <h3>Conditions, boucles et register</h3>
+<pre><code>- name: Vérifier si l'application est installée
+  ansible.builtin.stat:
+    path: /opt/app/bin/app
+  register: app_bin                 <span class="cm"># stocke le résultat de la tâche</span>
+
+- name: Installer l'application si elle est absente
+  ansible.builtin.unarchive:
+    src: app.tar.gz
+    dest: /opt/app
+  when: not app_bin.stat.exists     <span class="cm"># condition</span>
+
+- name: Créer les comptes utilisateurs
+  ansible.builtin.user:
+    name: <span class="str">"{{ item }}"</span>
+    state: present
+  loop:                             <span class="cm"># boucle</span>
+    - alice
+    - bob
+
+- name: Installer les paquets Debian uniquement
+  ansible.builtin.apt:
+    name: [curl, git]
+    state: present
+  when: ansible_facts['os_family'] == <span class="str">"Debian"</span></code></pre>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Les extra vars (<code>-e</code>) ont la priorité la plus haute ; les <code>defaults/</code> de rôle, la plus basse.</li>
+      <li>Facts = informations collectées sur l'hôte (<code>ansible_facts</code>).</li>
+      <li>Jinja2 : <code>{{ variable }}</code>, <code>{% for %}</code>, filtres ; mettez les guillemets en YAML.</li>
+      <li><code>register</code> stocke un résultat, <code>when</code> conditionne, <code>loop</code> répète.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 6 -->
+<section class="module" id="m6" data-title="Rôles & collections">
+  <div class="eyebrow">Module 6</div>
+  <h2 class="h">Rôles et collections</h2>
+
+  <h3>Les rôles</h3>
+  <p>Un <strong>rôle</strong> regroupe tout ce qui sert à configurer une fonctionnalité (tâches, handlers, templates, fichiers, variables) dans une <strong>arborescence standard</strong>. Il est réutilisable d'un projet à l'autre et se partage facilement.</p>
+<pre><code>roles/
+└── nginx/
+    ├── defaults/main.yml    <span class="cm"># variables par défaut (priorité la plus faible)</span>
+    ├── vars/main.yml        <span class="cm"># variables internes (priorité élevée)</span>
+    ├── tasks/main.yml       <span class="cm"># point d'entrée des tâches</span>
+    ├── handlers/main.yml    <span class="cm"># handlers</span>
+    ├── templates/           <span class="cm"># modèles Jinja2 (.j2)</span>
+    ├── files/               <span class="cm"># fichiers copiés tels quels</span>
+    └── meta/main.yml        <span class="cm"># métadonnées, dépendances</span></code></pre>
+  <p>La commande <code>ansible-galaxy role init nginx</code> crée ce squelette. On utilise ensuite le rôle dans un playbook :</p>
+<pre><code>- name: Serveurs web
+  hosts: webservers
+  become: true
+  roles:
+    - role: nginx
+      vars:
+        http_port: 8080</code></pre>
+  <p>On peut aussi inclure un rôle au milieu des tâches avec <code>ansible.builtin.import_role</code> (statique, résolu au chargement) ou <code>ansible.builtin.include_role</code> (dynamique, résolu à l'exécution).</p>
+
+  <h3>Les collections</h3>
+  <p>Une <strong>collection</strong> est le format de distribution du contenu Ansible : elle regroupe des modules, des plugins, des rôles et des playbooks sous un espace de noms (<code>community.general</code>, <code>amazon.aws</code>, <code>ansible.windows</code>, <code>kubernetes.core</code>…).</p>
+  <ul>
+    <li>Le paquet <code>ansible-core</code> ne contient que le moteur et la collection <code>ansible.builtin</code>.</li>
+    <li>Le paquet <code>ansible</code> (dit « communautaire ») inclut en plus une large sélection de collections.</li>
+    <li><strong>Ansible Galaxy</strong> est le dépôt public de rôles et de collections ; les entreprises utilisent souvent un hub privé (Automation Hub, Private Automation Hub, ou un dépôt Galaxy interne).</li>
+  </ul>
+  <p>Les dépendances d'un projet se déclarent dans un fichier <code>requirements.yml</code>, avec des versions figées :</p>
+<pre><code><span class="cm"># requirements.yml</span>
+collections:
+  - name: community.general
+    version: <span class="str">"&gt;=9.0.0,&lt;10.0.0"</span>
+  - name: amazon.aws
+roles:
+  - name: geerlingguy.docker
+    version: <span class="str">"7.4.1"</span></code></pre>
+<pre><code>ansible-galaxy install -r requirements.yml</code></pre>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Rôle = arborescence standard (tasks, handlers, templates, defaults…), réutilisable.</li>
+      <li><code>defaults/</code> pour ce que l'utilisateur peut surcharger, <code>vars/</code> pour l'interne.</li>
+      <li>Collection = format de distribution des modules, plugins et rôles.</li>
+      <li><code>requirements.yml</code> + versions figées pour des exécutions reproductibles.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 7 -->
+<section class="module" id="m7" data-title="Secrets & Ansible Vault">
+  <div class="eyebrow">Module 7</div>
+  <h2 class="h">Secrets et sécurité</h2>
+
+  <h3>Ansible Vault</h3>
+  <p><strong>Ansible Vault</strong> chiffre (en AES-256) des fichiers ou des valeurs, qui peuvent ainsi être commités dans Git sans exposer les secrets. Ansible les déchiffre en mémoire au moment de l'exécution.</p>
+<pre><code><span class="cm"># Créer, éditer, chiffrer, afficher un fichier chiffré</span>
+ansible-vault create group_vars/prod/vault.yml
+ansible-vault edit   group_vars/prod/vault.yml
+ansible-vault encrypt secrets.yml
+ansible-vault view   secrets.yml
+
+<span class="cm"># Chiffrer une seule valeur, à coller dans un fichier de variables</span>
+ansible-vault encrypt_string <span class="str">'S3cr3t!'</span> --name <span class="str">'db_password'</span>
+
+<span class="cm"># Exécuter un playbook qui utilise des données chiffrées</span>
+ansible-playbook site.yml --ask-vault-pass
+ansible-playbook site.yml --vault-password-file ~/.vault_pass</code></pre>
+  <div class="callout">
+    <strong>Une convention utile</strong>
+    Dans <code>group_vars/prod/</code>, placez un fichier <code>vars.yml</code> en clair qui référence des variables préfixées <code>vault_</code>, définies dans un fichier <code>vault.yml</code> chiffré :<br>
+    <code>db_password: "{{ vault_db_password }}"</code>.<br>
+    On voit ainsi quelles variables existent (avec <code>grep</code>, par exemple) sans pouvoir lire leurs valeurs.
+  </div>
+  <p>On peut aussi utiliser plusieurs mots de passe Vault avec des identifiants (<code>--vault-id dev@prompt --vault-id prod@~/.vault_prod</code>), ou récupérer les secrets directement depuis un coffre-fort externe (HashiCorp Vault, CyberArk, AWS Secrets Manager, Azure Key Vault) grâce aux plugins de lookup.</p>
+
+  <h3>Éviter les fuites dans les logs</h3>
+  <p>Par défaut, Ansible affiche les paramètres et les résultats des tâches, notamment en mode verbeux (<code>-v</code> à <code>-vvvv</code>). Pour une tâche qui manipule un secret, ajoutez <code>no_log: true</code> :</p>
+<pre><code>- name: Créer l'utilisateur de base de données
+  community.postgresql.postgresql_user:
+    name: app
+    password: <span class="str">"{{ db_password }}"</span>
+  no_log: true</code></pre>
+
+  <h3>Bonnes pratiques de sécurité</h3>
+  <ul>
+    <li><strong>Authentification SSH par clé</strong>, jamais par mot de passe en clair dans l'inventaire.</li>
+    <li>Un <strong>compte de service dédié</strong> à l'automatisation, avec des droits <code>sudo</code> limités au nécessaire.</li>
+    <li>Le mot de passe Vault ne doit jamais se trouver dans le dépôt Git.</li>
+    <li>Vérifier les rôles et collections tiers avant de les utiliser, et figer leurs versions.</li>
+    <li>Utiliser <code>validate</code> sur les modules <code>template</code> et <code>copy</code> (par exemple <code>validate: visudo -cf %s</code>) pour ne jamais déployer un fichier de configuration invalide.</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Ansible Vault chiffre fichiers et valeurs, qui peuvent ensuite aller dans Git.</li>
+      <li><code>no_log: true</code> empêche l'affichage des secrets dans la sortie.</li>
+      <li>Clés SSH, compte dédié, moindre privilège, mot de passe Vault hors du dépôt.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 8 -->
+<section class="module" id="m8" data-title="Robustesse, tests & échelle">
+  <div class="eyebrow">Module 8</div>
+  <h2 class="h">Robustesse, tests et exécution à l'échelle</h2>
+
+  <h3>Gérer les erreurs</h3>
+<pre><code>- name: Mise à jour de l'application avec retour arrière
+  block:
+    - name: Déployer la nouvelle version
+      ansible.builtin.unarchive:
+        src: app-2.0.tar.gz
+        dest: /opt/app
+    - name: Vérifier l'état de santé
+      ansible.builtin.uri:
+        url: http://localhost:8080/health
+        status_code: 200
+      retries: 5
+      delay: 3
+      register: health
+      until: health.status == 200
+  rescue:                       <span class="cm"># exécuté si une tâche du block échoue</span>
+    - name: Revenir à la version précédente
+      ansible.builtin.unarchive:
+        src: app-1.9.tar.gz
+        dest: /opt/app
+  always:                       <span class="cm"># exécuté dans tous les cas</span>
+    - name: Nettoyer les fichiers temporaires
+      ansible.builtin.file:
+        path: /tmp/app-upgrade
+        state: absent</code></pre>
+  <ul>
+    <li><code>ignore_errors: true</code> : continuer malgré l'échec d'une tâche (à utiliser avec parcimonie).</li>
+    <li><code>failed_when</code> / <code>changed_when</code> : définir soi-même ce qui compte comme un échec ou un changement.</li>
+    <li><code>retries</code> / <code>until</code> : réessayer jusqu'à ce qu'une condition soit remplie.</li>
+  </ul>
+
+  <h3>Déploiements progressifs</h3>
+  <ul>
+    <li><strong><code>serial</code></strong> : traiter les hôtes par lots (<code>serial: 2</code> ou <code>serial: "25%"</code>) pour une mise à jour progressive (<em>rolling update</em>) sans couper tout le service.</li>
+    <li><strong><code>max_fail_percentage</code></strong> : arrêter le déploiement si trop d'hôtes échouent.</li>
+    <li><strong><code>delegate_to</code></strong> : exécuter une tâche sur une autre machine, par exemple retirer un serveur du load balancer avant de le mettre à jour.</li>
+    <li><strong><code>run_once</code></strong> : exécuter une tâche une seule fois pour tout le groupe (une migration de base de données, par exemple).</li>
+    <li><strong><code>strategy: free</code></strong> : laisser chaque hôte avancer à son rythme, au lieu d'attendre que tous aient terminé chaque tâche (stratégie <code>linear</code>, par défaut).</li>
+  </ul>
+
+  <h3>Qualité et tests</h3>
+  <div class="grid">
+    <div class="card"><h4>ansible-lint</h4><p>Analyse statique : bonnes pratiques, FQCN, noms de tâches, usage risqué de <code>shell</code>…</p></div>
+    <div class="card"><h4>yamllint</h4><p>Syntaxe et style YAML.</p></div>
+    <div class="card"><h4>--syntax-check</h4><p><code>ansible-playbook --syntax-check</code> : vérification rapide de la syntaxe du playbook.</p></div>
+    <div class="card"><h4>Molecule</h4><p>Tests de rôles : crée des instances jetables (conteneurs, VM), applique le rôle, vérifie l'idempotence et le résultat, puis détruit tout.</p></div>
+  </div>
+
+  <h3>Exécuter à l'échelle</h3>
+  <div class="grid">
+    <div class="card"><h4>🏢 Ansible Automation Platform</h4><p>L'offre de Red Hat : interface web et API (automation controller), droits par équipe (RBAC), gestion des identifiants, planification, journal d'audit, workflows.</p></div>
+    <div class="card"><h4>🌱 AWX</h4><p>Le projet open source en amont de l'automation controller, avec les mêmes concepts.</p></div>
+    <div class="card"><h4>📦 Execution Environments</h4><p>Des images de conteneurs qui embarquent ansible-core, Python et les collections. Elles sont construites avec <code>ansible-builder</code> et utilisées avec <code>ansible-navigator</code>, pour une exécution identique partout.</p></div>
+    <div class="card"><h4>🔄 CI/CD</h4><p>Lint et tests sur chaque merge request, puis exécution des playbooks depuis la CI ou le contrôleur, jamais depuis un poste personnel en production.</p></div>
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li><code>block</code> / <code>rescue</code> / <code>always</code> pour gérer les erreurs et les retours arrière.</li>
+      <li><code>serial</code> pour des mises à jour progressives.</li>
+      <li>ansible-lint et Molecule pour la qualité et les tests.</li>
+      <li>AWX / Automation Platform et Execution Environments pour l'échelle et la reproductibilité.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 9 -->
+<section class="module" id="m9" data-title="Bonnes pratiques">
+  <div class="eyebrow">Module 9</div>
+  <h2 class="h">Bonnes pratiques et combinaison avec Terraform</h2>
+
+  <h3>Écriture</h3>
+  <ul>
+    <li><strong>Nommez toutes les tâches</strong> (<code>name:</code>) : la sortie devient lisible et sert de documentation.</li>
+    <li>Utilisez les <strong>FQCN</strong> et des <strong>modules dédiés</strong> plutôt que <code>command</code> / <code>shell</code>.</li>
+    <li>Gardez des playbooks courts, qui appellent des <strong>rôles</strong>.</li>
+    <li>Écrivez le YAML de façon cohérente : <code>true</code>/<code>false</code> plutôt que <code>yes</code>/<code>no</code>, modes de fichier entre guillemets (<code>mode: "0644"</code>).</li>
+    <li>Préfixez les variables d'un rôle par son nom (<code>nginx_port</code>) pour éviter les collisions.</li>
+    <li>Testez l'<strong>idempotence</strong> : un second passage doit donner <code>changed=0</code>.</li>
+  </ul>
+
+  <h3>Organisation d'un projet</h3>
+<pre><code>ansible-projet/
+├── ansible.cfg
+├── requirements.yml
+├── inventories/
+│   ├── dev/
+│   │   ├── hosts.yml
+│   │   └── group_vars/
+│   └── prod/
+│       ├── hosts.yml
+│       └── group_vars/
+├── roles/
+├── playbooks/
+│   ├── site.yml
+│   └── webservers.yml
+└── .ansible-lint</code></pre>
+  <p>Un inventaire par environnement : on choisit la cible explicitement avec <code>-i inventories/prod</code>, ce qui limite le risque de lancer une modification sur le mauvais environnement.</p>
+
+  <h3>Terraform + Ansible</h3>
+  <ol>
+    <li><strong>Terraform</strong> crée le réseau, les machines virtuelles, les bases managées et les règles de pare-feu, et pose des <strong>tags</strong> sur les machines (<code>role = web</code>).</li>
+    <li><strong>Ansible</strong> récupère les machines avec un <strong>inventaire dynamique</strong> basé sur ces tags, ou à partir des outputs Terraform (<code>terraform output -json</code>).</li>
+    <li><strong>Ansible</strong> configure le système, déploie l'application et gère les mises à jour progressives.</li>
+  </ol>
+  <div class="callout">
+    <strong>Variante immuable</strong>
+    Ansible peut aussi servir à <em>construire des images</em> (avec Packer, par exemple). Terraform déploie ensuite ces images toutes prêtes : il n'y a plus de configuration à faire au démarrage des machines.
+  </div>
+
+  <div class="callout warn">
+    <strong>Pièges courants</strong>
+    <ul style="margin:6px 0 0;padding-left:20px">
+      <li>Des playbooks remplis de <code>shell</code>, donc non idempotents et toujours <code>changed</code>.</li>
+      <li>La même variable définie à cinq endroits, avec des priorités difficiles à comprendre.</li>
+      <li>Des secrets en clair dans <code>group_vars</code>, ou affichés dans les logs faute de <code>no_log</code>.</li>
+      <li>Des modifications manuelles sur les serveurs, écrasées au passage suivant d'Ansible (ou, pire, qui le font échouer).</li>
+      <li>Des collections et rôles tiers sans version figée.</li>
+    </ul>
+  </div>
+
+  <div class="callout ok">
+    <strong>Prêt pour le quiz ?</strong>
+    Le module suivant contient 20 questions sur l'ensemble de la formation. Il faut 80 % de bonnes réponses pour le valider. Bonne chance !
+  </div>
+</section>
+
+<!-- ===================================================== QUIZ -->
+<section class="module" id="quiz" data-title="Quiz de validation">
+  <div class="eyebrow">Évaluation finale</div>
+  <h2 class="h">Quiz de validation des connaissances</h2>
+  <div id="quizRoot"></div>
+</section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Stockage local (tolérant aux erreurs) ---------------- */
+  var STORE_KEY = "formation-ansible-v1";
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save(s) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* ignoré */ }
+  }
+  var state = load();
+  state.done = state.done || {};
+
+  /* ---------------- Thème ---------------- */
+  var root = document.documentElement;
+  if (state.theme) root.setAttribute("data-theme", state.theme);
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme")
+      ? root.getAttribute("data-theme") === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    state.theme = dark ? "light" : "dark";
+    root.setAttribute("data-theme", state.theme);
+    save(state);
+  });
+
+  /* ---------------- Navigation ---------------- */
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section.module"));
+  var navList = document.getElementById("navList");
+  var learningIds = sections.filter(function (s) { return /^m[1-9]$/.test(s.id); }).map(function (s) { return s.id; });
+
+  sections.forEach(function (s, i) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#" + s.id;
+    a.dataset.id = s.id;
+    var label = s.id === "m0" ? "i" : (s.id === "quiz" ? "?" : s.id.slice(1));
+    a.innerHTML = '<span class="num">' + label + "</span><span></span>";
+    a.lastChild.textContent = s.dataset.title;
+    li.appendChild(a);
+    navList.appendChild(li);
+
+    // Pager
+    var pager = document.createElement("div");
+    pager.className = "pager";
+    var prev = sections[i - 1], next = sections[i + 1];
+    pager.innerHTML =
+      (prev ? '<a class="btn ghost" href="#' + prev.id + '">← ' + escapeHtml(prev.dataset.title) + "</a>" : "<span></span>") +
+      (next ? '<a class="btn" data-complete="' + s.id + '" href="#' + next.id + '">' + escapeHtml(next.dataset.title) + " →</a>" : "");
+    if (s.id !== "quiz") s.appendChild(pager);
+  });
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-complete]");
+    if (t) {
+      var id = t.getAttribute("data-complete");
+      if (learningIds.indexOf(id) !== -1) { state.done[id] = true; save(state); }
+    }
+  });
+
+  function show() {
+    var id = (location.hash || "#m0").slice(1);
+    if (!document.getElementById(id)) id = "m0";
+    sections.forEach(function (s) { s.classList.toggle("visible", s.id === id); });
+    navList.querySelectorAll("a").forEach(function (a) {
+      a.classList.toggle("active", a.dataset.id === id);
+      a.classList.toggle("done", !!state.done[a.dataset.id] || (a.dataset.id === "quiz" && state.passed));
+    });
+    updateProgress();
+    document.getElementById("sidebar").classList.remove("open");
+    window.scrollTo(0, 0);
+  }
+  function updateProgress() {
+    var n = learningIds.filter(function (id) { return state.done[id]; }).length;
+    document.getElementById("progressBar").style.width = (n / learningIds.length * 100) + "%";
+    document.getElementById("progressLabel").textContent = n + " / " + learningIds.length + " modules lus";
+  }
+  window.addEventListener("hashchange", show);
+  document.getElementById("menuBtn").addEventListener("click", function () {
+    document.getElementById("sidebar").classList.toggle("open");
+  });
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------------- Quiz ---------------- */
+  var PASS = 0.8;
+  var QUESTIONS = [
+    { t: "Principes", q: "Que faut-il installer sur un serveur Linux pour qu'Ansible puisse le gérer ?",
+      o: ["Un agent Ansible qui tourne en permanence", "Rien de spécifique : un accès SSH et Python suffisent", "Un serveur web", "Docker"],
+      a: 1, e: "Ansible fonctionne sans agent : il se connecte en SSH et exécute ses modules avec le Python déjà présent sur l'hôte." },
+    { t: "Principes", q: "Un playbook bien écrit est lancé deux fois de suite sur les mêmes serveurs. Que doit afficher le second passage ?",
+      o: ["Des erreurs, car tout existe déjà", "changed=0 : toutes les tâches sont en ok", "Le même nombre de changed que la première fois", "unreachable pour tous les hôtes"],
+      a: 1, e: "C'est l'idempotence : l'état décrit est déjà atteint, donc aucune tâche n'a besoin de modifier quoi que ce soit." },
+    { t: "Principes", q: "Pourquoi éviter les modules command et shell quand un module dédié existe ?",
+      o: ["Ils sont interdits en production", "Ils ne sont pas idempotents par défaut et renvoient toujours changed", "Ils ne fonctionnent que sous Windows", "Ils sont plus rapides"],
+      a: 1, e: "command et shell exécutent la commande à chaque fois. Un module dédié vérifie l'état et n'agit que si nécessaire." },
+    { t: "Principes", q: "Quelle répartition des rôles entre Terraform et Ansible est la plus courante ?",
+      o: ["Terraform configure les paquets, Ansible crée les VM", "Terraform provisionne l'infrastructure (réseau, VM, services cloud) ; Ansible configure l'intérieur des machines", "Ils font exactement la même chose", "Ansible remplace Terraform depuis 2023"],
+      a: 1, e: "Terraform excelle dans la création de ressources par API, Ansible dans la configuration système et le déploiement applicatif." },
+    { t: "Inventaire", q: "À quoi sert l'inventaire Ansible ?",
+      o: ["À lister les modules installés", "À lister les hôtes gérés et à les ranger en groupes, avec leurs variables", "À stocker l'historique des exécutions", "À chiffrer les secrets"],
+      a: 1, e: "L'inventaire définit les cibles (hôtes et groupes) et peut porter des variables, par exemple ansible_user ou ansible_host." },
+    { t: "Inventaire", q: "Pourquoi utiliser un inventaire dynamique dans le cloud ?",
+      o: ["Parce que les fichiers INI sont interdits dans le cloud", "Parce que les machines changent souvent : le plugin interroge la source (AWS, Azure…) et construit les groupes à partir des tags", "Pour chiffrer les adresses IP", "Pour se passer de SSH"],
+      a: 1, e: "Un inventaire statique devient vite faux quand les machines sont créées et détruites en permanence. Le plugin donne toujours une liste à jour." },
+    { t: "Modules", q: "Que vérifie la commande ad hoc « ansible all -m ansible.builtin.ping » ?",
+      o: ["Que les hôtes répondent au ping ICMP", "Qu'Ansible peut se connecter aux hôtes et y exécuter Python", "Que le port 80 est ouvert", "Que les hôtes ont accès à Internet"],
+      a: 1, e: "Le module ping n'est pas un ping réseau : il teste la connexion (SSH, authentification) et l'exécution de Python, et répond pong." },
+    { t: "Modules", q: "Que signifie FQCN, comme dans ansible.builtin.copy ?",
+      o: ["Fully Qualified Collection Name : le nom complet du module, collection comprise", "Fast Query Configuration Node", "Un format de fichier d'inventaire", "Un type de variable"],
+      a: 0, e: "Le FQCN (espace_de_noms.collection.module) identifie un module sans ambiguïté. C'est la pratique recommandée depuis l'arrivée des collections." },
+    { t: "Modules", q: "Quelle est la différence entre les modules copy et template ?",
+      o: ["Aucune", "copy envoie un fichier tel quel ; template génère le fichier à partir d'un modèle Jinja2 et de variables", "template ne fonctionne que pour les fichiers HTML", "copy ne fonctionne qu'en local"],
+      a: 1, e: "template interprète les {{ variables }}, les boucles et les conditions Jinja2 avant de déposer le fichier sur l'hôte." },
+    { t: "Playbooks", q: "Quand un handler s'exécute-t-il ?",
+      o: ["À chaque tâche du play", "Au début du play", "À la fin du play, une seule fois, uniquement si une tâche qui le notifie a renvoyé changed", "Uniquement en mode --check"],
+      a: 2, e: "Même s'il est notifié par plusieurs tâches, un handler ne s'exécute qu'une fois, à la fin du play (sauf meta: flush_handlers)." },
+    { t: "Playbooks", q: "À quoi sert become: true ?",
+      o: ["À rendre le playbook idempotent", "À exécuter les tâches avec des privilèges élevés (sudo par défaut)", "À lancer le play en parallèle", "À devenir le nœud de contrôle"],
+      a: 1, e: "become active l'élévation de privilèges, sudo par défaut. become_user permet de choisir l'utilisateur cible." },
+    { t: "Playbooks", q: "Quelle commande permet de voir ce qu'un playbook changerait, sans rien modifier sur les serveurs ?",
+      o: ["ansible-playbook site.yml --check --diff", "ansible-playbook site.yml --force", "ansible-lint site.yml", "ansible-galaxy install site.yml"],
+      a: 0, e: "--check simule l'exécution (dry run) et --diff affiche les différences de contenu des fichiers." },
+    { t: "Variables", q: "Parmi ces sources, laquelle a la priorité la plus haute pour une variable ?",
+      o: ["defaults/main.yml d'un rôle", "group_vars/all.yml", "host_vars/<hôte>.yml", "Une extra var passée avec -e en ligne de commande"],
+      a: 3, e: "Les extra vars (-e) l'emportent toujours. Les defaults de rôle ont la priorité la plus faible." },
+    { t: "Variables", q: "Où placer la valeur par défaut d'une variable de rôle que les utilisateurs doivent pouvoir facilement surcharger ?",
+      o: ["Dans vars/main.yml du rôle", "Dans defaults/main.yml du rôle", "Dans tasks/main.yml", "Dans ansible.cfg"],
+      a: 1, e: "defaults/ a la priorité la plus faible : n'importe quelle autre définition (inventaire, play…) la remplace. vars/ a au contraire une priorité élevée." },
+    { t: "Variables", q: "Que sont les facts ?",
+      o: ["Des variables chiffrées", "Des informations collectées automatiquement sur chaque hôte (OS, IP, mémoire…) par le module setup", "Les résultats d'un test Molecule", "Les entrées de l'inventaire"],
+      a: 1, e: "Au début de chaque play, setup collecte les facts, accessibles ensuite via ansible_facts. On peut désactiver cette collecte avec gather_facts: false." },
+    { t: "Variables", q: "À quoi sert le mot-clé register ?",
+      o: ["À enregistrer un hôte dans l'inventaire", "À stocker le résultat d'une tâche dans une variable, pour l'utiliser dans les tâches suivantes", "À inscrire un rôle dans Galaxy", "À chiffrer une variable"],
+      a: 1, e: "register capture la sortie d'une tâche (code retour, stdout, attributs…), souvent réutilisée ensuite dans une condition when." },
+    { t: "Variables", q: "Pourquoi la ligne suivante provoque-t-elle une erreur ?\nname: {{ item }}",
+      o: ["item n'est pas un nom de variable valide", "En YAML, une valeur qui commence par {{ doit être entre guillemets", "Les doubles accolades sont interdites dans Ansible", "Il manque un filtre Jinja2"],
+      a: 1, e: "Sans guillemets, YAML interprète { comme le début d'un dictionnaire. Il faut écrire name: \"{{ item }}\"." },
+    { t: "Rôles", q: "Dans un rôle, quel fichier est le point d'entrée des tâches ?",
+      o: ["main.yml à la racine du rôle", "tasks/main.yml", "playbook.yml", "meta/tasks.yml"],
+      a: 1, e: "Ansible exécute tasks/main.yml quand le rôle est appelé. Les handlers sont dans handlers/main.yml, les valeurs par défaut dans defaults/main.yml." },
+    { t: "Rôles", q: "Comment déclarer et installer de façon reproductible les collections et rôles dont dépend un projet ?",
+      o: ["Les copier à la main dans le dépôt", "Les lister avec leurs versions dans requirements.yml, puis lancer ansible-galaxy install -r requirements.yml", "Les installer avec pip sans version", "Ce n'est pas possible"],
+      a: 1, e: "requirements.yml avec des versions figées garantit que tout le monde, y compris la CI, utilise le même contenu." },
+    { t: "Sécurité", q: "À quoi sert Ansible Vault ?",
+      o: ["À stocker l'inventaire", "À chiffrer des fichiers ou des valeurs sensibles, qui peuvent ainsi être versionnés dans Git", "À sauvegarder les serveurs", "À accélérer les connexions SSH"],
+      a: 1, e: "Vault chiffre en AES-256 ; les données sont déchiffrées en mémoire à l'exécution, avec --ask-vault-pass ou --vault-password-file." },
+    { t: "Sécurité", q: "Une tâche définit le mot de passe d'un utilisateur de base de données. Que faut-il ajouter pour que ce mot de passe n'apparaisse pas dans la sortie ?",
+      o: ["become: true", "no_log: true", "ignore_errors: true", "gather_facts: false"],
+      a: 1, e: "no_log: true masque les paramètres et résultats de la tâche dans la sortie et les journaux d'exécution." },
+    { t: "Échelle", q: "Comment mettre à jour 20 serveurs web 4 par 4 pour ne jamais couper tout le service ?",
+      o: ["Avec strategy: free", "Avec serial: 4 dans le play", "Avec run_once: true", "Avec forks: 1 dans ansible.cfg"],
+      a: 1, e: "serial traite les hôtes par lots : le play s'exécute entièrement sur 4 hôtes avant de passer aux 4 suivants (rolling update)." },
+    { t: "Échelle", q: "Dans un block, quand s'exécutent les tâches de la section rescue ?",
+      o: ["Toujours, à la fin du block", "Uniquement si une tâche du block a échoué", "Uniquement en mode --check", "Avant le block"],
+      a: 1, e: "rescue joue le rôle d'un « catch » (par exemple pour un retour arrière) ; always s'exécute dans tous les cas." },
+    { t: "Échelle", q: "Quel outil sert à tester un rôle dans des instances jetables, y compris son idempotence ?",
+      o: ["Molecule", "ansible-vault", "ansible-inventory", "ansible-doc"],
+      a: 0, e: "Molecule crée des conteneurs ou VM de test, applique le rôle, vérifie l'idempotence et le résultat, puis détruit l'environnement." },
+    { t: "Échelle", q: "Qu'apporte AWX / Ansible Automation Platform par rapport à la ligne de commande seule ?",
+      o: ["Un nouveau langage plus rapide que YAML", "Une interface web et une API, des droits par équipe, la gestion des identifiants, la planification et l'audit des exécutions", "L'installation d'agents sur les serveurs", "Le remplacement des playbooks par des scripts"],
+      a: 1, e: "Ces plateformes centralisent et sécurisent l'exécution des playbooks à l'échelle de l'entreprise. AWX est le projet open source en amont de l'automation controller." }
+  ];
+  var QUIZ_SIZE = 20;
+
+  var quizRoot = document.getElementById("quizRoot");
+  var quiz = null;
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function renderIntro() {
+    var unread = learningIds.length - learningIds.filter(function (id) { return state.done[id]; }).length;
+    var best = state.best != null ? '<p>Votre meilleur score : <strong>' + state.best + ' %</strong>' + (state.passed ? ' ✅ quiz validé' : '') + '</p>' : '';
+    quizRoot.innerHTML =
+      '<div class="card qcard">' +
+        '<p class="lead" style="margin-top:0">' + QUIZ_SIZE + ' questions tirées au hasard parmi ' + QUESTIONS.length + ', ordre des réponses mélangé. Une explication s\'affiche après chaque réponse.</p>' +
+        '<ul><li>Seuil de réussite : <strong>' + Math.round(PASS * 100) + ' %</strong> (' + Math.ceil(PASS * QUIZ_SIZE) + ' bonnes réponses sur ' + QUIZ_SIZE + ')</li>' +
+        '<li>Vous pouvez recommencer autant de fois que vous le souhaitez.</li></ul>' +
+        (unread > 0 ? '<div class="callout warn"><strong>Conseil</strong>Il vous reste ' + unread + ' module(s) non lu(s). Vous pouvez quand même commencer le quiz.</div>' : '') +
+        best +
+        '<div class="quiz-actions"><button class="btn" id="startQuiz">Commencer le quiz</button></div>' +
+      '</div>';
+    document.getElementById("startQuiz").onclick = startQuiz;
+  }
+
+  function startQuiz() {
+    var picked = shuffle(QUESTIONS).slice(0, QUIZ_SIZE).map(function (q) {
+      var order = shuffle(q.o.map(function (_, i) { return i; }));
+      return { t: q.t, q: q.q, e: q.e, o: order.map(function (i) { return q.o[i]; }), a: order.indexOf(q.a) };
+    });
+    quiz = { items: picked, idx: 0, answers: [] };
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    var item = quiz.items[quiz.idx];
+    var letters = "ABCD";
+    var html =
+      '<div class="quiz-head"><span>Question ' + (quiz.idx + 1) + ' / ' + quiz.items.length + '</span><span class="tag">' + escapeHtml(item.t) + '</span></div>' +
+      '<div class="progress" style="max-width:none;margin-bottom:16px"><div style="width:' + (quiz.idx / quiz.items.length * 100) + '%"></div></div>' +
+      '<div class="card qcard"><h3>' + escapeHtml(item.q).replace(/\n/g, '<br><code>').replace(/(<code>.*)$/, '$1</code>') + '</h3>' +
+      '<div class="options">' +
+      item.o.map(function (opt, i) {
+        return '<button class="opt" data-i="' + i + '"><span class="letter">' + letters[i] + '</span><span>' + escapeHtml(opt) + '</span></button>';
+      }).join("") +
+      '</div><div class="feedback" id="fb"></div>' +
+      '<div class="quiz-actions"><button class="btn" id="validate" disabled>Valider</button></div></div>';
+    quizRoot.innerHTML = html;
+
+    var selected = null;
+    var opts = quizRoot.querySelectorAll(".opt");
+    var btn = document.getElementById("validate");
+    opts.forEach(function (b) {
+      b.onclick = function () {
+        opts.forEach(function (x) { x.classList.remove("selected"); });
+        b.classList.add("selected");
+        selected = +b.dataset.i;
+        btn.disabled = false;
+      };
+    });
+    btn.onclick = function () {
+      if (btn.dataset.next) { next(); return; }
+      var ok = selected === item.a;
+      quiz.answers.push(selected);
+      opts.forEach(function (x, i) {
+        x.disabled = true;
+        x.classList.remove("selected");
+        if (i === item.a) x.classList.add("correct");
+        else if (i === selected) x.classList.add("wrong");
+      });
+      var fb = document.getElementById("fb");
+      fb.className = "feedback show " + (ok ? "good" : "bad");
+      fb.innerHTML = "<strong>" + (ok ? "✅ Bonne réponse" : "❌ Mauvaise réponse") + "</strong><br>" + escapeHtml(item.e);
+      btn.textContent = quiz.idx + 1 < quiz.items.length ? "Question suivante →" : "Voir mes résultats";
+      btn.dataset.next = "1";
+      btn.focus();
+    };
+  }
+
+  function next() {
+    quiz.idx++;
+    if (quiz.idx < quiz.items.length) renderQuestion(); else renderResult();
+    window.scrollTo(0, 0);
+  }
+
+  function renderResult() {
+    var total = quiz.items.length;
+    var good = quiz.items.filter(function (it, i) { return quiz.answers[i] === it.a; }).length;
+    var pct = Math.round(good / total * 100);
+    var passed = good / total >= PASS;
+    state.best = Math.max(state.best || 0, pct);
+    if (passed) state.passed = true;
+    save(state);
+    show();
+
+    var themes = {};
+    quiz.items.forEach(function (it, i) {
+      themes[it.t] = themes[it.t] || { g: 0, n: 0 };
+      themes[it.t].n++;
+      if (quiz.answers[i] === it.a) themes[it.t].g++;
+    });
+
+    var r = 64, c = 2 * Math.PI * r;
+    var color = passed ? "var(--ok)" : "var(--ko)";
+    var html =
+      '<div class="card qcard result">' +
+      '<svg class="score-ring" viewBox="0 0 160 160"><circle cx="80" cy="80" r="' + r + '" fill="none" stroke="var(--surface-2)" stroke-width="14"/>' +
+      '<circle cx="80" cy="80" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + (c * pct / 100) + ' ' + c + '" transform="rotate(-90 80 80)"/>' +
+      '<text x="80" y="88" text-anchor="middle" font-size="30" font-weight="700" fill="var(--text)">' + pct + '%</text></svg>' +
+      '<div class="verdict" style="color:' + color + '">' + (passed ? "🎉 Formation validée !" : "Pas encore validée") + '</div>' +
+      '<p>' + good + ' bonnes réponses sur ' + total + '. ' +
+      (passed ? "Vous maîtrisez les fondamentaux d'Ansible et de l'automatisation de configuration."
+              : "Il faut au moins " + Math.round(PASS * 100) + " %. Revoyez les thèmes les plus faibles ci-dessous puis réessayez.") + '</p>' +
+      '<div class="themes"><h3>Résultats par thème</h3>' +
+      Object.keys(themes).map(function (k) {
+        var p = Math.round(themes[k].g / themes[k].n * 100);
+        var col = p >= 80 ? "var(--ok)" : p >= 50 ? "var(--warn)" : "var(--ko)";
+        return '<div class="theme-row"><span>' + escapeHtml(k) + '</span><div class="theme-bar"><div style="width:' + p + '%;background:' + col + '"></div></div><span>' + themes[k].g + '/' + themes[k].n + '</span></div>';
+      }).join("") + '</div>' +
+      (passed
+        ? '<div class="cert"><h3 style="margin-top:0">Attestation de réussite</h3><p>Saisissez votre nom pour l\'afficher sur l\'attestation, puis imprimez-la.</p>' +
+          '<input id="certName" placeholder="Prénom Nom" aria-label="Votre nom"><p id="certText" style="font-size:1.05rem;margin-top:16px"></p></div>'
+        : "") +
+      '<div class="quiz-actions" style="justify-content:center;flex-wrap:wrap">' +
+      '<button class="btn ghost" id="toggleReview">Voir la correction détaillée</button>' +
+      (passed ? '<button class="btn ghost" id="printCert">Imprimer l\'attestation</button>' : '') +
+      '<button class="btn" id="retry">Recommencer le quiz</button></div>' +
+      '<div id="review" style="display:none;margin-top:20px"></div></div>';
+    quizRoot.innerHTML = html;
+
+    document.getElementById("retry").onclick = startQuiz;
+    document.getElementById("toggleReview").onclick = function () {
+      var rv = document.getElementById("review");
+      rv.style.display = rv.style.display === "none" ? "block" : "none";
+    };
+    document.getElementById("review").innerHTML = quiz.items.map(function (it, i) {
+      var ok = quiz.answers[i] === it.a;
+      return '<div class="review-item"><div><span class="' + (ok ? "badge-ok" : "badge-ko") + '">' + (ok ? "✓" : "✗") + '</span> <strong>' + (i + 1) + '. ' + escapeHtml(it.q) + '</strong></div>' +
+        (ok ? "" : '<div class="ans">Votre réponse : ' + escapeHtml(it.o[quiz.answers[i]]) + '</div>') +
+        '<div class="ans">Bonne réponse : <strong>' + escapeHtml(it.o[it.a]) + '</strong></div>' +
+        '<div class="ans">' + escapeHtml(it.e) + '</div></div>';
+    }).join("");
+
+    if (passed) {
+      var nameInput = document.getElementById("certName");
+      var certText = document.getElementById("certText");
+      var date = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+      var upd = function () {
+        var n = nameInput.value.trim() || "…";
+        certText.innerHTML = "Nous attestons que <strong>" + escapeHtml(n) + "</strong> a validé la formation <em>Ansible &amp; automatisation de configuration</em> avec un score de <strong>" + pct + " %</strong>, le " + date + ".";
+        state.name = nameInput.value; save(state);
+      };
+      nameInput.value = state.name || "";
+      nameInput.oninput = upd; upd();
+      document.getElementById("printCert").onclick = function () {
+        document.body.classList.add("print-cert");
+        window.print();
+        document.body.classList.remove("print-cert");
+      };
+    }
+  }
+
+  renderIntro();
+  window.addEventListener("hashchange", function () { if (location.hash === "#quiz" && !quiz) renderIntro(); });
+  show();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formation Terraform</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface-2: #eef1f8;
+    --text: #1b1f2a;
+    --muted: #5a6275;
+    --border: #d9deea;
+    --accent: #7b42bc;
+    --accent-2: #5c4ee5;
+    --accent-soft: #f1e9fb;
+    --ok: #1a8f4c;
+    --ok-soft: #e2f6ea;
+    --ko: #c62f3a;
+    --ko-soft: #fbe5e7;
+    --warn: #b56a00;
+    --warn-soft: #fff1d9;
+    --code-bg: #1e2230;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(20, 30, 60, .08), 0 6px 20px rgba(20, 30, 60, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141c;
+      --surface: #1a1e29;
+      --surface-2: #232838;
+      --text: #e7eaf2;
+      --muted: #9aa3b8;
+      --border: #2e3446;
+      --accent: #b48ae8;
+      --accent-2: #8b85ff;
+      --accent-soft: #2a1f3d;
+      --ok: #4cc583;
+      --ok-soft: #133524;
+      --ko: #ff6b76;
+      --ko-soft: #3d1a1e;
+      --warn: #f0b04c;
+      --warn-soft: #3a2c12;
+      --code-bg: #0b0d13;
+      --code-text: #e6e9f2;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141c;
+    --surface: #1a1e29;
+    --surface-2: #232838;
+    --text: #e7eaf2;
+    --muted: #9aa3b8;
+    --border: #2e3446;
+    --accent: #b48ae8;
+    --accent-2: #8b85ff;
+    --accent-soft: #2a1f3d;
+    --ok: #4cc583;
+    --ok-soft: #133524;
+    --ko: #ff6b76;
+    --ko-soft: #3d1a1e;
+    --warn: #f0b04c;
+    --warn-soft: #3a2c12;
+    --code-bg: #0b0d13;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+  code, pre { font-family: "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace; font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+  code { background: var(--surface-2); padding: .1em .35em; border-radius: 4px; font-size: .9em; }
+  pre {
+    background: var(--code-bg); color: var(--code-text);
+    padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: .88em; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  .kw { color: #ff9e64; } .fn { color: #7aa2f7; } .str { color: #9ece6a; } .cm { color: #7a8299; font-style: italic; }
+
+  /* ---------- Layout ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; color: #fff; font-size: .9rem;
+  }
+  .progress-wrap { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .progress { flex: 1; height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; max-width: 360px; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s; }
+  .progress-label { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+  .icon-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: .9rem;
+  }
+  .icon-btn:hover { background: var(--surface-2); }
+  #menuBtn { display: none; }
+
+  .layout { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100vh - 53px); }
+  nav.side {
+    border-right: 1px solid var(--border); background: var(--surface);
+    padding: 18px 12px; position: sticky; top: 53px; height: calc(100vh - 53px); overflow-y: auto;
+  }
+  nav.side h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 6px 10px 10px; }
+  nav.side ol { list-style: none; margin: 0; padding: 0; }
+  nav.side li a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px; text-decoration: none; color: var(--text); font-size: .93rem;
+  }
+  nav.side li a:hover { background: var(--surface-2); }
+  nav.side li a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .num {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center; font-size: .75rem; font-weight: 700;
+    background: var(--surface-2); color: var(--muted);
+  }
+  a.done .num { background: var(--ok); color: #fff; }
+  a.active .num { background: var(--accent); color: #fff; }
+
+  main { padding: 32px 40px 80px; max-width: 980px; width: 100%; }
+  section.module { display: none; animation: fade .25s ease; scroll-margin-top: 70px; }
+  section.module.visible { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .eyebrow { color: var(--accent); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 6px 0 12px; }
+  h2.h { font-size: 1.6rem; margin: 4px 0 16px; line-height: 1.25; }
+  h3 { font-size: 1.15rem; margin: 28px 0 10px; }
+  .lead { font-size: 1.1rem; color: var(--muted); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 16px 0; }
+  .grid .card h4 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+  .grid .card p { margin: 0; color: var(--muted); font-size: .93rem; }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px;
+    background: var(--accent-soft); color: var(--accent);
+  }
+
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .callout strong:first-child { display: block; margin-bottom: 2px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .93rem; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 600; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .table-wrap table { margin: 0; }
+
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 10px 0; }
+  details summary { cursor: pointer; font-weight: 600; }
+
+  .diagram { width: 100%; height: auto; margin: 10px 0; }
+  .diagram text { fill: var(--text); font-family: inherit; }
+  .diagram .muted { fill: var(--muted); }
+  .diagram .box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  .diagram .box-a { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .diagram .line { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .diagram .bar1 { fill: var(--accent); } .diagram .bar2 { fill: var(--accent-2); } .diagram .bar3 { fill: var(--ok); } .diagram .bar4 { fill: var(--warn); }
+
+  .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .btn {
+    border: 0; border-radius: 9px; padding: 10px 18px; font-weight: 600; cursor: pointer; font-size: .95rem;
+    background: var(--accent); color: #fff;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .keypoints { background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; padding: 14px 20px; margin-top: 26px; }
+  .keypoints h4 { margin: 0 0 6px; color: var(--accent); }
+  .keypoints ul { margin: 0; padding-left: 20px; }
+
+  /* ---------- Quiz ---------- */
+  .quiz-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; color: var(--muted); font-size: .9rem; }
+  .qcard { padding: 24px; }
+  .qcard h3 { margin-top: 0; font-size: 1.2rem; }
+  .options { display: grid; gap: 10px; margin: 16px 0; }
+  .opt {
+    display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%;
+    padding: 12px 14px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 10px; cursor: pointer; font-size: .97rem; font-family: inherit; line-height: 1.45;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt .letter {
+    flex: none; width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center;
+    background: var(--surface-2); font-weight: 700; font-size: .82rem;
+  }
+  .opt.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .opt.correct { border-color: var(--ok); background: var(--ok-soft); }
+  .opt.correct .letter { background: var(--ok); color: #fff; }
+  .opt.wrong { border-color: var(--ko); background: var(--ko-soft); }
+  .opt.wrong .letter { background: var(--ko); color: #fff; }
+  .opt:disabled { cursor: default; }
+  .feedback { display: none; padding: 12px 16px; border-radius: 10px; margin-top: 4px; }
+  .feedback.show { display: block; }
+  .feedback.good { background: var(--ok-soft); border-left: 4px solid var(--ok); }
+  .feedback.bad { background: var(--ko-soft); border-left: 4px solid var(--ko); }
+  .quiz-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+  .score-ring { width: 160px; height: 160px; margin: 0 auto 10px; display: block; }
+  .result { text-align: center; }
+  .result .verdict { font-size: 1.4rem; font-weight: 700; margin: 6px 0; }
+  .themes { text-align: left; margin-top: 24px; }
+  .theme-row { display: grid; grid-template-columns: minmax(140px, 1fr) 2fr 60px; gap: 12px; align-items: center; margin: 8px 0; font-size: .93rem; }
+  .theme-bar { height: 10px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .theme-bar > div { height: 100%; border-radius: 99px; }
+  .review-item { text-align: left; border-bottom: 1px solid var(--border); padding: 12px 0; }
+  .review-item:last-child { border: 0; }
+  .review-item .ans { font-size: .9rem; color: var(--muted); }
+  .badge-ok { color: var(--ok); font-weight: 700; } .badge-ko { color: var(--ko); font-weight: 700; }
+
+  .cert {
+    border: 2px solid var(--accent); border-radius: 14px; padding: 24px; margin-top: 24px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--surface));
+  }
+  .cert input {
+    padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); font-size: 1rem; width: 100%; max-width: 320px;
+  }
+
+  @media (max-width: 860px) {
+    #menuBtn { display: inline-block; }
+    .layout { grid-template-columns: 1fr; }
+    nav.side {
+      position: fixed; top: 53px; left: 0; width: 290px; max-width: 85vw; z-index: 30;
+      transform: translateX(-100%); transition: transform .25s; box-shadow: var(--shadow);
+    }
+    nav.side.open { transform: none; }
+    main { padding: 22px 16px 60px; }
+    h1 { font-size: 1.6rem; }
+    .brand span.full { display: none; }
+    .progress-label { display: none; }
+    .theme-row { grid-template-columns: 1fr 1.4fr 48px; }
+  }
+  @media print {
+    header.top, nav.side, .pager, .quiz-actions { display: none !important; }
+    .layout { display: block; }
+    section.module { display: block !important; page-break-after: always; }
+    body.print-cert section.module:not(#quiz), body.print-cert #quiz > :not(#quizRoot),
+    body.print-cert .result > :not(.cert), body.print-cert .cert input, body.print-cert .cert p:not(#certText) { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="icon-btn" id="menuBtn" aria-label="Ouvrir le menu">☰</button>
+  <div class="brand"><div class="brand-mark">◆</div><span class="full">Formation Terraform &amp; Infrastructure as Code</span></div>
+  <div class="progress-wrap">
+    <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+    <span class="progress-label" id="progressLabel">0 / 9 modules</span>
+  </div>
+  <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Changer de thème">◐</button>
+</header>
+
+<div class="layout">
+  <nav class="side" id="sidebar" aria-label="Sommaire">
+    <h2>Parcours</h2>
+    <ol id="navList"></ol>
+  </nav>
+
+  <main id="main">
+
+<!-- ===================================================== MODULE 0 -->
+<section class="module" id="m0" data-title="Introduction">
+  <div class="eyebrow">Bienvenue</div>
+  <h1>Terraform et l'Infrastructure as Code</h1>
+  <p class="lead">Cette formation présente les principes de l'Infrastructure as Code (IaC) et l'utilisation de Terraform pour créer, modifier et versionner une infrastructure de façon fiable et reproductible. Elle se termine par un quiz de validation des connaissances.</p>
+
+  <div class="grid">
+    <div class="card"><h4>⏱️ Durée</h4><p>Environ 1 h 30 de lecture, plus 20 minutes de quiz.</p></div>
+    <div class="card"><h4>🎯 Public</h4><p>Développeurs, ops, SRE, architectes cloud et toute personne qui doit gérer de l'infrastructure.</p></div>
+    <div class="card"><h4>✅ Validation</h4><p>Un quiz de 20 questions. Seuil de réussite : <strong>80 %</strong>.</p></div>
+  </div>
+
+  <h3>Objectifs pédagogiques</h3>
+  <p>À l'issue de cette formation, vous saurez :</p>
+  <ul>
+    <li>expliquer les principes de l'<strong>Infrastructure as Code</strong> (déclaratif, idempotence, immutabilité) ;</li>
+    <li>écrire une configuration Terraform en <strong>HCL</strong> : providers, ressources, data sources ;</li>
+    <li>utiliser le cycle <strong>init → plan → apply → destroy</strong> ;</li>
+    <li>paramétrer une configuration avec <strong>variables, locals et outputs</strong> ;</li>
+    <li>comprendre et sécuriser le <strong>state</strong> ;</li>
+    <li>factoriser le code avec des <strong>modules</strong> et gérer plusieurs environnements ;</li>
+    <li>intégrer Terraform dans une <strong>chaîne CI/CD</strong> avec tests et contrôles de sécurité.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Comment utiliser cette page</strong>
+    Naviguez avec le sommaire ou les boutons en bas de chaque module. Un module est marqué comme lu quand vous passez au suivant. Votre progression est conservée dans ce navigateur. La page fonctionne entièrement hors ligne.
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 1 -->
+<section class="module" id="m1" data-title="Infrastructure as Code">
+  <div class="eyebrow">Module 1</div>
+  <h2 class="h">Les principes de l'Infrastructure as Code</h2>
+
+  <p>L'<strong>Infrastructure as Code</strong> (IaC) consiste à décrire l'infrastructure (réseaux, machines virtuelles, bases de données, DNS, droits d'accès…) dans des <strong>fichiers texte versionnés</strong>, puis à laisser un outil créer et maintenir cette infrastructure à partir de ces fichiers. On remplace ainsi les clics dans une console (le « ClickOps ») et les scripts manuels.</p>
+
+  <h3>Pourquoi l'IaC ?</h3>
+  <div class="grid">
+    <div class="card"><h4>🔁 Reproductibilité</h4><p>Le même code produit la même infrastructure, en dev, en recette et en production.</p></div>
+    <div class="card"><h4>📜 Traçabilité</h4><p>Chaque changement passe par Git : qui, quoi, quand, pourquoi. On peut revenir en arrière.</p></div>
+    <div class="card"><h4>👀 Revue</h4><p>Les changements d'infrastructure sont relus en merge request, comme du code applicatif.</p></div>
+    <div class="card"><h4>⚡ Rapidité</h4><p>Un environnement complet se crée en minutes au lieu de jours, et se détruit aussi vite.</p></div>
+  </div>
+
+  <h3>Déclaratif ou impératif</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Impératif (le « comment »)</th><th>Déclaratif (le « quoi »)</th></tr></thead>
+    <tbody>
+      <tr><td>On décrit les étapes à exécuter : « crée 3 serveurs », « ajoute 1 serveur ».</td><td>On décrit l'état final souhaité : « il doit y avoir 4 serveurs ».</td></tr>
+      <tr><td>Le résultat dépend de l'état de départ.</td><td>L'outil calcule lui-même les actions pour atteindre l'état souhaité.</td></tr>
+      <tr><td>Exemples : scripts shell, appels d'API, SDK.</td><td>Exemples : <strong>Terraform</strong>, CloudFormation, Kubernetes (manifestes YAML).</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Idempotence</h3>
+  <p>Une opération est <strong>idempotente</strong> si on peut l'exécuter plusieurs fois sans changer le résultat au-delà de la première exécution. Appliquer deux fois de suite la même configuration Terraform ne crée rien de plus la seconde fois : Terraform constate que l'état réel correspond déjà à l'état voulu et annonce « No changes ».</p>
+
+  <h3>Infrastructure mutable ou immuable</h3>
+  <ul>
+    <li><strong>Mutable</strong> : on modifie les serveurs existants (mises à jour, changements de configuration). Avec le temps, les serveurs divergent les uns des autres (<em>configuration drift</em>), ce qui donne des « serveurs flocons de neige » impossibles à reproduire.</li>
+    <li><strong>Immuable</strong> : on ne modifie pas un serveur, on le <strong>remplace</strong> par un nouveau construit à partir d'une image à jour. C'est plus prévisible et plus simple à reproduire.</li>
+  </ul>
+
+  <h3>Provisioning et gestion de configuration</h3>
+  <p>On distingue deux familles d'outils, souvent utilisées ensemble :</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>Provisioning</th><th>Gestion de configuration</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Rôle</strong></td><td>Créer les ressources : réseau, VM, base managée, bucket, DNS</td><td>Configurer l'intérieur des serveurs : paquets, fichiers, services</td></tr>
+      <tr><td><strong>Outils</strong></td><td>Terraform, OpenTofu, CloudFormation, Pulumi, Bicep</td><td>Ansible, Puppet, Chef, Salt</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout">
+    <strong>Terraform en bref</strong>
+    Terraform est un outil d'IaC déclaratif créé par HashiCorp (aujourd'hui dans le groupe IBM). Il est <strong>multi-cloud</strong> : grâce à ses milliers de <em>providers</em>, il pilote AWS, Azure, GCP, mais aussi Kubernetes, GitHub, Datadog, Dynatrace, Cloudflare et bien d'autres, avec un seul langage et un seul flux de travail.
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>IaC = infrastructure décrite dans du code versionné, relu et reproductible.</li>
+      <li>Terraform est déclaratif : on décrit l'état final, l'outil calcule les actions.</li>
+      <li>Idempotence : réappliquer la même configuration ne change rien.</li>
+      <li>Terraform sert au provisioning ; Ansible et ses équivalents, à la configuration.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 2 -->
+<section class="module" id="m2" data-title="Premiers pas avec Terraform">
+  <div class="eyebrow">Module 2</div>
+  <h2 class="h">Premiers pas : HCL, providers, ressources et cycle de travail</h2>
+
+  <h3>Le langage HCL</h3>
+  <p>Terraform utilise <strong>HCL</strong> (HashiCorp Configuration Language), un langage lisible conçu pour décrire de la configuration. Les fichiers portent l'extension <code>.tf</code>. Terraform lit <strong>tous les fichiers <code>.tf</code> d'un répertoire</strong> : leur découpage (<code>main.tf</code>, <code>variables.tf</code>, <code>outputs.tf</code>…) n'est qu'une convention de lisibilité.</p>
+
+<pre><code><span class="cm"># versions.tf : version de Terraform et providers requis</span>
+<span class="kw">terraform</span> {
+  required_version = <span class="str">"&gt;= 1.6"</span>
+  required_providers {
+    aws = {
+      source  = <span class="str">"hashicorp/aws"</span>
+      version = <span class="str">"~&gt; 6.0"</span>
+    }
+  }
+}
+
+<span class="cm"># Configuration du provider</span>
+<span class="kw">provider</span> <span class="str">"aws"</span> {
+  region = <span class="str">"eu-west-3"</span>  <span class="cm"># Paris</span>
+}
+
+<span class="cm"># Une ressource : type "aws_s3_bucket", nom local "logs"</span>
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket"</span> <span class="str">"logs"</span> {
+  bucket = <span class="str">"acme-prod-logs"</span>
+  tags = {
+    environment = <span class="str">"prod"</span>
+  }
+}</code></pre>
+
+  <h3>Les blocs essentiels</h3>
+  <div class="grid">
+    <div class="card"><h4>🔌 provider</h4><p>Un plugin qui sait parler à une API (AWS, Azure, Kubernetes…). Il est téléchargé depuis le Terraform Registry.</p></div>
+    <div class="card"><h4>🧱 resource</h4><p>Un objet que Terraform <strong>crée et gère</strong> : VM, bucket, enregistrement DNS… Adresse : <code>type.nom</code>.</p></div>
+    <div class="card"><h4>🔎 data</h4><p>Une <strong>data source</strong> lit une information existante sans la gérer : une image, un réseau créé ailleurs, un compte.</p></div>
+    <div class="card"><h4>⚙️ terraform</h4><p>Les réglages de Terraform lui-même : versions, providers requis, backend du state.</p></div>
+  </div>
+
+<pre><code><span class="cm"># Data source : lire la dernière image Ubuntu 24.04 publiée par Canonical</span>
+<span class="kw">data</span> <span class="str">"aws_ami"</span> <span class="str">"ubuntu"</span> {
+  most_recent = true
+  owners      = [<span class="str">"099720109477"</span>]
+  filter {
+    name   = <span class="str">"name"</span>
+    values = [<span class="str">"ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"</span>]
+  }
+}
+
+<span class="kw">resource</span> <span class="str">"aws_instance"</span> <span class="str">"web"</span> {
+  ami           = data.aws_ami.ubuntu.id   <span class="cm"># référence à la data source</span>
+  instance_type = <span class="str">"t3.micro"</span>
+}</code></pre>
+
+  <h3>Le cycle de travail</h3>
+  <svg class="diagram" viewBox="0 0 760 210" role="img" aria-label="Cycle Terraform : écrire, init, plan, apply, avec le state">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color:var(--muted)"/>
+      </marker>
+    </defs>
+    <rect class="box" x="10" y="30" width="120" height="60" rx="8"/>
+    <text x="24" y="56" font-size="13" font-weight="700">Écrire</text>
+    <text class="muted" x="24" y="76" font-size="11">fichiers .tf</text>
+    <rect class="box-a" x="170" y="30" width="120" height="60" rx="8"/>
+    <text x="184" y="56" font-size="13" font-weight="700">init</text>
+    <text class="muted" x="184" y="76" font-size="11">providers, backend</text>
+    <rect class="box-a" x="330" y="30" width="120" height="60" rx="8"/>
+    <text x="344" y="56" font-size="13" font-weight="700">plan</text>
+    <text class="muted" x="344" y="76" font-size="11">aperçu des écarts</text>
+    <rect class="box-a" x="490" y="30" width="120" height="60" rx="8"/>
+    <text x="504" y="56" font-size="13" font-weight="700">apply</text>
+    <text class="muted" x="504" y="76" font-size="11">appels aux API</text>
+    <rect class="box" x="640" y="30" width="110" height="60" rx="8"/>
+    <text x="652" y="56" font-size="13" font-weight="700">Cloud</text>
+    <text class="muted" x="652" y="76" font-size="11">ressources réelles</text>
+    <rect class="box" x="390" y="140" width="160" height="50" rx="8"/>
+    <text x="404" y="162" font-size="13" font-weight="700">State</text>
+    <text class="muted" x="404" y="180" font-size="11">terraform.tfstate</text>
+    <path class="line" d="M130 60 H168" marker-end="url(#arr)"/>
+    <path class="line" d="M290 60 H328" marker-end="url(#arr)"/>
+    <path class="line" d="M450 60 H488" marker-end="url(#arr)"/>
+    <path class="line" d="M610 60 H638" marker-end="url(#arr)"/>
+    <path class="line" d="M390 92 V138" marker-end="url(#arr)" marker-start="url(#arr)"/>
+    <path class="line" d="M550 92 V138" marker-end="url(#arr)"/>
+    <text class="muted" x="260" y="124" font-size="10">lit le state + l'état réel</text>
+    <text class="muted" x="560" y="124" font-size="10">met à jour le state</text>
+  </svg>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Commande</th><th>Rôle</th></tr></thead>
+    <tbody>
+      <tr><td><code>terraform init</code></td><td>Prépare le répertoire : télécharge les providers et les modules, configure le backend du state. À relancer quand on ajoute un provider, un module ou qu'on change de backend.</td></tr>
+      <tr><td><code>terraform fmt</code></td><td>Formate le code selon le style standard.</td></tr>
+      <tr><td><code>terraform validate</code></td><td>Vérifie la syntaxe et la cohérence interne de la configuration.</td></tr>
+      <tr><td><code>terraform plan</code></td><td>Compare la configuration, le state et l'infrastructure réelle, puis affiche les changements prévus, <strong>sans rien modifier</strong>.</td></tr>
+      <tr><td><code>terraform apply</code></td><td>Exécute les changements après confirmation, puis met à jour le state.</td></tr>
+      <tr><td><code>terraform destroy</code></td><td>Détruit toutes les ressources gérées par la configuration.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Lire un plan</h3>
+<pre><code>Terraform will perform the following actions:
+
+  <span class="str"># aws_s3_bucket.logs will be created</span>
+  <span class="str">+</span> resource "aws_s3_bucket" "logs" { ... }
+
+  <span class="fn"># aws_instance.web will be updated in-place</span>
+  <span class="fn">~</span> resource "aws_instance" "web" {
+      <span class="fn">~</span> instance_type = "t3.micro" -&gt; "t3.small"
+    }
+
+  <span class="kw"># aws_db_instance.main must be replaced</span>
+<span class="kw">-/+</span> resource "aws_db_instance" "main" { ... }
+
+Plan: 2 to add, 1 to change, 1 to destroy.</code></pre>
+  <div class="callout warn">
+    <strong>Lisez toujours le plan</strong>
+    <code>+</code> création, <code>~</code> modification sur place, <code>-</code> destruction, <code>-/+</code> remplacement (destruction puis recréation). Un <code>-/+</code> sur une base de données ou un disque peut signifier une <strong>perte de données</strong> : c'est le symbole à surveiller en priorité.
+  </div>
+
+  <h3>Le fichier de verrouillage des providers</h3>
+  <p><code>terraform init</code> crée le fichier <code>.terraform.lock.hcl</code>, qui fige les versions exactes et les empreintes (checksums) des providers. Il <strong>doit être commité</strong> dans Git pour que toute l'équipe et la CI utilisent exactement les mêmes versions. Le répertoire <code>.terraform/</code>, lui, ne se commite pas.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>HCL, fichiers <code>.tf</code> ; Terraform lit tout le répertoire.</li>
+      <li><code>resource</code> = géré par Terraform ; <code>data</code> = lu seulement.</li>
+      <li>Cycle : <code>init</code> → <code>plan</code> → <code>apply</code> (→ <code>destroy</code>).</li>
+      <li>Surveillez les remplacements <code>-/+</code> ; commitez <code>.terraform.lock.hcl</code>.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 3 -->
+<section class="module" id="m3" data-title="Variables, locals & outputs">
+  <div class="eyebrow">Module 3</div>
+  <h2 class="h">Variables, locals, outputs et expressions</h2>
+
+  <h3>Variables d'entrée</h3>
+  <p>Les <strong>variables</strong> rendent une configuration réutilisable. Elles ont un type, une description, éventuellement une valeur par défaut et des règles de validation.</p>
+<pre><code><span class="kw">variable</span> <span class="str">"instance_count"</span> {
+  type        = number
+  default     = 2
+  description = <span class="str">"Nombre d'instances web"</span>
+
+  validation {
+    condition     = var.instance_count &gt; 0 &amp;&amp; var.instance_count &lt;= 10
+    error_message = <span class="str">"Le nombre d'instances doit être compris entre 1 et 10."</span>
+  }
+}
+
+<span class="kw">variable</span> <span class="str">"db_password"</span> {
+  type      = string
+  sensitive = true   <span class="cm"># masqué dans l'affichage du plan et des logs</span>
+}</code></pre>
+  <p>Types disponibles : <code>string</code>, <code>number</code>, <code>bool</code>, et les types complexes <code>list(...)</code>, <code>set(...)</code>, <code>map(...)</code>, <code>object({...})</code>, <code>tuple([...])</code>.</p>
+
+  <h3>Donner une valeur aux variables</h3>
+  <p>Par ordre de priorité <strong>croissante</strong> (la dernière source l'emporte) :</p>
+  <ol>
+    <li>la valeur <code>default</code> de la déclaration ;</li>
+    <li>les variables d'environnement <code>TF_VAR_nom</code> ;</li>
+    <li>le fichier <code>terraform.tfvars</code> (puis <code>terraform.tfvars.json</code>) ;</li>
+    <li>les fichiers <code>*.auto.tfvars</code>, par ordre alphabétique ;</li>
+    <li>les options en ligne de commande <code>-var</code> et <code>-var-file</code> : <strong>priorité la plus haute</strong>.</li>
+  </ol>
+<pre><code>terraform plan -var-file=<span class="str">"prod.tfvars"</span> -var=<span class="str">"instance_count=4"</span></code></pre>
+
+  <h3>Locals</h3>
+  <p>Les <strong>locals</strong> sont des valeurs calculées, internes à la configuration, qui évitent les répétitions :</p>
+<pre><code><span class="kw">locals</span> {
+  name_prefix = <span class="str">"${var.project}-${var.environment}"</span>
+  common_tags = {
+    project     = var.project
+    environment = var.environment
+    managed_by  = <span class="str">"terraform"</span>
+  }
+}</code></pre>
+
+  <h3>Outputs</h3>
+  <p>Les <strong>outputs</strong> exposent des valeurs après l'<code>apply</code> : pour les afficher, pour les passer à un autre module, ou pour qu'un outil externe les lise (<code>terraform output -json</code>).</p>
+<pre><code><span class="kw">output</span> <span class="str">"web_public_ip"</span> {
+  value       = aws_instance.web.public_ip
+  description = <span class="str">"Adresse IP publique du serveur web"</span>
+}</code></pre>
+
+  <h3>Créer plusieurs ressources : count et for_each</h3>
+<pre><code><span class="cm"># count : N copies identiques, adressées par index [0], [1], ...</span>
+<span class="kw">resource</span> <span class="str">"aws_instance"</span> <span class="str">"web"</span> {
+  count         = var.instance_count
+  ami           = data.aws_ami.ubuntu.id
+  instance_type = <span class="str">"t3.micro"</span>
+  tags = { Name = <span class="str">"web-${count.index}"</span> }
+}
+
+<span class="cm"># for_each : une ressource par élément d'un map ou d'un set, adressée par clé</span>
+<span class="kw">resource</span> <span class="str">"aws_s3_bucket"</span> <span class="str">"this"</span> {
+  for_each = toset([<span class="str">"logs"</span>, <span class="str">"backups"</span>, <span class="str">"exports"</span>])
+  bucket   = <span class="str">"acme-${each.key}"</span>
+}</code></pre>
+  <div class="callout warn">
+    <strong>count ou for_each ?</strong>
+    Avec <code>count</code>, supprimer un élément au milieu d'une liste décale tous les index suivants : Terraform veut alors détruire et recréer des ressources qui n'ont pas changé. Avec <code>for_each</code>, chaque ressource est identifiée par une <strong>clé stable</strong> (<code>aws_s3_bucket.this["logs"]</code>). Préférez <code>for_each</code> dès que les éléments sont distincts ; gardez <code>count</code> pour des copies identiques ou pour une création conditionnelle (<code>count = var.enabled ? 1 : 0</code>).
+  </div>
+
+  <h3>Expressions utiles</h3>
+  <ul>
+    <li><strong>Conditionnelle</strong> : <code>var.env == "prod" ? "t3.large" : "t3.micro"</code></li>
+    <li><strong>Expression for</strong> : <code>{ for k, b in aws_s3_bucket.this : k =&gt; b.arn }</code></li>
+    <li><strong>Fonctions intégrées</strong> : <code>merge()</code>, <code>lookup()</code>, <code>join()</code>, <code>cidrsubnet()</code>, <code>templatefile()</code>…</li>
+    <li><strong>Blocs dynamiques</strong> : <code>dynamic "ingress" { for_each = ... }</code> pour générer des sous-blocs répétés.</li>
+  </ul>
+  <p>La commande <code>terraform console</code> permet de tester ces expressions de façon interactive.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Variables = entrées ; locals = valeurs calculées internes ; outputs = sorties.</li>
+      <li><code>-var</code> / <code>-var-file</code> en ligne de commande ont la priorité la plus haute.</li>
+      <li><code>sensitive = true</code> masque une valeur à l'affichage.</li>
+      <li>Préférez <code>for_each</code> à <code>count</code> pour des éléments distincts.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 4 -->
+<section class="module" id="m4" data-title="Le state">
+  <div class="eyebrow">Module 4</div>
+  <h2 class="h">Le state : la mémoire de Terraform</h2>
+
+  <p>Le <strong>state</strong> (par défaut le fichier <code>terraform.tfstate</code>) est un fichier JSON qui fait le lien entre les ressources déclarées dans le code et les objets réels chez le fournisseur. Pour chaque ressource, il stocke son identifiant réel et ses attributs.</p>
+  <p>Il sert à :</p>
+  <ul>
+    <li><strong>associer</strong> <code>aws_instance.web</code> à l'instance réelle <code>i-0abc123…</code> ;</li>
+    <li><strong>calculer le plan</strong> : savoir ce qui existe déjà, ce qu'il faut créer, modifier ou supprimer ;</li>
+    <li><strong>mémoriser les dépendances</strong>, par exemple pour détruire les ressources dans le bon ordre ;</li>
+    <li><strong>améliorer les performances</strong> sur les grosses infrastructures.</li>
+  </ul>
+
+  <div class="callout warn">
+    <strong>Le state contient des secrets en clair</strong>
+    Mots de passe de base de données, clés générées, certificats… <code>sensitive = true</code> masque ces valeurs à l'affichage, mais elles restent <strong>stockées en clair dans le state</strong>. Il ne faut donc <strong>jamais commiter le state dans Git</strong>, et il faut le stocker dans un emplacement chiffré avec un accès restreint.
+  </div>
+
+  <h3>Le backend distant</h3>
+  <p>En local, le state est un simple fichier sur un poste. Dès qu'on travaille à plusieurs ou en CI, il faut un <strong>backend distant</strong> : S3, Azure Blob Storage, Google Cloud Storage, HCP Terraform, GitLab…</p>
+<pre><code><span class="kw">terraform</span> {
+  backend <span class="str">"s3"</span> {
+    bucket       = <span class="str">"acme-terraform-state"</span>
+    key          = <span class="str">"network/prod/terraform.tfstate"</span>
+    region       = <span class="str">"eu-west-3"</span>
+    encrypt      = true
+    use_lockfile = true   <span class="cm"># verrouillage natif S3 (Terraform 1.10 et +)</span>
+  }
+}</code></pre>
+  <div class="grid">
+    <div class="card"><h4>🤝 Partage</h4><p>Toute l'équipe et la CI travaillent sur le même state, toujours à jour.</p></div>
+    <div class="card"><h4>🔒 Verrouillage</h4><p>Le <em>state locking</em> empêche deux <code>apply</code> simultanés de corrompre le state.</p></div>
+    <div class="card"><h4>🛡️ Sécurité</h4><p>Chiffrement au repos, droits d'accès contrôlés, versioning du bucket pour restaurer une version précédente.</p></div>
+  </div>
+  <p>Sur S3, le verrouillage passait historiquement par une table DynamoDB. Depuis Terraform 1.10, il peut se faire directement dans S3 avec <code>use_lockfile</code>.</p>
+
+  <h3>La dérive (drift)</h3>
+  <p>On parle de <strong>dérive</strong> quand l'infrastructure réelle ne correspond plus au code, en général parce que quelqu'un l'a modifiée à la main dans la console. Au <code>plan</code> suivant, Terraform la détecte et propose de revenir à ce que dit le code.</p>
+  <ul>
+    <li><code>terraform plan</code> : montre la dérive et les corrections prévues ;</li>
+    <li><code>terraform apply -refresh-only</code> : met à jour le state avec la réalité, sans toucher à l'infrastructure (remplace l'ancienne commande <code>terraform refresh</code>).</li>
+  </ul>
+
+  <h3>Les commandes de manipulation du state</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Commande</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><code>terraform state list</code></td><td>Lister les ressources suivies</td></tr>
+      <tr><td><code>terraform state show &lt;adresse&gt;</code></td><td>Afficher les attributs d'une ressource</td></tr>
+      <tr><td><code>terraform state mv</code></td><td>Renommer ou déplacer une ressource dans le state (préférez le bloc <code>moved</code>, voir module 7)</td></tr>
+      <tr><td><code>terraform state rm</code></td><td>Arrêter de gérer une ressource <strong>sans la détruire</strong></td></tr>
+      <tr><td><code>terraform import</code></td><td>Faire entrer une ressource existante dans le state (préférez le bloc <code>import</code>)</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout">
+    <strong>Règle d'or</strong>
+    Ne modifiez jamais le fichier de state à la main. Passez par les commandes <code>terraform state</code> ou, mieux, par des blocs <code>moved</code>, <code>import</code> et <code>removed</code> qui sont relus en merge request.
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Le state relie le code aux ressources réelles.</li>
+      <li>Il contient des secrets en clair : jamais dans Git, toujours chiffré.</li>
+      <li>En équipe : backend distant + verrouillage.</li>
+      <li>Dérive = modification hors Terraform, détectée au <code>plan</code>.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 5 -->
+<section class="module" id="m5" data-title="Les modules">
+  <div class="eyebrow">Module 5</div>
+  <h2 class="h">Les modules : factoriser et réutiliser</h2>
+
+  <p>Un <strong>module</strong> est simplement un répertoire de fichiers <code>.tf</code>. Le répertoire depuis lequel on lance Terraform est le <strong>module racine</strong> (<em>root module</em>) ; il peut appeler des <strong>modules enfants</strong> (<em>child modules</em>), un peu comme une fonction appelle d'autres fonctions.</p>
+
+  <h3>Structure type d'un module</h3>
+<pre><code>modules/
+└── web-app/
+    ├── main.tf        <span class="cm"># ressources</span>
+    ├── variables.tf   <span class="cm"># entrées du module</span>
+    ├── outputs.tf     <span class="cm"># sorties du module</span>
+    ├── versions.tf    <span class="cm"># contraintes de versions</span>
+    └── README.md      <span class="cm"># documentation et exemple d'usage</span></code></pre>
+
+  <h3>Appeler un module</h3>
+<pre><code><span class="cm"># Module public du Terraform Registry, version figée</span>
+<span class="kw">module</span> <span class="str">"vpc"</span> {
+  source  = <span class="str">"terraform-aws-modules/vpc/aws"</span>
+  version = <span class="str">"~&gt; 6.0"</span>
+
+  name = <span class="str">"prod"</span>
+  cidr = <span class="str">"10.0.0.0/16"</span>
+}
+
+<span class="cm"># Module local, qui utilise une sortie du module précédent</span>
+<span class="kw">module</span> <span class="str">"app"</span> {
+  source     = <span class="str">"./modules/web-app"</span>
+  subnet_ids = module.vpc.private_subnets
+}</code></pre>
+  <p>Un module ne voit que ses <strong>variables</strong> et n'expose que ses <strong>outputs</strong> : c'est son interface. Les sources possibles sont un chemin local, le Terraform Registry public, un registre privé, un dépôt Git (<code>git::https://…?ref=v1.2.0</code>) ou une archive HTTP.</p>
+
+  <h3>Les contraintes de version</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Contrainte</th><th>Signification</th></tr></thead>
+    <tbody>
+      <tr><td><code>= 1.2.0</code></td><td>Exactement cette version</td></tr>
+      <tr><td><code>&gt;= 1.2.0</code></td><td>Cette version ou une plus récente</td></tr>
+      <tr><td><code>~&gt; 1.2.0</code></td><td>≥ 1.2.0 et &lt; 1.3.0 : seulement les correctifs</td></tr>
+      <tr><td><code>~&gt; 1.2</code></td><td>≥ 1.2 et &lt; 2.0 : versions mineures et correctifs</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>L'opérateur <code>~&gt;</code> (« pessimiste ») n'autorise que l'incrément du <strong>dernier chiffre indiqué</strong>. Pour un module Git, on fige la version avec un tag : <code>?ref=v1.2.0</code>.</p>
+
+  <h3>Concevoir de bons modules</h3>
+  <ul>
+    <li>Un module doit correspondre à un <strong>concept cohérent</strong> (« un réseau », « une application web », « une base de données »), pas à une seule ressource.</li>
+    <li>Exposer <strong>peu de variables</strong>, avec des valeurs par défaut sensées et des validations.</li>
+    <li>Documenter les entrées et sorties (l'outil <code>terraform-docs</code> génère le README).</li>
+    <li><strong>Versionner</strong> les modules partagés et figer les versions chez les utilisateurs.</li>
+    <li>Éviter les imbrications trop profondes : deux niveaux de modules suffisent en général.</li>
+    <li>Ne pas déclarer de bloc <code>provider</code> dans un module réutilisable : c'est le module racine qui configure les providers.</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Module = répertoire de <code>.tf</code> ; interface = variables + outputs.</li>
+      <li>Sources : local, Registry, Git, registre privé.</li>
+      <li>Toujours figer les versions des modules partagés.</li>
+      <li><code>~&gt; 1.2</code> autorise 1.x à partir de 1.2, mais pas 2.0.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 6 -->
+<section class="module" id="m6" data-title="Environnements & écosystème">
+  <div class="eyebrow">Module 6</div>
+  <h2 class="h">Environnements, organisation du code et écosystème</h2>
+
+  <h3>Gérer plusieurs environnements</h3>
+  <p>Il faut presque toujours déployer la même infrastructure en dev, recette et production. Deux approches principales existent :</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>Un répertoire par environnement</th><th>Workspaces Terraform (CLI)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Principe</strong></td><td><code>envs/dev</code>, <code>envs/prod</code>… qui appellent les mêmes modules avec des valeurs différentes, chacun avec son propre backend.</td><td>Une seule configuration, plusieurs states (<code>terraform workspace new prod</code>) ; on distingue avec <code>terraform.workspace</code>.</td></tr>
+      <tr><td><strong>Avantages</strong></td><td>Isolation forte, droits distincts par environnement, différences explicites.</td><td>Peu de duplication, mise en place rapide.</td></tr>
+      <tr><td><strong>Limites</strong></td><td>Un peu de code répété (atténué par les modules).</td><td>Même backend et mêmes droits pour tous les environnements ; on se trompe facilement de workspace.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Pour la production, l'approche <strong>un répertoire (ou un dépôt) par environnement</strong> est en général préférée, car elle isole mieux les droits et réduit le risque d'erreur.</p>
+
+  <h3>Découper le state</h3>
+  <p>Un state unique pour toute l'entreprise devient lent, risqué et source de conflits. On découpe par <strong>domaine et par cycle de vie</strong> : réseau, données, applications, supervision… Chaque partie a son propre state. On lit les sorties d'une autre partie avec la data source <code>terraform_remote_state</code>, ou mieux, avec des data sources du provider (rechercher un VPC par tag par exemple).</p>
+  <div class="callout">
+    <strong>Le rayon d'impact</strong>
+    Plus un state est petit, plus le <em>blast radius</em> d'une erreur est limité : un <code>apply</code> raté sur le state « application » ne peut pas casser le réseau de production.
+  </div>
+
+  <h3>L'écosystème</h3>
+  <div class="grid">
+    <div class="card"><h4>☁️ HCP Terraform</h4><p>Le service SaaS de HashiCorp (anciennement Terraform Cloud) : state distant, exécutions à distance, gestion des variables et secrets, politiques (Sentinel), registre privé. Une version auto-hébergée existe : Terraform Enterprise.</p></div>
+    <div class="card"><h4>🌿 OpenTofu</h4><p>En 2023, HashiCorp a remplacé la licence open source MPL de Terraform par la licence BSL. La communauté a créé <strong>OpenTofu</strong>, un fork open source hébergé par la Linux Foundation, largement compatible avec Terraform.</p></div>
+    <div class="card"><h4>🧰 Terragrunt</h4><p>Une surcouche qui limite la répétition entre environnements (configuration du backend, dépendances entre states).</p></div>
+    <div class="card"><h4>🔄 Autres orchestrateurs</h4><p>Atlantis, Spacelift, env0, Scalr, ou simplement GitLab CI / GitHub Actions pour exécuter plan et apply en équipe.</p></div>
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Production : un répertoire (et un backend) par environnement plutôt que des workspaces.</li>
+      <li>Découpez le state par domaine pour limiter le rayon d'impact.</li>
+      <li>HCP Terraform = service géré ; OpenTofu = fork open source après le passage à la licence BSL.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 7 -->
+<section class="module" id="m7" data-title="Dépendances & cycle de vie">
+  <div class="eyebrow">Module 7</div>
+  <h2 class="h">Dépendances, cycle de vie et refactoring</h2>
+
+  <h3>Le graphe de dépendances</h3>
+  <p>Terraform construit un <strong>graphe</strong> des ressources pour savoir dans quel ordre les créer, et lesquelles créer <strong>en parallèle</strong>.</p>
+  <ul>
+    <li><strong>Dépendance implicite</strong> : dès qu'une ressource référence un attribut d'une autre (<code>subnet_id = aws_subnet.main.id</code>), Terraform sait qu'il doit créer le sous-réseau d'abord. C'est le cas le plus courant.</li>
+    <li><strong>Dépendance explicite</strong> : <code>depends_on = [aws_iam_role_policy.app]</code>, à réserver aux cas où le lien n'apparaît pas dans les attributs (par exemple une application qui a besoin qu'une politique IAM existe avant de démarrer).</li>
+  </ul>
+  <p><code>terraform graph</code> exporte ce graphe au format DOT (Graphviz).</p>
+
+  <h3>Le bloc lifecycle</h3>
+<pre><code><span class="kw">resource</span> <span class="str">"aws_db_instance"</span> <span class="str">"main"</span> {
+  <span class="cm"># ...</span>
+  lifecycle {
+    prevent_destroy       = true                    <span class="cm"># refuse toute destruction</span>
+    create_before_destroy = true                    <span class="cm"># crée le remplaçant avant de supprimer l'ancien</span>
+    ignore_changes        = [tags[<span class="str">"last_backup"</span>]]  <span class="cm"># ignore les modifs faites ailleurs</span>
+  }
+}</code></pre>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Option</th><th>Usage typique</th></tr></thead>
+    <tbody>
+      <tr><td><code>prevent_destroy</code></td><td>Protéger des ressources critiques (bases de données, clés de chiffrement) : toute action qui les détruirait fait échouer le plan.</td></tr>
+      <tr><td><code>create_before_destroy</code></td><td>Éviter une coupure lors d'un remplacement (certificat, groupe d'autoscaling).</td></tr>
+      <tr><td><code>ignore_changes</code></td><td>Ignorer un attribut modifié par un autre système (autoscaling, outil externe).</td></tr>
+      <tr><td><code>replace_triggered_by</code></td><td>Forcer le remplacement quand une autre ressource change.</td></tr>
+      <tr><td><code>precondition</code> / <code>postcondition</code></td><td>Vérifier des hypothèses avant ou après la création.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Pour forcer ponctuellement le remplacement d'une ressource, on utilise <code>terraform apply -replace="aws_instance.web"</code> (qui remplace l'ancienne commande <code>terraform taint</code>).</p>
+
+  <h3>Refactoring sans destruction</h3>
+  <p>Renommer une ressource dans le code (<code>aws_instance.web</code> → <code>aws_instance.frontend</code>) fait croire à Terraform que l'ancienne doit être détruite et qu'une nouvelle doit être créée. Le bloc <code>moved</code> lui indique qu'il s'agit de la même ressource :</p>
+<pre><code><span class="kw">moved</span> {
+  from = aws_instance.web
+  to   = aws_instance.frontend
+}</code></pre>
+
+  <h3>Importer l'existant</h3>
+  <p>Pour gérer avec Terraform une ressource créée à la main, on utilise le bloc <code>import</code> (Terraform 1.5 et +), relu en merge request comme le reste du code :</p>
+<pre><code><span class="kw">import</span> {
+  to = aws_s3_bucket.legacy
+  id = <span class="str">"acme-legacy-bucket"</span>
+}</code></pre>
+  <p><code>terraform plan -generate-config-out=generated.tf</code> peut même générer une première version du code HCL correspondant. Le bloc <code>removed</code> fait l'inverse : il retire une ressource de la gestion Terraform sans la détruire.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Les références entre ressources créent des dépendances implicites ; <code>depends_on</code> en dernier recours.</li>
+      <li><code>prevent_destroy</code> protège ; <code>create_before_destroy</code> évite les coupures.</li>
+      <li><code>moved</code> pour renommer, <code>import</code> pour reprendre l'existant, <code>removed</code> pour abandonner sans détruire.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 8 -->
+<section class="module" id="m8" data-title="CI/CD, tests & sécurité">
+  <div class="eyebrow">Module 8</div>
+  <h2 class="h">CI/CD, tests et sécurité</h2>
+
+  <h3>Un pipeline type</h3>
+  <ol>
+    <li><strong>Sur chaque merge request</strong> : <code>terraform fmt -check</code>, <code>terraform validate</code>, analyse statique (<code>tflint</code>), scan de sécurité (<code>Checkov</code>, <code>Trivy</code>), tests.</li>
+    <li><strong><code>terraform plan -out=tfplan</code></strong> : le plan est publié en commentaire de la merge request pour être relu.</li>
+    <li><strong>Après validation et fusion</strong> : <code>terraform apply tfplan</code> applique <strong>exactement le plan relu</strong>, ni plus ni moins.</li>
+    <li>Les applies se font <strong>depuis la CI uniquement</strong>, jamais depuis un poste de développeur.</li>
+  </ol>
+  <div class="callout ok">
+    <strong>Pourquoi sauvegarder le plan ?</strong>
+    Entre la revue et l'application, l'infrastructure ou le code peuvent avoir changé. Appliquer le fichier <code>tfplan</code> garantit que ce qui est exécuté est bien ce qui a été validé. Si l'état a changé entre-temps, Terraform refuse le plan devenu obsolète.
+  </div>
+
+  <h3>Tester son code</h3>
+  <div class="grid">
+    <div class="card"><h4>terraform validate</h4><p>Syntaxe et cohérence interne. Rapide, sans accès au cloud.</p></div>
+    <div class="card"><h4>tflint</h4><p>Erreurs probables et bonnes pratiques, par exemple un type d'instance inexistant.</p></div>
+    <div class="card"><h4>terraform test</h4><p>Framework de test natif (Terraform 1.6 et +) avec des fichiers <code>.tftest.hcl</code>.</p></div>
+    <div class="card"><h4>Terratest</h4><p>Tests d'intégration en Go : on déploie, on vérifie, on détruit.</p></div>
+  </div>
+<pre><code><span class="cm"># tests/bucket.tftest.hcl</span>
+<span class="kw">run</span> <span class="str">"nom_du_bucket"</span> {
+  command = plan
+
+  assert {
+    condition     = aws_s3_bucket.logs.bucket == <span class="str">"acme-prod-logs"</span>
+    error_message = <span class="str">"Nom de bucket inattendu"</span>
+  }
+}</code></pre>
+
+  <h3>Sécurité</h3>
+  <ul>
+    <li><strong>Pas de secrets dans le code</strong> : utilisez un coffre-fort (Vault, AWS Secrets Manager, Azure Key Vault) lu par data source, ou des variables d'environnement injectées par la CI.</li>
+    <li><strong>Pas d'identifiants longue durée</strong> en CI : préférez l'authentification par OIDC (fédération d'identité de la CI vers le cloud).</li>
+    <li><strong>Moindre privilège</strong> : un rôle par pipeline, limité à ce qu'il gère ; séparer les droits de <code>plan</code> (lecture) et d'<code>apply</code> (écriture).</li>
+    <li><strong>Protéger le state</strong> : chiffrement, accès restreint, versioning.</li>
+    <li><strong>Scanner le code</strong> : Checkov et Trivy détectent les erreurs de configuration (bucket public, chiffrement désactivé, port 22 ouvert à Internet…).</li>
+    <li><strong>Policy as code</strong> : <strong>Sentinel</strong> (HCP Terraform) ou <strong>OPA / Conftest</strong> pour imposer des règles d'entreprise sur le plan, par exemple « pas de ressource sans tag <code>owner</code> » ou « uniquement les régions européennes ».</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>fmt, validate, lint, scan et plan sur chaque merge request.</li>
+      <li>On applique le plan relu (<code>apply tfplan</code>), depuis la CI uniquement.</li>
+      <li>Aucun secret dans le code ; OIDC plutôt que des clés statiques.</li>
+      <li>La policy as code (Sentinel, OPA) rend les règles d'entreprise automatiques.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 9 -->
+<section class="module" id="m9" data-title="Bonnes pratiques">
+  <div class="eyebrow">Module 9</div>
+  <h2 class="h">Bonnes pratiques</h2>
+
+  <h3>Code</h3>
+  <ul>
+    <li><strong>Conventions de nommage</strong> : <code>snake_case</code> pour les noms Terraform, nom unique <code>this</code> ou <code>main</code> quand il n'y a qu'une ressource d'un type.</li>
+    <li><strong>Découpage des fichiers</strong> : <code>versions.tf</code>, <code>providers.tf</code>, <code>variables.tf</code>, <code>main.tf</code>, <code>outputs.tf</code>.</li>
+    <li><strong>Figer les versions</strong> de Terraform, des providers et des modules ; commiter <code>.terraform.lock.hcl</code>.</li>
+    <li><strong>Taguer toutes les ressources</strong> (projet, environnement, propriétaire, <code>managed_by = terraform</code>), par exemple avec <code>default_tags</code> du provider AWS.</li>
+    <li>Décrire et valider les variables ; marquer les valeurs sensibles avec <code>sensitive</code>.</li>
+    <li>Ne pas en faire trop : un code simple et explicite vaut mieux que des abstractions trop astucieuses.</li>
+  </ul>
+
+  <h3>Organisation</h3>
+  <ul>
+    <li><strong>Tout passe par le code</strong> : aucune modification manuelle en console, sinon il y aura de la dérive.</li>
+    <li>Des states <strong>petits et découpés</strong> par domaine et par environnement.</li>
+    <li>Un <strong>backend distant</strong> chiffré, avec verrouillage et versioning.</li>
+    <li>Des <strong>modules partagés</strong> versionnés, dans un registre interne.</li>
+    <li>Un <strong>pipeline CI/CD</strong> unique pour <code>plan</code> et <code>apply</code>.</li>
+    <li>Une <strong>détection régulière de la dérive</strong> (un <code>plan</code> planifié chaque nuit, par exemple).</li>
+  </ul>
+
+  <div class="callout warn">
+    <strong>Pièges courants</strong>
+    <ul style="margin:6px 0 0;padding-left:20px">
+      <li>State local ou commité dans Git, avec des secrets dedans.</li>
+      <li>Utiliser <code>count</code> sur une liste qui évolue, ce qui recrée des ressources inutilement.</li>
+      <li>Lancer un <code>apply</code> sans lire le plan, ou avec <code>-auto-approve</code> sur un poste local.</li>
+      <li>Renommer une ressource sans bloc <code>moved</code>, ce qui la détruit puis la recrée.</li>
+      <li>Ne pas figer les versions de providers : un <code>init</code> le lundi ne donne plus le même résultat que le vendredi.</li>
+    </ul>
+  </div>
+
+  <div class="callout ok">
+    <strong>Prêt pour le quiz ?</strong>
+    Le module suivant contient 20 questions sur l'ensemble de la formation. Il faut 80 % de bonnes réponses pour le valider. Bonne chance !
+  </div>
+</section>
+
+<!-- ===================================================== QUIZ -->
+<section class="module" id="quiz" data-title="Quiz de validation">
+  <div class="eyebrow">Évaluation finale</div>
+  <h2 class="h">Quiz de validation des connaissances</h2>
+  <div id="quizRoot"></div>
+</section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Stockage local (tolérant aux erreurs) ---------------- */
+  var STORE_KEY = "formation-terraform-v1";
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save(s) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* ignoré */ }
+  }
+  var state = load();
+  state.done = state.done || {};
+
+  /* ---------------- Thème ---------------- */
+  var root = document.documentElement;
+  if (state.theme) root.setAttribute("data-theme", state.theme);
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme")
+      ? root.getAttribute("data-theme") === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    state.theme = dark ? "light" : "dark";
+    root.setAttribute("data-theme", state.theme);
+    save(state);
+  });
+
+  /* ---------------- Navigation ---------------- */
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section.module"));
+  var navList = document.getElementById("navList");
+  var learningIds = sections.filter(function (s) { return /^m[1-9]$/.test(s.id); }).map(function (s) { return s.id; });
+
+  sections.forEach(function (s, i) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#" + s.id;
+    a.dataset.id = s.id;
+    var label = s.id === "m0" ? "i" : (s.id === "quiz" ? "?" : s.id.slice(1));
+    a.innerHTML = '<span class="num">' + label + "</span><span></span>";
+    a.lastChild.textContent = s.dataset.title;
+    li.appendChild(a);
+    navList.appendChild(li);
+
+    // Pager
+    var pager = document.createElement("div");
+    pager.className = "pager";
+    var prev = sections[i - 1], next = sections[i + 1];
+    pager.innerHTML =
+      (prev ? '<a class="btn ghost" href="#' + prev.id + '">← ' + escapeHtml(prev.dataset.title) + "</a>" : "<span></span>") +
+      (next ? '<a class="btn" data-complete="' + s.id + '" href="#' + next.id + '">' + escapeHtml(next.dataset.title) + " →</a>" : "");
+    if (s.id !== "quiz") s.appendChild(pager);
+  });
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-complete]");
+    if (t) {
+      var id = t.getAttribute("data-complete");
+      if (learningIds.indexOf(id) !== -1) { state.done[id] = true; save(state); }
+    }
+  });
+
+  function show() {
+    var id = (location.hash || "#m0").slice(1);
+    if (!document.getElementById(id)) id = "m0";
+    sections.forEach(function (s) { s.classList.toggle("visible", s.id === id); });
+    navList.querySelectorAll("a").forEach(function (a) {
+      a.classList.toggle("active", a.dataset.id === id);
+      a.classList.toggle("done", !!state.done[a.dataset.id] || (a.dataset.id === "quiz" && state.passed));
+    });
+    updateProgress();
+    document.getElementById("sidebar").classList.remove("open");
+    window.scrollTo(0, 0);
+  }
+  function updateProgress() {
+    var n = learningIds.filter(function (id) { return state.done[id]; }).length;
+    document.getElementById("progressBar").style.width = (n / learningIds.length * 100) + "%";
+    document.getElementById("progressLabel").textContent = n + " / " + learningIds.length + " modules lus";
+  }
+  window.addEventListener("hashchange", show);
+  document.getElementById("menuBtn").addEventListener("click", function () {
+    document.getElementById("sidebar").classList.toggle("open");
+  });
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------------- Quiz ---------------- */
+  var PASS = 0.8;
+  var QUESTIONS = [
+    { t: "IaC", q: "Que signifie le fait que Terraform soit « déclaratif » ?",
+      o: ["On écrit la liste des commandes à exécuter dans l'ordre",
+          "On décrit l'état final souhaité de l'infrastructure, et Terraform calcule les actions pour y parvenir",
+          "Il faut déclarer chaque ressource dans un fichier séparé",
+          "Terraform ne fonctionne qu'avec des scripts shell"],
+      a: 1, e: "En déclaratif, on décrit le « quoi » (l'état souhaité) et non le « comment ». Terraform compare cet état à la réalité et en déduit les actions à mener." },
+    { t: "IaC", q: "On applique deux fois de suite la même configuration Terraform, sans aucun changement entre les deux. Que se passe-t-il la seconde fois ?",
+      o: ["Les ressources sont créées en double", "Les ressources sont détruites puis recréées", "Terraform indique qu'il n'y a aucun changement à faire", "Terraform renvoie une erreur"],
+      a: 2, e: "C'est l'idempotence : l'infrastructure correspond déjà à l'état souhaité, donc il n'y a rien à faire (« No changes »)." },
+    { t: "IaC", q: "Dans une approche d'infrastructure immuable, comment applique-t-on une mise à jour à un serveur ?",
+      o: ["On se connecte en SSH pour mettre à jour les paquets", "On remplace le serveur par un nouveau, construit à partir d'une image à jour", "On redémarre le serveur", "On ne met jamais à jour les serveurs"],
+      a: 1, e: "Avec l'infrastructure immuable, on ne modifie pas un serveur existant : on le remplace. Cela évite la dérive de configuration." },
+    { t: "Bases", q: "Quelle est la différence entre un bloc resource et un bloc data ?",
+      o: ["Aucune, ce sont des synonymes", "resource crée et gère un objet ; data lit seulement un objet existant sans le gérer", "data crée des bases de données, resource tout le reste", "resource est réservé à AWS"],
+      a: 1, e: "Une resource est créée, modifiée et détruite par Terraform. Une data source se contente de lire une information existante (image, réseau, compte…)." },
+    { t: "Bases", q: "Quel est le rôle de la commande terraform init ?",
+      o: ["Créer les ressources dans le cloud", "Télécharger les providers et les modules, et configurer le backend du state", "Afficher les changements prévus", "Formater le code"],
+      a: 1, e: "init prépare le répertoire de travail. Il faut la relancer après l'ajout d'un provider ou d'un module, ou après un changement de backend." },
+    { t: "Bases", q: "Que fait terraform plan ?",
+      o: ["Il applique les changements immédiatement", "Il affiche les changements que Terraform ferait, sans rien modifier", "Il détruit les ressources inutilisées", "Il génère la documentation"],
+      a: 1, e: "plan compare le code, le state et l'infrastructure réelle, puis présente les créations, modifications et destructions prévues, sans les exécuter." },
+    { t: "Bases", q: "Dans la sortie d'un plan, que signifie le symbole -/+ devant une ressource ?",
+      o: ["La ressource sera modifiée sur place", "La ressource sera détruite puis recréée (remplacement)", "La ressource est ignorée", "La ressource sera importée"],
+      a: 1, e: "-/+ indique un remplacement. Sur une base de données ou un disque, cela peut entraîner une perte de données : à vérifier en priorité." },
+    { t: "Bases", q: "Que faut-il faire du fichier .terraform.lock.hcl ?",
+      o: ["Le supprimer après chaque init", "L'ajouter au .gitignore", "Le commiter dans Git pour que tout le monde utilise les mêmes versions de providers", "Le modifier à la main pour changer de version"],
+      a: 2, e: "Le lock file fige les versions et les empreintes des providers. Le commiter garantit des exécutions identiques sur tous les postes et en CI." },
+    { t: "Bases", q: "Que permet la contrainte de version \"~> 6.0\" pour un provider ?",
+      o: ["Uniquement la version 6.0.0", "Toute version ≥ 6.0 et < 7.0", "Toute version ≥ 6.0, y compris 7.x", "Toute version < 6.0"],
+      a: 1, e: "L'opérateur ~> n'autorise que l'incrément du dernier chiffre indiqué : ~> 6.0 accepte 6.1, 6.25… mais pas 7.0." },
+    { t: "Variables", q: "Parmi ces sources, laquelle a la priorité la plus haute pour la valeur d'une variable ?",
+      o: ["La valeur default de la déclaration", "La variable d'environnement TF_VAR_nom", "Le fichier terraform.tfvars", "L'option -var en ligne de commande"],
+      a: 3, e: "Les options -var et -var-file passées en ligne de commande l'emportent sur les fichiers .tfvars, les variables d'environnement et les valeurs par défaut." },
+    { t: "Variables", q: "Une variable est déclarée avec sensitive = true. Quelle affirmation est exacte ?",
+      o: ["Sa valeur est chiffrée dans le state", "Sa valeur est masquée à l'affichage, mais reste stockée en clair dans le state", "Sa valeur n'est jamais transmise au provider", "Elle ne peut pas avoir de valeur par défaut"],
+      a: 1, e: "sensitive masque la valeur dans le plan et les logs. Le state la contient toujours en clair, d'où l'importance de le protéger." },
+    { t: "Variables", q: "Pourquoi préférer for_each à count pour créer des buckets à partir d'une liste de noms ?",
+      o: ["for_each est plus rapide à exécuter", "Avec count, retirer un élément au milieu de la liste décale les index et provoque des recréations inutiles ; for_each utilise des clés stables",
+          "count ne fonctionne pas avec les buckets", "for_each crée les ressources dans un ordre aléatoire"],
+      a: 1, e: "count adresse par index [0], [1]… : supprimer un élément décale les suivants. for_each adresse par clé, ce qui reste stable." },
+    { t: "Variables", q: "À quoi sert un bloc output ?",
+      o: ["À écrire des logs dans un fichier", "À exposer une valeur après l'apply : affichage, passage à un autre module, lecture par un outil externe", "À envoyer des métriques au cloud", "À déclarer une variable d'entrée"],
+      a: 1, e: "Les outputs sont les sorties d'un module : affichés après l'apply, lisibles avec terraform output, ou utilisés par le module appelant." },
+    { t: "State", q: "Quel est le rôle principal du fichier de state ?",
+      o: ["Stocker le code source de la configuration", "Faire le lien entre les ressources déclarées dans le code et les objets réels chez le fournisseur", "Stocker les logs d'exécution", "Lister les utilisateurs autorisés"],
+      a: 1, e: "Le state associe chaque ressource du code à son objet réel (identifiant, attributs). Terraform en a besoin pour calculer le plan." },
+    { t: "State", q: "Pourquoi utiliser un backend distant avec verrouillage quand on travaille en équipe ?",
+      o: ["Pour accélérer le téléchargement des providers", "Pour partager un state unique et à jour, et empêcher deux apply simultanés de le corrompre", "Pour ne plus avoir besoin de terraform plan", "C'est obligatoire pour utiliser des modules"],
+      a: 1, e: "Le backend distant partage le state entre tous les membres et la CI ; le verrouillage évite les écritures concurrentes." },
+    { t: "State", q: "Pourquoi ne faut-il jamais commiter le state dans Git ?",
+      o: ["Parce qu'il est trop volumineux", "Parce qu'il peut contenir des secrets en clair et que plusieurs copies divergentes provoqueraient des conflits", "Parce que Git ne gère pas le JSON", "Parce que Terraform le supprime automatiquement"],
+      a: 1, e: "Le state contient des valeurs sensibles en clair, et une copie dans Git n'offre ni verrouillage ni garantie d'être à jour." },
+    { t: "State", q: "Quelqu'un a modifié une ressource à la main dans la console du cloud. Comment appelle-t-on cette situation, et comment Terraform la repère-t-il ?",
+      o: ["Une fuite ; avec terraform fmt", "Une dérive (drift) ; elle apparaît au terraform plan suivant", "Un verrou ; avec terraform init", "Un import ; avec terraform output"],
+      a: 1, e: "La dérive est un écart entre la réalité et le code. Le plan la détecte et propose de revenir à l'état décrit par le code." },
+    { t: "Modules", q: "Qu'est-ce qu'un module Terraform ?",
+      o: ["Un plugin écrit en Go qui parle à une API", "Un répertoire de fichiers .tf dont l'interface est constituée de ses variables et de ses outputs", "Une commande de la CLI", "Un fichier de state partagé"],
+      a: 1, e: "Tout répertoire de .tf est un module. Il reçoit des variables et expose des outputs. Le plugin qui parle à une API, c'est un provider." },
+    { t: "Modules", q: "Quelle est la bonne pratique pour un module partagé entre plusieurs équipes ?",
+      o: ["Toujours pointer sur la branche main", "Le versionner (tags, registre) et figer la version chez les utilisateurs", "Le copier-coller dans chaque projet", "Y déclarer les providers avec des identifiants en dur"],
+      a: 1, e: "Figer la version (version = \"~> 1.2\" ou ?ref=v1.2.0) évite qu'une modification du module casse silencieusement les projets qui l'utilisent." },
+    { t: "Cycle de vie", q: "Vous voulez renommer aws_instance.web en aws_instance.frontend sans que l'instance soit détruite et recréée. Que faut-il utiliser ?",
+      o: ["Un bloc moved", "L'option -auto-approve", "Un bloc import", "terraform destroy puis terraform apply"],
+      a: 0, e: "Le bloc moved { from = …, to = … } indique à Terraform qu'il s'agit de la même ressource sous un nouveau nom." },
+    { t: "Cycle de vie", q: "Comment faire gérer par Terraform un bucket créé à la main il y a deux ans ?",
+      o: ["Le supprimer puis le recréer avec Terraform", "Utiliser un bloc import (ou terraform import) puis écrire le code correspondant", "Modifier le fichier de state à la main", "Ce n'est pas possible"],
+      a: 1, e: "Le bloc import (Terraform 1.5 et +) fait entrer la ressource existante dans le state. -generate-config-out peut générer une première version du code." },
+    { t: "Cycle de vie", q: "Quelle option du bloc lifecycle empêche toute destruction accidentelle d'une base de données de production ?",
+      o: ["ignore_changes", "create_before_destroy", "prevent_destroy", "depends_on"],
+      a: 2, e: "Avec prevent_destroy = true, tout plan qui détruirait la ressource échoue." },
+    { t: "Cycle de vie", q: "Quand faut-il utiliser depends_on ?",
+      o: ["Systématiquement, sur chaque ressource", "Uniquement quand une dépendance n'apparaît pas dans les références entre attributs", "Pour accélérer l'apply", "Pour remplacer les variables"],
+      a: 1, e: "Terraform déduit seul les dépendances à partir des références (dépendances implicites). depends_on est réservé aux liens qu'il ne peut pas voir." },
+    { t: "CI/CD & sécurité", q: "Dans un pipeline CI/CD, pourquoi faire terraform plan -out=tfplan puis terraform apply tfplan ?",
+      o: ["Pour que l'apply soit plus rapide", "Pour garantir que ce qui est appliqué est exactement le plan qui a été relu et validé", "Parce que apply ne fonctionne pas sans fichier", "Pour chiffrer le state"],
+      a: 1, e: "Appliquer le plan sauvegardé assure que rien n'a changé entre la revue et l'exécution. Si l'état a évolué, Terraform refuse ce plan." },
+    { t: "CI/CD & sécurité", q: "Qu'est-ce que la « policy as code » appliquée à Terraform (Sentinel, OPA) ?",
+      o: ["Un format de documentation", "Des règles automatiques vérifiées sur le plan, par exemple « pas de bucket public » ou « tag owner obligatoire »", "Une licence open source", "Une méthode pour chiffrer les variables"],
+      a: 1, e: "Les politiques sont du code exécuté sur chaque plan : un changement non conforme est bloqué avant l'apply." },
+    { t: "CI/CD & sécurité", q: "Qu'est-ce qu'OpenTofu ?",
+      o: ["Un provider Terraform pour OpenStack", "Un fork open source de Terraform, hébergé par la Linux Foundation, créé après le changement de licence de 2023", "Le nouveau nom de HCP Terraform", "Un outil de test de modules"],
+      a: 1, e: "Quand HashiCorp est passé de la licence MPL à la licence BSL, la communauté a créé OpenTofu, largement compatible avec Terraform." }
+  ];
+  var QUIZ_SIZE = 20;
+
+  var quizRoot = document.getElementById("quizRoot");
+  var quiz = null;
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function renderIntro() {
+    var unread = learningIds.length - learningIds.filter(function (id) { return state.done[id]; }).length;
+    var best = state.best != null ? '<p>Votre meilleur score : <strong>' + state.best + ' %</strong>' + (state.passed ? ' ✅ quiz validé' : '') + '</p>' : '';
+    quizRoot.innerHTML =
+      '<div class="card qcard">' +
+        '<p class="lead" style="margin-top:0">' + QUIZ_SIZE + ' questions tirées au hasard parmi ' + QUESTIONS.length + ', ordre des réponses mélangé. Une explication s\'affiche après chaque réponse.</p>' +
+        '<ul><li>Seuil de réussite : <strong>' + Math.round(PASS * 100) + ' %</strong> (' + Math.ceil(PASS * QUIZ_SIZE) + ' bonnes réponses sur ' + QUIZ_SIZE + ')</li>' +
+        '<li>Vous pouvez recommencer autant de fois que vous le souhaitez.</li></ul>' +
+        (unread > 0 ? '<div class="callout warn"><strong>Conseil</strong>Il vous reste ' + unread + ' module(s) non lu(s). Vous pouvez quand même commencer le quiz.</div>' : '') +
+        best +
+        '<div class="quiz-actions"><button class="btn" id="startQuiz">Commencer le quiz</button></div>' +
+      '</div>';
+    document.getElementById("startQuiz").onclick = startQuiz;
+  }
+
+  function startQuiz() {
+    var picked = shuffle(QUESTIONS).slice(0, QUIZ_SIZE).map(function (q) {
+      var order = shuffle(q.o.map(function (_, i) { return i; }));
+      return { t: q.t, q: q.q, e: q.e, o: order.map(function (i) { return q.o[i]; }), a: order.indexOf(q.a) };
+    });
+    quiz = { items: picked, idx: 0, answers: [] };
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    var item = quiz.items[quiz.idx];
+    var letters = "ABCD";
+    var html =
+      '<div class="quiz-head"><span>Question ' + (quiz.idx + 1) + ' / ' + quiz.items.length + '</span><span class="tag">' + escapeHtml(item.t) + '</span></div>' +
+      '<div class="progress" style="max-width:none;margin-bottom:16px"><div style="width:' + (quiz.idx / quiz.items.length * 100) + '%"></div></div>' +
+      '<div class="card qcard"><h3>' + escapeHtml(item.q).replace(/\n/g, '<br><code>').replace(/(<code>.*)$/, '$1</code>') + '</h3>' +
+      '<div class="options">' +
+      item.o.map(function (opt, i) {
+        return '<button class="opt" data-i="' + i + '"><span class="letter">' + letters[i] + '</span><span>' + escapeHtml(opt) + '</span></button>';
+      }).join("") +
+      '</div><div class="feedback" id="fb"></div>' +
+      '<div class="quiz-actions"><button class="btn" id="validate" disabled>Valider</button></div></div>';
+    quizRoot.innerHTML = html;
+
+    var selected = null;
+    var opts = quizRoot.querySelectorAll(".opt");
+    var btn = document.getElementById("validate");
+    opts.forEach(function (b) {
+      b.onclick = function () {
+        opts.forEach(function (x) { x.classList.remove("selected"); });
+        b.classList.add("selected");
+        selected = +b.dataset.i;
+        btn.disabled = false;
+      };
+    });
+    btn.onclick = function () {
+      if (btn.dataset.next) { next(); return; }
+      var ok = selected === item.a;
+      quiz.answers.push(selected);
+      opts.forEach(function (x, i) {
+        x.disabled = true;
+        x.classList.remove("selected");
+        if (i === item.a) x.classList.add("correct");
+        else if (i === selected) x.classList.add("wrong");
+      });
+      var fb = document.getElementById("fb");
+      fb.className = "feedback show " + (ok ? "good" : "bad");
+      fb.innerHTML = "<strong>" + (ok ? "✅ Bonne réponse" : "❌ Mauvaise réponse") + "</strong><br>" + escapeHtml(item.e);
+      btn.textContent = quiz.idx + 1 < quiz.items.length ? "Question suivante →" : "Voir mes résultats";
+      btn.dataset.next = "1";
+      btn.focus();
+    };
+  }
+
+  function next() {
+    quiz.idx++;
+    if (quiz.idx < quiz.items.length) renderQuestion(); else renderResult();
+    window.scrollTo(0, 0);
+  }
+
+  function renderResult() {
+    var total = quiz.items.length;
+    var good = quiz.items.filter(function (it, i) { return quiz.answers[i] === it.a; }).length;
+    var pct = Math.round(good / total * 100);
+    var passed = good / total >= PASS;
+    state.best = Math.max(state.best || 0, pct);
+    if (passed) state.passed = true;
+    save(state);
+    show();
+
+    var themes = {};
+    quiz.items.forEach(function (it, i) {
+      themes[it.t] = themes[it.t] || { g: 0, n: 0 };
+      themes[it.t].n++;
+      if (quiz.answers[i] === it.a) themes[it.t].g++;
+    });
+
+    var r = 64, c = 2 * Math.PI * r;
+    var color = passed ? "var(--ok)" : "var(--ko)";
+    var html =
+      '<div class="card qcard result">' +
+      '<svg class="score-ring" viewBox="0 0 160 160"><circle cx="80" cy="80" r="' + r + '" fill="none" stroke="var(--surface-2)" stroke-width="14"/>' +
+      '<circle cx="80" cy="80" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + (c * pct / 100) + ' ' + c + '" transform="rotate(-90 80 80)"/>' +
+      '<text x="80" y="88" text-anchor="middle" font-size="30" font-weight="700" fill="var(--text)">' + pct + '%</text></svg>' +
+      '<div class="verdict" style="color:' + color + '">' + (passed ? "🎉 Formation validée !" : "Pas encore validée") + '</div>' +
+      '<p>' + good + ' bonnes réponses sur ' + total + '. ' +
+      (passed ? "Vous maîtrisez les fondamentaux de Terraform et de l'Infrastructure as Code."
+              : "Il faut au moins " + Math.round(PASS * 100) + " %. Revoyez les thèmes les plus faibles ci-dessous puis réessayez.") + '</p>' +
+      '<div class="themes"><h3>Résultats par thème</h3>' +
+      Object.keys(themes).map(function (k) {
+        var p = Math.round(themes[k].g / themes[k].n * 100);
+        var col = p >= 80 ? "var(--ok)" : p >= 50 ? "var(--warn)" : "var(--ko)";
+        return '<div class="theme-row"><span>' + escapeHtml(k) + '</span><div class="theme-bar"><div style="width:' + p + '%;background:' + col + '"></div></div><span>' + themes[k].g + '/' + themes[k].n + '</span></div>';
+      }).join("") + '</div>' +
+      (passed
+        ? '<div class="cert"><h3 style="margin-top:0">Attestation de réussite</h3><p>Saisissez votre nom pour l\'afficher sur l\'attestation, puis imprimez-la.</p>' +
+          '<input id="certName" placeholder="Prénom Nom" aria-label="Votre nom"><p id="certText" style="font-size:1.05rem;margin-top:16px"></p></div>'
+        : "") +
+      '<div class="quiz-actions" style="justify-content:center;flex-wrap:wrap">' +
+      '<button class="btn ghost" id="toggleReview">Voir la correction détaillée</button>' +
+      (passed ? '<button class="btn ghost" id="printCert">Imprimer l\'attestation</button>' : '') +
+      '<button class="btn" id="retry">Recommencer le quiz</button></div>' +
+      '<div id="review" style="display:none;margin-top:20px"></div></div>';
+    quizRoot.innerHTML = html;
+
+    document.getElementById("retry").onclick = startQuiz;
+    document.getElementById("toggleReview").onclick = function () {
+      var rv = document.getElementById("review");
+      rv.style.display = rv.style.display === "none" ? "block" : "none";
+    };
+    document.getElementById("review").innerHTML = quiz.items.map(function (it, i) {
+      var ok = quiz.answers[i] === it.a;
+      return '<div class="review-item"><div><span class="' + (ok ? "badge-ok" : "badge-ko") + '">' + (ok ? "✓" : "✗") + '</span> <strong>' + (i + 1) + '. ' + escapeHtml(it.q) + '</strong></div>' +
+        (ok ? "" : '<div class="ans">Votre réponse : ' + escapeHtml(it.o[quiz.answers[i]]) + '</div>') +
+        '<div class="ans">Bonne réponse : <strong>' + escapeHtml(it.o[it.a]) + '</strong></div>' +
+        '<div class="ans">' + escapeHtml(it.e) + '</div></div>';
+    }).join("");
+
+    if (passed) {
+      var nameInput = document.getElementById("certName");
+      var certText = document.getElementById("certText");
+      var date = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+      var upd = function () {
+        var n = nameInput.value.trim() || "…";
+        certText.innerHTML = "Nous attestons que <strong>" + escapeHtml(n) + "</strong> a validé la formation <em>Terraform &amp; Infrastructure as Code</em> avec un score de <strong>" + pct + " %</strong>, le " + date + ".";
+        state.name = nameInput.value; save(state);
+      };
+      nameInput.value = state.name || "";
+      nameInput.oninput = upd; upd();
+      document.getElementById("printCert").onclick = function () {
+        document.body.classList.add("print-cert");
+        window.print();
+        document.body.classList.remove("print-cert");
+      };
+    }
+  }
+
+  renderIntro();
+  window.addEventListener("hashchange", function () { if (location.hash === "#quiz" && !quiz) renderIntro(); });
+  show();
+})();
+</script>
+</body>
+</html>

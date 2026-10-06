@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formation Observabilité Dynatrace</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface-2: #eef1f8;
+    --text: #1b1f2a;
+    --muted: #5a6275;
+    --border: #d9deea;
+    --accent: #1496ff;
+    --accent-2: #6f2da8;
+    --accent-soft: #e3f1ff;
+    --ok: #1a8f4c;
+    --ok-soft: #e2f6ea;
+    --ko: #c62f3a;
+    --ko-soft: #fbe5e7;
+    --warn: #b56a00;
+    --warn-soft: #fff1d9;
+    --code-bg: #1e2230;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(20, 30, 60, .08), 0 6px 20px rgba(20, 30, 60, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11141c;
+      --surface: #1a1e29;
+      --surface-2: #232838;
+      --text: #e7eaf2;
+      --muted: #9aa3b8;
+      --border: #2e3446;
+      --accent: #4aaeff;
+      --accent-2: #b07fe0;
+      --accent-soft: #16304a;
+      --ok: #4cc583;
+      --ok-soft: #133524;
+      --ko: #ff6b76;
+      --ko-soft: #3d1a1e;
+      --warn: #f0b04c;
+      --warn-soft: #3a2c12;
+      --code-bg: #0b0d13;
+      --code-text: #e6e9f2;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11141c;
+    --surface: #1a1e29;
+    --surface-2: #232838;
+    --text: #e7eaf2;
+    --muted: #9aa3b8;
+    --border: #2e3446;
+    --accent: #4aaeff;
+    --accent-2: #b07fe0;
+    --accent-soft: #16304a;
+    --ok: #4cc583;
+    --ok-soft: #133524;
+    --ko: #ff6b76;
+    --ko-soft: #3d1a1e;
+    --warn: #f0b04c;
+    --warn-soft: #3a2c12;
+    --code-bg: #0b0d13;
+    --code-text: #e6e9f2;
+    --shadow: 0 1px 3px rgba(0, 0, 0, .4);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  a { color: var(--accent); }
+  code, pre { font-family: "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace; font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+  code { background: var(--surface-2); padding: .1em .35em; border-radius: 4px; font-size: .9em; }
+  pre {
+    background: var(--code-bg); color: var(--code-text);
+    padding: 14px 16px; border-radius: 8px; overflow-x: auto; font-size: .88em; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+  .kw { color: #ff9e64; } .fn { color: #7aa2f7; } .str { color: #9ece6a; } .cm { color: #7a8299; font-style: italic; }
+
+  /* ---------- Layout ---------- */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 20px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; color: #fff; font-size: .9rem;
+  }
+  .progress-wrap { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .progress { flex: 1; height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; max-width: 360px; }
+  .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .4s; }
+  .progress-label { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+  .icon-btn {
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: .9rem;
+  }
+  .icon-btn:hover { background: var(--surface-2); }
+  #menuBtn { display: none; }
+
+  .layout { display: grid; grid-template-columns: 290px 1fr; min-height: calc(100vh - 53px); }
+  nav.side {
+    border-right: 1px solid var(--border); background: var(--surface);
+    padding: 18px 12px; position: sticky; top: 53px; height: calc(100vh - 53px); overflow-y: auto;
+  }
+  nav.side h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 6px 10px 10px; }
+  nav.side ol { list-style: none; margin: 0; padding: 0; }
+  nav.side li a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px; text-decoration: none; color: var(--text); font-size: .93rem;
+  }
+  nav.side li a:hover { background: var(--surface-2); }
+  nav.side li a.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .num {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center; font-size: .75rem; font-weight: 700;
+    background: var(--surface-2); color: var(--muted);
+  }
+  a.done .num { background: var(--ok); color: #fff; }
+  a.active .num { background: var(--accent); color: #fff; }
+
+  main { padding: 32px 40px 80px; max-width: 980px; width: 100%; }
+  section.module { display: none; animation: fade .25s ease; scroll-margin-top: 70px; }
+  section.module.visible { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .eyebrow { color: var(--accent); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 6px 0 12px; }
+  h2.h { font-size: 1.6rem; margin: 4px 0 16px; line-height: 1.25; }
+  h3 { font-size: 1.15rem; margin: 28px 0 10px; }
+  .lead { font-size: 1.1rem; color: var(--muted); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin: 16px 0; }
+  .grid .card h4 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+  .grid .card p { margin: 0; color: var(--muted); font-size: .93rem; }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px;
+    background: var(--accent-soft); color: var(--accent);
+  }
+
+  .callout { border-left: 4px solid var(--accent); background: var(--accent-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .callout strong:first-child { display: block; margin-bottom: 2px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: .93rem; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--surface-2); font-weight: 600; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .table-wrap table { margin: 0; }
+
+  details { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin: 10px 0; }
+  details summary { cursor: pointer; font-weight: 600; }
+
+  .diagram { width: 100%; height: auto; margin: 10px 0; }
+  .diagram text { fill: var(--text); font-family: inherit; }
+  .diagram .muted { fill: var(--muted); }
+  .diagram .box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  .diagram .box-a { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .diagram .line { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+  .diagram .bar1 { fill: var(--accent); } .diagram .bar2 { fill: var(--accent-2); } .diagram .bar3 { fill: var(--ok); } .diagram .bar4 { fill: var(--warn); }
+
+  .pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .btn {
+    border: 0; border-radius: 9px; padding: 10px 18px; font-weight: 600; cursor: pointer; font-size: .95rem;
+    background: var(--accent); color: #fff;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .keypoints { background: var(--surface); border: 1px dashed var(--accent); border-radius: 12px; padding: 14px 20px; margin-top: 26px; }
+  .keypoints h4 { margin: 0 0 6px; color: var(--accent); }
+  .keypoints ul { margin: 0; padding-left: 20px; }
+
+  /* ---------- Quiz ---------- */
+  .quiz-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; color: var(--muted); font-size: .9rem; }
+  .qcard { padding: 24px; }
+  .qcard h3 { margin-top: 0; font-size: 1.2rem; }
+  .options { display: grid; gap: 10px; margin: 16px 0; }
+  .opt {
+    display: flex; gap: 12px; align-items: flex-start; text-align: left; width: 100%;
+    padding: 12px 14px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    border-radius: 10px; cursor: pointer; font-size: .97rem; font-family: inherit; line-height: 1.45;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--accent); }
+  .opt .letter {
+    flex: none; width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center;
+    background: var(--surface-2); font-weight: 700; font-size: .82rem;
+  }
+  .opt.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .opt.correct { border-color: var(--ok); background: var(--ok-soft); }
+  .opt.correct .letter { background: var(--ok); color: #fff; }
+  .opt.wrong { border-color: var(--ko); background: var(--ko-soft); }
+  .opt.wrong .letter { background: var(--ko); color: #fff; }
+  .opt:disabled { cursor: default; }
+  .feedback { display: none; padding: 12px 16px; border-radius: 10px; margin-top: 4px; }
+  .feedback.show { display: block; }
+  .feedback.good { background: var(--ok-soft); border-left: 4px solid var(--ok); }
+  .feedback.bad { background: var(--ko-soft); border-left: 4px solid var(--ko); }
+  .quiz-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+
+  .score-ring { width: 160px; height: 160px; margin: 0 auto 10px; display: block; }
+  .result { text-align: center; }
+  .result .verdict { font-size: 1.4rem; font-weight: 700; margin: 6px 0; }
+  .themes { text-align: left; margin-top: 24px; }
+  .theme-row { display: grid; grid-template-columns: minmax(140px, 1fr) 2fr 60px; gap: 12px; align-items: center; margin: 8px 0; font-size: .93rem; }
+  .theme-bar { height: 10px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+  .theme-bar > div { height: 100%; border-radius: 99px; }
+  .review-item { text-align: left; border-bottom: 1px solid var(--border); padding: 12px 0; }
+  .review-item:last-child { border: 0; }
+  .review-item .ans { font-size: .9rem; color: var(--muted); }
+  .badge-ok { color: var(--ok); font-weight: 700; } .badge-ko { color: var(--ko); font-weight: 700; }
+
+  .cert {
+    border: 2px solid var(--accent); border-radius: 14px; padding: 24px; margin-top: 24px;
+    background: linear-gradient(135deg, var(--accent-soft), var(--surface));
+  }
+  .cert input {
+    padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+    color: var(--text); font-size: 1rem; width: 100%; max-width: 320px;
+  }
+
+  @media (max-width: 860px) {
+    #menuBtn { display: inline-block; }
+    .layout { grid-template-columns: 1fr; }
+    nav.side {
+      position: fixed; top: 53px; left: 0; width: 290px; max-width: 85vw; z-index: 30;
+      transform: translateX(-100%); transition: transform .25s; box-shadow: var(--shadow);
+    }
+    nav.side.open { transform: none; }
+    main { padding: 22px 16px 60px; }
+    h1 { font-size: 1.6rem; }
+    .brand span.full { display: none; }
+    .progress-label { display: none; }
+    .theme-row { grid-template-columns: 1fr 1.4fr 48px; }
+  }
+  @media print {
+    header.top, nav.side, .pager, .quiz-actions { display: none !important; }
+    .layout { display: block; }
+    section.module { display: block !important; page-break-after: always; }
+    body.print-cert section.module:not(#quiz), body.print-cert #quiz > :not(#quizRoot),
+    body.print-cert .result > :not(.cert), body.print-cert .cert input, body.print-cert .cert p:not(#certText) { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="icon-btn" id="menuBtn" aria-label="Ouvrir le menu">☰</button>
+  <div class="brand"><div class="brand-mark">◆</div><span class="full">Formation Observabilité &amp; Dynatrace</span></div>
+  <div class="progress-wrap">
+    <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+    <span class="progress-label" id="progressLabel">0 / 9 modules</span>
+  </div>
+  <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Changer de thème">◐</button>
+</header>
+
+<div class="layout">
+  <nav class="side" id="sidebar" aria-label="Sommaire">
+    <h2>Parcours</h2>
+    <ol id="navList"></ol>
+  </nav>
+
+  <main id="main">
+
+<!-- ===================================================== MODULE 0 -->
+<section class="module" id="m0" data-title="Introduction">
+  <div class="eyebrow">Bienvenue</div>
+  <h1>L'observabilité avec Dynatrace</h1>
+  <p class="lead">Cette formation couvre les grands concepts de l'observabilité moderne et la façon dont Dynatrace les met en œuvre. Elle se termine par un quiz de validation des connaissances.</p>
+
+  <div class="grid">
+    <div class="card"><h4>⏱️ Durée</h4><p>Environ 1 h 30 de lecture, plus 20 minutes de quiz.</p></div>
+    <div class="card"><h4>🎯 Public</h4><p>Développeurs, ops, SRE, chefs de projet et toute personne amenée à utiliser Dynatrace.</p></div>
+    <div class="card"><h4>✅ Validation</h4><p>Un quiz de 20 questions. Seuil de réussite : <strong>80 %</strong>.</p></div>
+  </div>
+
+  <h3>Objectifs pédagogiques</h3>
+  <p>À l'issue de cette formation, vous saurez :</p>
+  <ul>
+    <li>expliquer la différence entre <strong>supervision</strong> (monitoring) et <strong>observabilité</strong> ;</li>
+    <li>décrire les types de télémétrie : <strong>métriques, événements, logs, traces</strong> (MELT) ;</li>
+    <li>comprendre le traçage distribué et le rôle d'<strong>OpenTelemetry</strong> ;</li>
+    <li>utiliser les signaux de référence (Golden Signals, RED, USE) et définir des <strong>SLI / SLO</strong> ;</li>
+    <li>identifier les composants de Dynatrace : <strong>OneAgent, ActiveGate, Smartscape, PurePath, Davis AI, Grail, DQL</strong> ;</li>
+    <li>appliquer les bonnes pratiques pour un usage efficace de la plateforme.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>Comment utiliser cette page</strong>
+    Naviguez avec le sommaire ou les boutons en bas de chaque module. Un module est marqué comme lu quand vous passez au suivant. Votre progression est conservée dans ce navigateur. La page fonctionne entièrement hors ligne.
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 1 -->
+<section class="module" id="m1" data-title="Supervision vs observabilité">
+  <div class="eyebrow">Module 1</div>
+  <h2 class="h">De la supervision à l'observabilité</h2>
+
+  <p>Le terme <strong>observabilité</strong> vient de la théorie du contrôle (Rudolf Kálmán, 1960) : un système est observable si l'on peut déduire son <em>état interne</em> à partir de ses <em>sorties externes</em>. Appliqué au logiciel, cela signifie : <strong>être capable de répondre à n'importe quelle question sur le comportement d'un système en production, y compris celles qu'on n'avait pas anticipées, sans avoir à déployer du nouveau code.</strong></p>
+
+  <h3>Pourquoi la supervision classique ne suffit plus</h3>
+  <p>La supervision traditionnelle repose sur des seuils prédéfinis (CPU &gt; 90 %, disque plein, ping KO). Elle répond bien aux pannes <em>connues</em>. Or les architectures modernes ont changé la donne :</p>
+  <ul>
+    <li><strong>Microservices</strong> : une requête utilisateur traverse des dizaines de services ;</li>
+    <li><strong>Conteneurs et Kubernetes</strong> : des composants éphémères qui apparaissent et disparaissent en quelques secondes ;</li>
+    <li><strong>Cloud et services managés</strong> : une partie de l'infrastructure n'est plus sous votre contrôle direct ;</li>
+    <li><strong>Déploiements continus</strong> : le système change plusieurs fois par jour.</li>
+  </ul>
+  <p>Dans ce contexte, la plupart des incidents sont des <strong>« inconnues inconnues »</strong> (<em>unknown unknowns</em>) : des combinaisons de conditions que personne n'avait prévues et pour lesquelles aucun tableau de bord n'existe.</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>Supervision (monitoring)</th><th>Observabilité</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Question</strong></td><td>« Est-ce que ça marche ? »</td><td>« Pourquoi ça ne marche pas, et pour qui ? »</td></tr>
+      <tr><td><strong>Approche</strong></td><td>Seuils et contrôles définis à l'avance</td><td>Exploration libre de données riches et corrélées</td></tr>
+      <tr><td><strong>Problèmes couverts</strong></td><td>Inconnues connues (pannes anticipées)</td><td>Inconnues inconnues (comportements émergents)</td></tr>
+      <tr><td><strong>Données</strong></td><td>Agrégées, souvent en silos</td><td>Détaillées, contextualisées, reliées entre elles</td></tr>
+      <tr><td><strong>Résultat</strong></td><td>Une alerte</td><td>Une compréhension de la cause</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout ok">
+    <strong>À retenir</strong>
+    L'observabilité ne remplace pas la supervision : elle l'englobe. La supervision vous dit <em>qu'il</em> y a un problème ; l'observabilité vous aide à comprendre <em>pourquoi</em>.
+  </div>
+
+  <h3>Les bénéfices attendus</h3>
+  <div class="grid">
+    <div class="card"><h4>📉 MTTR réduit</h4><p>Le <em>Mean Time To Repair</em> baisse quand on trouve la cause en minutes plutôt qu'en heures.</p></div>
+    <div class="card"><h4>🔍 MTTD réduit</h4><p>Le <em>Mean Time To Detect</em> baisse : on détecte l'anomalie avant que les utilisateurs ne se plaignent.</p></div>
+    <div class="card"><h4>🚀 Livraisons plus sûres</h4><p>On mesure l'impact de chaque déploiement et on revient en arrière plus vite.</p></div>
+    <div class="card"><h4>💼 Lien avec le métier</h4><p>On relie la performance technique au chiffre d'affaires, aux conversions et à l'expérience client.</p></div>
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Observabilité = déduire l'état interne d'un système à partir de ses sorties.</li>
+      <li>Elle sert surtout à résoudre des problèmes non anticipés.</li>
+      <li>Indicateurs suivis : MTTD (temps de détection) et MTTR (temps de résolution).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 2 -->
+<section class="module" id="m2" data-title="Les types de télémétrie (MELT)">
+  <div class="eyebrow">Module 2</div>
+  <h2 class="h">Les données de télémétrie : MELT</h2>
+  <p>On parle historiquement des « trois piliers » de l'observabilité (métriques, logs, traces). On utilise aujourd'hui plutôt l'acronyme <strong>MELT</strong>, qui ajoute les <strong>événements</strong>. Plusieurs plateformes, dont Dynatrace, y ajoutent la topologie, les profils de code et les données d'expérience utilisateur.</p>
+
+  <div class="grid">
+    <div class="card"><h4><span class="tag">M</span> Métriques</h4><p>Valeurs numériques agrégées dans le temps : taux de requêtes, latence, CPU. Légères, idéales pour les tendances et les alertes.</p></div>
+    <div class="card"><h4><span class="tag">E</span> Événements</h4><p>Faits ponctuels et significatifs : déploiement, redémarrage, changement de configuration, transaction métier.</p></div>
+    <div class="card"><h4><span class="tag">L</span> Logs</h4><p>Enregistrements horodatés produits par une application ou un système. Riches en détail, mais volumineux.</p></div>
+    <div class="card"><h4><span class="tag">T</span> Traces</h4><p>Le parcours complet d'une requête à travers les services, découpé en <em>spans</em>.</p></div>
+  </div>
+
+  <h3>Métriques</h3>
+  <p>Une métrique est une série temporelle : un nom, une valeur, un horodatage et des <strong>dimensions</strong> (aussi appelées labels ou attributs), par exemple <code>http.requests{service="checkout", status="500"}</code>.</p>
+  <ul>
+    <li><strong>Compteur</strong> (counter) : ne fait qu'augmenter, comme le nombre total de requêtes.</li>
+    <li><strong>Jauge</strong> (gauge) : monte et descend, comme la mémoire utilisée.</li>
+    <li><strong>Histogramme</strong> : distribution de valeurs, qui permet de calculer des percentiles (p50, p90, p99).</li>
+  </ul>
+  <div class="callout warn">
+    <strong>Attention à la cardinalité</strong>
+    La <em>cardinalité</em> est le nombre de combinaisons uniques de dimensions. Ajouter une dimension comme <code>user_id</code> ou <code>request_id</code> à une métrique peut créer des millions de séries temporelles, ce qui fait exploser les coûts et dégrade les performances. Les identifiants uniques ont leur place dans les logs et les traces, pas dans les dimensions de métriques.
+  </div>
+  <div class="callout">
+    <strong>Préférez les percentiles à la moyenne</strong>
+    Une latence moyenne de 200 ms peut masquer 5 % d'utilisateurs à 4 secondes. Le <strong>p95</strong> ou le <strong>p99</strong> révèle ce que vivent les utilisateurs les moins bien servis.
+  </div>
+
+  <h3>Logs</h3>
+  <p>Les logs sont la source de détail la plus fine. Pour qu'ils soient exploitables à grande échelle :</p>
+  <ul>
+    <li><strong>Structurez-les</strong> (JSON, paires clé-valeur) plutôt que d'écrire du texte libre ;</li>
+    <li>utilisez des <strong>niveaux</strong> cohérents (DEBUG, INFO, WARN, ERROR) ;</li>
+    <li>ajoutez le <strong>contexte de trace</strong> (<code>trace_id</code>, <code>span_id</code>) pour pouvoir passer d'un log à la trace associée ;</li>
+    <li>ne loggez <strong>jamais</strong> de données sensibles (mots de passe, numéros de carte, données personnelles non masquées).</li>
+  </ul>
+<pre><code><span class="cm">// Log non structuré : difficile à exploiter</span>
+2026-10-05 10:42:13 Erreur paiement pour commande 8812 client 554
+
+<span class="cm">// Log structuré : filtrable, agrégeable, corrélé à une trace</span>
+{<span class="str">"timestamp"</span>:<span class="str">"2026-10-05T10:42:13Z"</span>, <span class="str">"level"</span>:<span class="str">"ERROR"</span>, <span class="str">"service"</span>:<span class="str">"payment"</span>,
+ <span class="str">"message"</span>:<span class="str">"Payment refused"</span>, <span class="str">"order_id"</span>:<span class="str">"8812"</span>, <span class="str">"reason"</span>:<span class="str">"PSP_TIMEOUT"</span>,
+ <span class="str">"trace_id"</span>:<span class="str">"4bf92f3577b34da6a3ce929d0e0e4736"</span>, <span class="str">"span_id"</span>:<span class="str">"00f067aa0ba902b7"</span>}</code></pre>
+
+  <h3>Événements</h3>
+  <p>Les événements marquent des moments de changement. Les plus utiles sont les <strong>événements de déploiement et de configuration</strong> : la majorité des incidents en production suivent un changement. Pouvoir superposer « déploiement de la v2.3 à 14 h 02 » et « hausse des erreurs à 14 h 05 » accélère fortement le diagnostic.</p>
+  <p>Dynatrace gère aussi des <strong>Business Events</strong> (bizevents) : des événements métier (commande validée, panier abandonné, souscription) qui relient la technique à la valeur produite.</p>
+
+  <h3>Le contexte : ce qui relie tout</h3>
+  <p>Des données collectées en silos (un outil pour les logs, un autre pour les métriques, un troisième pour les traces) obligent à faire la corrélation à la main, au milieu de l'incident. La valeur de l'observabilité vient de la <strong>corrélation automatique</strong> : depuis une métrique anormale, on doit pouvoir accéder aux traces concernées, puis aux logs de ces traces, puis à l'hôte et au déploiement en cause.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>MELT : Métriques, Événements, Logs, Traces.</li>
+      <li>Méfiez-vous de la haute cardinalité dans les métriques ; utilisez les percentiles.</li>
+      <li>Logs structurés et enrichis avec <code>trace_id</code> = corrélation possible.</li>
+      <li>La valeur vient du contexte qui relie les données, pas des données isolées.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 3 -->
+<section class="module" id="m3" data-title="Traçage distribué & OpenTelemetry">
+  <div class="eyebrow">Module 3</div>
+  <h2 class="h">Traçage distribué et OpenTelemetry</h2>
+
+  <p>Dans une architecture distribuée, une seule action utilisateur (« Valider mon panier ») déclenche une cascade d'appels entre services. Le <strong>traçage distribué</strong> reconstitue ce parcours de bout en bout.</p>
+
+  <h3>Vocabulaire</h3>
+  <ul>
+    <li><strong>Trace</strong> : l'ensemble du parcours d'une requête, identifié par un <code>trace_id</code> unique.</li>
+    <li><strong>Span</strong> : une unité de travail dans la trace (appel HTTP, requête SQL, appel de méthode). Elle a un début, une durée, des attributs et un statut.</li>
+    <li><strong>Span parent / enfant</strong> : les spans forment un arbre qui montre qui a appelé qui.</li>
+    <li><strong>Propagation de contexte</strong> : le mécanisme qui transmet le <code>trace_id</code> d'un service au suivant, en général via l'en-tête HTTP standard W3C <code>traceparent</code>.</li>
+  </ul>
+
+  <svg class="diagram" viewBox="0 0 760 230" role="img" aria-label="Diagramme en cascade d'une trace distribuée">
+    <text x="0" y="16" font-size="13" font-weight="700">Trace 4bf92f…  (durée totale 840 ms)</text>
+    <line class="line" x1="160" y1="30" x2="160" y2="220" stroke-dasharray="3 4"/>
+    <line class="line" x1="740" y1="30" x2="740" y2="220" stroke-dasharray="3 4"/>
+    <text x="0" y="52" font-size="12">frontend  POST /checkout</text>
+    <rect class="bar1" x="160" y="40" width="580" height="18" rx="4"/>
+    <text x="14" y="84" font-size="12">cart  GET /cart</text>
+    <rect class="bar2" x="175" y="72" width="80" height="18" rx="4"/>
+    <text x="14" y="116" font-size="12">payment  POST /pay</text>
+    <rect class="bar4" x="265" y="104" width="440" height="18" rx="4"/>
+    <text x="28" y="148" font-size="12">psp-gateway  (externe)</text>
+    <rect class="bar4" x="280" y="136" width="400" height="18" rx="4" opacity=".75"/>
+    <text x="300" y="149" font-size="11" fill="#fff">⚠ 560 ms : goulot d'étranglement</text>
+    <text x="14" y="180" font-size="12">order  INSERT orders</text>
+    <rect class="bar3" x="708" y="168" width="28" height="18" rx="4"/>
+    <text class="muted" x="160" y="214" font-size="11">0 ms</text>
+    <text class="muted" x="700" y="214" font-size="11">840 ms</text>
+  </svg>
+  <p style="color:var(--muted);font-size:.9rem">La vue en cascade (<em>waterfall</em>) montre d'un coup d'œil où le temps est dépensé : ici, l'appel au prestataire de paiement externe.</p>
+
+  <h3>Échantillonnage (sampling)</h3>
+  <p>Conserver 100 % des traces coûte cher à fort trafic. On distingue :</p>
+  <ul>
+    <li><strong>Head-based sampling</strong> : la décision de garder la trace est prise au début de la requête (par exemple 10 % des traces). Simple, mais on peut perdre les traces en erreur.</li>
+    <li><strong>Tail-based sampling</strong> : la décision est prise à la fin, une fois la trace complète, ce qui permet de garder en priorité les traces lentes ou en erreur. Plus pertinent, mais plus coûteux à mettre en œuvre.</li>
+  </ul>
+  <p>Dynatrace OneAgent ajuste lui-même son échantillonnage (<em>Adaptive Traffic Management</em>) selon le volume de trafic, tout en conservant des statistiques exactes sur les requêtes.</p>
+
+  <h3>OpenTelemetry (OTel)</h3>
+  <p><strong>OpenTelemetry</strong> est un projet open source de la <strong>CNCF</strong> qui standardise la façon de produire, collecter et exporter la télémétrie (traces, métriques, logs). Il comprend :</p>
+  <ul>
+    <li>des <strong>API et SDK</strong> par langage, pour instrumenter le code ;</li>
+    <li>des <strong>conventions sémantiques</strong> qui fixent les noms d'attributs (<code>http.request.method</code>, <code>db.system</code>…) ;</li>
+    <li>le protocole <strong>OTLP</strong> pour transporter les données ;</li>
+    <li>l'<strong>OpenTelemetry Collector</strong>, pour recevoir, transformer et router la télémétrie.</li>
+  </ul>
+  <div class="callout ok">
+    <strong>Ce qu'OTel apporte</strong>
+    Indépendance vis-à-vis du fournisseur : on instrumente une fois, et on peut envoyer les données vers n'importe quel backend compatible. Dynatrace accepte nativement l'OTLP et combine les données OpenTelemetry avec celles collectées automatiquement par OneAgent.
+  </div>
+
+  <h3>Instrumentation automatique ou manuelle</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Automatique</th><th>Manuelle</th></tr></thead>
+    <tbody>
+      <tr><td>Agent qui instrumente le code sans modification (OneAgent, agents OTel).</td><td>Ajout explicite de spans et d'attributs dans le code via un SDK.</td></tr>
+      <tr><td>Couverture immédiate des frameworks connus (HTTP, JDBC, messagerie…).</td><td>Permet d'ajouter du contexte métier (identifiant de commande, segment client).</td></tr>
+      <tr><td>Aucun effort pour les développeurs.</td><td>Demande du temps de développement et de maintenance.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>En pratique, on combine les deux : l'automatique pour la couverture, le manuel pour le contexte métier.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Trace = parcours d'une requête ; span = étape de ce parcours.</li>
+      <li>La propagation de contexte (W3C <code>traceparent</code>) relie les spans entre services.</li>
+      <li>Le tail-based sampling permet de conserver en priorité les traces intéressantes.</li>
+      <li>OpenTelemetry = standard ouvert de la CNCF, compatible avec Dynatrace.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 4 -->
+<section class="module" id="m4" data-title="Signaux clés, SLI & SLO">
+  <div class="eyebrow">Module 4</div>
+  <h2 class="h">Signaux clés, SLI, SLO et budget d'erreur</h2>
+
+  <h3>Les méthodes de référence</h3>
+  <div class="grid">
+    <div class="card">
+      <h4>Four Golden Signals</h4>
+      <p>Tirés du livre <em>Site Reliability Engineering</em> de Google :<br>
+      <strong>Latence</strong>, <strong>Trafic</strong>, <strong>Erreurs</strong>, <strong>Saturation</strong>.</p>
+    </div>
+    <div class="card">
+      <h4>RED (services)</h4>
+      <p><strong>R</strong>ate (débit de requêtes), <strong>E</strong>rrors (taux d'erreur), <strong>D</strong>uration (latence). Pour tout service qui reçoit des requêtes.</p>
+    </div>
+    <div class="card">
+      <h4>USE (ressources)</h4>
+      <p><strong>U</strong>tilization, <strong>S</strong>aturation, <strong>E</strong>rrors. Pour les ressources : CPU, mémoire, disque, réseau.</p>
+    </div>
+  </div>
+  <div class="callout">
+    <strong>Moyen mnémotechnique</strong>
+    RED pour ce que vivent les <em>utilisateurs</em> (les services), USE pour ce que subissent les <em>machines</em> (les ressources).
+  </div>
+
+  <h3>SLI, SLO, SLA</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Terme</th><th>Définition</th><th>Exemple</th></tr></thead>
+    <tbody>
+      <tr><td><strong>SLI</strong><br><small>Service Level Indicator</small></td><td>Une <em>mesure</em> de la qualité de service, souvent un ratio d'événements « bons » sur le total.</td><td>Part des requêtes HTTP traitées avec succès en moins de 300 ms.</td></tr>
+      <tr><td><strong>SLO</strong><br><small>Service Level Objective</small></td><td>Un <em>objectif interne</em> fixé sur un SLI, sur une période donnée.</td><td>99,9 % des requêtes réussies en moins de 300 ms, sur 30 jours glissants.</td></tr>
+      <tr><td><strong>SLA</strong><br><small>Service Level Agreement</small></td><td>Un <em>engagement contractuel</em> envers un client, avec des pénalités en cas de non-respect.</td><td>99,5 % de disponibilité mensuelle, sinon avoir de 10 %.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Le SLO est généralement <strong>plus strict</strong> que le SLA : il sert de marge de sécurité qui alerte l'équipe avant que l'engagement contractuel ne soit menacé.</p>
+
+  <h3>Le budget d'erreur (error budget)</h3>
+  <p>Le budget d'erreur est la quantité de « non-fiabilité » tolérée par le SLO : <code>budget = 100 % − SLO</code>.</p>
+  <div class="card">
+    <strong>Exemple de calcul</strong><br>
+    SLO de disponibilité de <strong>99,9 %</strong> sur 30 jours.<br>
+    30 jours × 24 h × 60 min = 43 200 minutes.<br>
+    Budget = 0,1 % × 43 200 = <strong>43,2 minutes</strong> d'indisponibilité autorisées sur la période.
+  </div>
+  <ul>
+    <li>Tant qu'il reste du budget, l'équipe peut livrer et expérimenter.</li>
+    <li>Quand le budget est épuisé, on donne la priorité à la fiabilité (gel des fonctionnalités, corrections).</li>
+    <li>Le <strong>burn rate</strong> mesure la vitesse de consommation du budget. Un burn rate de 1 épuise le budget exactement à la fin de la période ; un burn rate de 10 l'épuise dix fois plus vite. On alerte sur le burn rate plutôt que sur chaque erreur isolée.</li>
+  </ul>
+
+  <h3>Apdex</h3>
+  <p>L'<strong>Apdex</strong> (Application Performance Index) est un score de satisfaction entre 0 et 1, calculé à partir d'un seuil de temps de réponse <em>T</em> :</p>
+  <ul>
+    <li><strong>Satisfait</strong> : réponse ≤ T ;</li>
+    <li><strong>Toléré</strong> : T &lt; réponse ≤ 4T ;</li>
+    <li><strong>Frustré</strong> : réponse &gt; 4T, ou erreur.</li>
+  </ul>
+  <p><code>Apdex = (satisfaits + tolérés / 2) / total</code>. Dynatrace l'utilise notamment pour évaluer l'expérience des utilisateurs réels.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Golden Signals : latence, trafic, erreurs, saturation.</li>
+      <li>RED pour les services, USE pour les ressources.</li>
+      <li>SLI = mesure ; SLO = objectif interne ; SLA = contrat.</li>
+      <li>Budget d'erreur = 100 % − SLO ; on alerte sur le burn rate.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 5 -->
+<section class="module" id="m5" data-title="Alerting & AIOps">
+  <div class="eyebrow">Module 5</div>
+  <h2 class="h">Alerting, détection d'anomalies et AIOps</h2>
+
+  <h3>Les écueils de l'alerting traditionnel</h3>
+  <ul>
+    <li><strong>Fatigue d'alerte</strong> : trop d'alertes, souvent sans action possible. Les équipes finissent par les ignorer, y compris les vraies.</li>
+    <li><strong>Tempêtes d'alertes</strong> : une seule panne (une base de données qui tombe) déclenche des centaines d'alertes sur tous les services qui en dépendent.</li>
+    <li><strong>Seuils statiques</strong> : un seuil fixe ne tient pas compte de la saisonnalité (trafic du lundi matin, soldes, nuit).</li>
+  </ul>
+
+  <h3>Les bonnes pratiques</h3>
+  <ul>
+    <li>Alerter sur les <strong>symptômes</strong> qui touchent les utilisateurs (latence, erreurs, SLO), pas sur chaque cause possible.</li>
+    <li>Chaque alerte doit être <strong>actionnable</strong> et associée à une procédure (runbook).</li>
+    <li>Utiliser des <strong>baselines dynamiques</strong> qui apprennent le comportement normal.</li>
+    <li><strong>Regrouper</strong> les alertes liées en un seul incident.</li>
+  </ul>
+
+  <h3>AIOps : corrélation et causalité</h3>
+  <p>L'AIOps applique l'IA aux opérations. Deux grandes approches existent :</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>IA corrélative / statistique</th><th>IA causale (approche de Dynatrace)</th></tr></thead>
+    <tbody>
+      <tr><td>Repère des signaux qui varient ensemble dans le temps.</td><td>S'appuie sur le modèle de dépendances réel (topologie) pour suivre la chaîne de cause à effet.</td></tr>
+      <tr><td>Corrélation ne veut pas dire causalité : risque de faux positifs.</td><td>Identifie la cause racine de façon déterministe et explicable.</td></tr>
+      <tr><td>Demande souvent une période d'apprentissage ou un entraînement.</td><td>Fonctionne dès que la topologie et les données sont disponibles.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Davis AI, le moteur d'IA de Dynatrace</h3>
+  <p><strong>Davis</strong> combine plusieurs techniques d'IA :</p>
+  <ul>
+    <li><strong>IA causale</strong> : à partir de la topologie Smartscape, Davis remonte la chaîne de dépendances pour trouver la <strong>cause racine</strong> d'un incident ;</li>
+    <li><strong>IA prédictive</strong> : prévisions (saturation de disque, capacité) et baselines automatiques ;</li>
+    <li><strong>IA générative</strong> (Davis CoPilot) : assistance en langage naturel, par exemple pour écrire des requêtes DQL ou expliquer un problème.</li>
+  </ul>
+  <p>Quand Davis détecte des anomalies liées, il les regroupe dans un seul <strong>Problème</strong> (<em>Problem</em>) qui indique :</p>
+  <ul>
+    <li>l'<strong>impact</strong> : services, applications et nombre d'utilisateurs touchés ;</li>
+    <li>la <strong>cause racine</strong> identifiée ;</li>
+    <li>la <strong>chronologie</strong> des événements, dont les déploiements et changements de configuration.</li>
+  </ul>
+  <div class="callout ok">
+    <strong>Exemple</strong>
+    Un disque plein sur un hôte de base de données provoque des lenteurs sur 12 services et 3 applications. Au lieu de 40 alertes, Davis ouvre <strong>un seul problème</strong> : « Cause racine : disque saturé sur <code>db-prod-02</code> ; impact : 3 applications, 4 800 utilisateurs ».
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Alertez sur les symptômes ; chaque alerte doit être actionnable.</li>
+      <li>Les baselines dynamiques remplacent les seuils statiques.</li>
+      <li>Davis utilise l'IA causale, appuyée sur la topologie, pour trouver la cause racine.</li>
+      <li>Plusieurs anomalies liées = un seul Problème Dynatrace.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 6 -->
+<section class="module" id="m6" data-title="Architecture Dynatrace">
+  <div class="eyebrow">Module 6</div>
+  <h2 class="h">L'architecture de Dynatrace</h2>
+  <p>Dynatrace est une plateforme d'observabilité, de sécurité applicative et d'analytique. Elle est disponible en SaaS (le mode principal) ou en mode Managed (hébergé par le client).</p>
+
+  <svg class="diagram" viewBox="0 0 760 300" role="img" aria-label="Architecture : hôtes avec OneAgent, ActiveGate, cluster Dynatrace">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color:var(--muted)"/>
+      </marker>
+    </defs>
+    <rect class="box" x="10" y="20" width="220" height="260" rx="10"/>
+    <text x="24" y="44" font-size="13" font-weight="700">Votre environnement</text>
+    <rect class="box-a" x="24" y="60" width="192" height="44" rx="8"/>
+    <text x="36" y="80" font-size="12" font-weight="600">Hôte Linux / Windows</text>
+    <text class="muted" x="36" y="96" font-size="11">OneAgent</text>
+    <rect class="box-a" x="24" y="114" width="192" height="44" rx="8"/>
+    <text x="36" y="134" font-size="12" font-weight="600">Cluster Kubernetes</text>
+    <text class="muted" x="36" y="150" font-size="11">Dynatrace Operator + OneAgent</text>
+    <rect class="box" x="24" y="168" width="192" height="44" rx="8"/>
+    <text x="36" y="188" font-size="12" font-weight="600">Apps instrumentées OTel</text>
+    <text class="muted" x="36" y="204" font-size="11">OTLP</text>
+    <rect class="box" x="24" y="222" width="192" height="44" rx="8"/>
+    <text x="36" y="242" font-size="12" font-weight="600">Navigateurs / mobiles</text>
+    <text class="muted" x="36" y="258" font-size="11">RUM (JavaScript, SDK mobile)</text>
+
+    <rect class="box-a" x="290" y="100" width="170" height="90" rx="10"/>
+    <text x="306" y="126" font-size="13" font-weight="700">ActiveGate</text>
+    <text class="muted" x="306" y="146" font-size="11">routage, compression</text>
+    <text class="muted" x="306" y="162" font-size="11">extensions, API cloud</text>
+    <text class="muted" x="306" y="178" font-size="11">synthétique privé</text>
+
+    <rect class="box-a" x="520" y="20" width="230" height="260" rx="10"/>
+    <text x="536" y="44" font-size="13" font-weight="700">Plateforme Dynatrace</text>
+    <rect class="box" x="534" y="58" width="202" height="34" rx="6"/><text x="546" y="80" font-size="12">OpenPipeline (ingestion)</text>
+    <rect class="box" x="534" y="100" width="202" height="34" rx="6"/><text x="546" y="122" font-size="12">Grail (data lakehouse)</text>
+    <rect class="box" x="534" y="142" width="202" height="34" rx="6"/><text x="546" y="164" font-size="12">Smartscape (topologie)</text>
+    <rect class="box" x="534" y="184" width="202" height="34" rx="6"/><text x="546" y="206" font-size="12">Davis AI</text>
+    <rect class="box" x="534" y="226" width="202" height="34" rx="6"/><text x="546" y="248" font-size="12">Apps, Dashboards, Workflows</text>
+
+    <path class="line" d="M216 82 H260 V130 H288" marker-end="url(#arr)"/>
+    <path class="line" d="M216 136 H288" marker-end="url(#arr)"/>
+    <path class="line" d="M460 145 H518" marker-end="url(#arr)"/>
+    <path class="line" d="M216 190 H250 V60 H518" marker-end="url(#arr)"/>
+    <path class="line" d="M216 244 H490 V230 H518" marker-end="url(#arr)"/>
+    <text class="muted" x="258" y="54" font-size="10">OTLP direct ou via ActiveGate</text>
+  </svg>
+
+  <h3>OneAgent</h3>
+  <p><strong>OneAgent</strong> est l'agent unique de Dynatrace. On l'installe <strong>une fois par hôte</strong> (ou via le Dynatrace Operator sur Kubernetes) et il :</p>
+  <ul>
+    <li>découvre automatiquement les processus, services et dépendances ;</li>
+    <li>instrumente automatiquement les applications (Java, .NET, Node.js, PHP, Go, etc.) <strong>sans modifier le code</strong> ;</li>
+    <li>collecte métriques d'infrastructure, logs, traces distribuées et données de niveau code ;</li>
+    <li>ajoute automatiquement dans les pages web le script qui mesure l'expérience des utilisateurs réels (<strong>RUM</strong>, <em>Real User Monitoring</em>, voir <a href="#m8">module 8</a>), sans modifier le code de l'application.</li>
+  </ul>
+  <div class="callout">
+    <strong>Modes de surveillance</strong>
+    OneAgent propose plusieurs modes : <em>Full-Stack</em> (applications et infrastructure, jusqu'au code), <em>Infrastructure</em> (hôtes et processus uniquement) et <em>Discovery</em> (découverte légère). Le mode choisi détermine la profondeur de la collecte et la consommation de licence.
+  </div>
+
+  <h3>ActiveGate</h3>
+  <p>L'<strong>ActiveGate</strong> est un composant intermédiaire, optionnel ou requis selon les cas, qui :</p>
+  <ul>
+    <li>sert de <strong>proxy et de point de routage</strong> entre les OneAgent et le cluster Dynatrace (réseau segmenté, compression, une seule ouverture de flux sortant) ;</li>
+    <li>surveille via API les <strong>services cloud</strong> (AWS, Azure, GCP), VMware et d'autres plateformes ;</li>
+    <li>exécute des <strong>extensions</strong> (bases de données, équipements réseau via SNMP, etc.) ;</li>
+    <li>héberge des <strong>emplacements privés de surveillance synthétique</strong>.</li>
+  </ul>
+
+  <h3>Smartscape</h3>
+  <p><strong>Smartscape</strong> est la carte de topologie en temps réel, découverte automatiquement. Elle représente les entités et leurs relations :</p>
+  <ul>
+    <li><strong>Verticalement</strong> : application → services → processus → hôtes → datacenter ou cloud ;</li>
+    <li><strong>Horizontalement</strong> : qui appelle qui (service A → service B → base de données).</li>
+  </ul>
+  <p>C'est ce modèle de dépendances qui permet à Davis de faire de l'analyse causale.</p>
+
+  <h3>PurePath</h3>
+  <p><strong>PurePath</strong> est la technologie de traçage distribué de Dynatrace. Elle capture chaque transaction de bout en bout, du navigateur jusqu'à la base de données, avec le détail au niveau du code (méthodes, requêtes SQL, exceptions). Elle intègre aussi les spans OpenTelemetry.</p>
+
+  <h3>Les entités</h3>
+  <p>Dans Dynatrace, chaque composant surveillé est une <strong>entité</strong> avec un identifiant unique : <code>HOST-…</code>, <code>PROCESS_GROUP-…</code>, <code>SERVICE-…</code>, <code>APPLICATION-…</code>. Les entités portent des <strong>tags</strong> (automatiques ou manuels) qui servent à filtrer, à attribuer la responsabilité et à gérer les droits d'accès.</p>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>OneAgent : un agent par hôte, découverte et instrumentation automatiques.</li>
+      <li>ActiveGate : proxy et routage, monitoring cloud par API, extensions, synthétique privé.</li>
+      <li>Smartscape : topologie temps réel, verticale et horizontale.</li>
+      <li>PurePath : traces distribuées de bout en bout, au niveau du code.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 7 -->
+<section class="module" id="m7" data-title="Grail, DQL & la plateforme">
+  <div class="eyebrow">Module 7</div>
+  <h2 class="h">Grail, DQL et la plateforme Dynatrace</h2>
+
+  <h3>Grail : le data lakehouse</h3>
+  <p><strong>Grail</strong> est le moteur de stockage et d'analyse de Dynatrace. Il réunit dans un même lieu logs, métriques, traces (spans), événements, business events et données de topologie.</p>
+  <ul>
+    <li><strong>Schema-on-read</strong> : pas besoin de définir un schéma ou des index à l'ingestion ; la structure est interprétée au moment de la requête.</li>
+    <li><strong>Traitement massivement parallèle</strong> : requêtes rapides sur de très gros volumes.</li>
+    <li><strong>Buckets et rétention</strong> : les données sont rangées dans des <em>buckets</em> dont on configure la durée de conservation.</li>
+    <li><strong>Contexte conservé</strong> : les données gardent leur lien avec les entités de la topologie.</li>
+  </ul>
+
+  <h3>OpenPipeline</h3>
+  <p><strong>OpenPipeline</strong> traite les données à l'ingestion, avant leur stockage dans Grail :</p>
+  <ul>
+    <li><strong>parser</strong> et structurer des logs bruts ;</li>
+    <li><strong>masquer</strong> les données sensibles (conformité RGPD) ;</li>
+    <li><strong>filtrer</strong> ou supprimer les données inutiles pour maîtriser les coûts ;</li>
+    <li><strong>extraire</strong> des métriques ou des business events à partir des logs ;</li>
+    <li><strong>router</strong> les données vers le bon bucket.</li>
+  </ul>
+
+  <h3>DQL : Dynatrace Query Language</h3>
+  <p><strong>DQL</strong> est le langage de requête de Grail. Il fonctionne en <strong>pipeline</strong> : une commande de départ produit des enregistrements, puis chaque commande, séparée par <code>|</code>, transforme le résultat de la précédente.</p>
+
+<pre><code><span class="cm">// Top 10 des services qui produisent le plus de logs d'erreur sur les 2 dernières heures</span>
+<span class="kw">fetch</span> logs, from: <span class="fn">now</span>() - 2h
+| <span class="kw">filter</span> loglevel == <span class="str">"ERROR"</span>
+| <span class="kw">summarize</span> erreurs = <span class="fn">count</span>(), by: { dt.entity.service }
+| <span class="kw">sort</span> erreurs desc
+| <span class="kw">limit</span> 10</code></pre>
+
+<pre><code><span class="cm">// Série temporelle : CPU moyen par hôte</span>
+<span class="kw">timeseries</span> cpu = <span class="fn">avg</span>(dt.host.cpu.usage), by: { dt.entity.host }</code></pre>
+
+<pre><code><span class="cm">// Spans en échec, avec leur durée</span>
+<span class="kw">fetch</span> spans
+| <span class="kw">filter</span> request.is_failed == true
+| <span class="kw">fields</span> start_time, service.name, span.name, duration
+| <span class="kw">sort</span> duration desc</code></pre>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Commande</th><th>Rôle</th></tr></thead>
+    <tbody>
+      <tr><td><code>fetch</code></td><td>Charger des données d'un type (logs, spans, events, bizevents…)</td></tr>
+      <tr><td><code>timeseries</code></td><td>Construire des séries temporelles à partir de métriques</td></tr>
+      <tr><td><code>filter</code></td><td>Garder les enregistrements qui respectent une condition</td></tr>
+      <tr><td><code>fields</code> / <code>fieldsAdd</code></td><td>Choisir ou calculer des champs</td></tr>
+      <tr><td><code>parse</code></td><td>Extraire des champs structurés d'un texte</td></tr>
+      <tr><td><code>summarize</code></td><td>Agréger (count, avg, percentile…) avec regroupement <code>by:</code></td></tr>
+      <tr><td><code>sort</code> / <code>limit</code></td><td>Trier et limiter le nombre de résultats</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Les outils d'analyse et d'action</h3>
+  <div class="grid">
+    <div class="card"><h4>📓 Notebooks</h4><p>Exploration interactive : requêtes DQL, visualisations et notes dans un même document.</p></div>
+    <div class="card"><h4>📊 Dashboards</h4><p>Tableaux de bord construits à partir de requêtes DQL et de tuiles de visualisation.</p></div>
+    <div class="card"><h4>⚙️ Workflows</h4><p>Automatisation (AutomationEngine) : déclencher des actions sur un problème, un horaire ou un événement (ticket, notification, remédiation).</p></div>
+    <div class="card"><h4>🛡️ Site Reliability Guardian</h4><p>Valide automatiquement une version par rapport à des objectifs (SLO, seuils) avant ou après un déploiement.</p></div>
+    <div class="card"><h4>🧩 AppEngine</h4><p>Création d'applications personnalisées qui s'exécutent dans la plateforme.</p></div>
+    <div class="card"><h4>🎯 SLO</h4><p>Définition et suivi des objectifs de niveau de service et de leur budget d'erreur.</p></div>
+  </div>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>Grail : data lakehouse unifié, schema-on-read, sans index à gérer.</li>
+      <li>OpenPipeline : traitement à l'ingestion (parsing, masquage, filtrage, routage).</li>
+      <li>DQL : langage en pipeline (<code>fetch … | filter … | summarize …</code>).</li>
+      <li>Workflows et Site Reliability Guardian automatisent les réactions et les validations.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 8 -->
+<section class="module" id="m8" data-title="Expérience utilisateur & sécurité">
+  <div class="eyebrow">Module 8</div>
+  <h2 class="h">Expérience numérique et sécurité applicative</h2>
+
+  <h3>Real User Monitoring (RUM)</h3>
+  <p>Le <strong>RUM</strong> mesure l'expérience des <strong>vrais utilisateurs</strong>, dans leur navigateur ou leur application mobile :</p>
+  <ul>
+    <li>temps de chargement, actions utilisateur, erreurs JavaScript ;</li>
+    <li><strong>Core Web Vitals</strong> : LCP (affichage du plus grand élément), INP (réactivité aux interactions), CLS (stabilité visuelle) ;</li>
+    <li>répartition par navigateur, pays, type d'appareil ;</li>
+    <li>lien direct entre une action utilisateur et la trace PurePath côté serveur.</li>
+  </ul>
+  <p><strong>Session Replay</strong> permet de rejouer visuellement une session utilisateur pour comprendre un problème, avec masquage des données sensibles.</p>
+
+  <h3>Surveillance synthétique</h3>
+  <p>La <strong>surveillance synthétique</strong> simule des utilisateurs à intervalles réguliers, depuis des emplacements publics ou privés :</p>
+  <ul>
+    <li><strong>Moniteurs HTTP</strong> : vérification de la disponibilité et des réponses d'API ;</li>
+    <li><strong>Moniteurs navigateur</strong> : un clic unique ou un parcours scripté (connexion, recherche, paiement).</li>
+  </ul>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th></th><th>RUM</th><th>Synthétique</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Source</strong></td><td>Trafic réel</td><td>Trafic simulé</td></tr>
+      <tr><td><strong>Quand</strong></td><td>Uniquement quand il y a des utilisateurs</td><td>En continu, 24 h/24, même sans trafic</td></tr>
+      <tr><td><strong>Points forts</strong></td><td>Diversité réelle des conditions</td><td>Détection proactive, référence stable, tests avant mise en production</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout">
+    <strong>Les deux se complètent</strong>
+    Le synthétique détecte une panne à 3 h du matin avant l'arrivée des premiers utilisateurs ; le RUM montre ce que vivent vraiment les clients sur leurs appareils et leurs réseaux.
+  </div>
+
+  <h3>Observabilité métier</h3>
+  <p>Avec les <strong>Business Events</strong>, on suit des indicateurs métier (taux de conversion, montant des paniers, étapes d'un parcours) à côté des données techniques. On peut ainsi répondre à des questions comme : « Combien de chiffre d'affaires la lenteur du service de paiement a-t-elle coûté hier ? »</p>
+
+  <h3>Sécurité applicative</h3>
+  <p>OneAgent connaît précisément les bibliothèques chargées en mémoire et leur usage réel. Dynatrace s'en sert pour :</p>
+  <ul>
+    <li><strong>Détecter les vulnérabilités</strong> (CVE) dans les bibliothèques tierces <em>réellement chargées</em> en production ;</li>
+    <li><strong>Prioriser</strong> les vulnérabilités selon le contexte : exposition à Internet, accès à des données sensibles, présence effective du code vulnérable dans l'exécution ;</li>
+    <li><strong>Protéger à l'exécution</strong> (Runtime Application Protection) contre certaines attaques comme l'injection SQL.</li>
+  </ul>
+
+  <div class="keypoints">
+    <h4>Points clés</h4>
+    <ul>
+      <li>RUM = utilisateurs réels ; Synthétique = utilisateurs simulés, en continu.</li>
+      <li>Session Replay rejoue les sessions, avec masquage des données sensibles.</li>
+      <li>Les Business Events relient la performance technique au métier.</li>
+      <li>La sécurité applicative priorise les vulnérabilités selon le contexte d'exécution.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== MODULE 9 -->
+<section class="module" id="m9" data-title="Bonnes pratiques">
+  <div class="eyebrow">Module 9</div>
+  <h2 class="h">Bonnes pratiques et culture de l'observabilité</h2>
+
+  <h3>Mise en œuvre de Dynatrace</h3>
+  <ol>
+    <li><strong>Déployer OneAgent largement</strong>, en Full-Stack sur les applications critiques : la couverture automatique est la plus grande force de l'outil.</li>
+    <li><strong>Mettre en place une stratégie de tags</strong> dès le départ (application, environnement, équipe propriétaire, criticité), de préférence par règles automatiques ou via les métadonnées Kubernetes.</li>
+    <li><strong>Gérer les accès</strong> avec des politiques IAM et des segments (ou les zones de gestion dans l'interface historique) : chaque équipe voit ce qui la concerne.</li>
+    <li><strong>Envoyer les événements de déploiement</strong> depuis la CI/CD pour que Davis puisse les relier aux problèmes.</li>
+    <li><strong>Définir des SLO</strong> sur les parcours utilisateurs critiques, plutôt que d'empiler les alertes techniques.</li>
+    <li><strong>Brancher les notifications</strong> (ITSM, messagerie, astreinte) via des Workflows, avec des règles de filtrage pour éviter le bruit.</li>
+    <li><strong>Maîtriser l'ingestion</strong> avec OpenPipeline : filtrer les logs sans valeur, masquer les données personnelles, régler la rétention par bucket.</li>
+  </ol>
+
+  <h3>Culture et organisation</h3>
+  <ul>
+    <li><strong>« You build it, you run it »</strong> : les équipes de développement sont responsables de l'observabilité de leurs services.</li>
+    <li><strong>Observability as code</strong> : configuration (alertes, SLO, dashboards) versionnée et déployée par automatisation, par exemple avec Monaco (Monitoring as Code) ou Terraform.</li>
+    <li><strong>Post-mortems sans recherche de coupable</strong> (<em>blameless</em>) : on analyse le système, pas les personnes.</li>
+    <li><strong>Shift-left</strong> : utiliser l'observabilité dès les environnements de test et dans les pipelines de livraison, pas seulement en production.</li>
+  </ul>
+
+  <h3>Démarche d'investigation type</h3>
+  <ol>
+    <li><strong>Partir du symptôme</strong> : un problème Davis, un SLO qui se dégrade ou une plainte utilisateur.</li>
+    <li><strong>Mesurer l'impact</strong> : quels utilisateurs, quelles applications, depuis quand ?</li>
+    <li><strong>Remonter la topologie</strong> : quel service, quelle dépendance ? (Smartscape)</li>
+    <li><strong>Descendre dans les traces</strong> : où passe le temps ? quelle exception ? (PurePath)</li>
+    <li><strong>Consulter les logs</strong> des traces concernées pour le détail.</li>
+    <li><strong>Vérifier les changements</strong> : déploiement, configuration, montée de charge.</li>
+    <li><strong>Corriger, puis capitaliser</strong> : nouveau SLO, alerte, runbook, ou automatisation.</li>
+  </ol>
+
+  <div class="callout warn">
+    <strong>Pièges courants</strong>
+    <ul style="margin:6px 0 0;padding-left:20px">
+      <li>Tout collecter sans stratégie de rétention ni de filtrage : coûts qui explosent.</li>
+      <li>Créer des dizaines de dashboards que personne ne consulte.</li>
+      <li>Garder des alertes sur des seuils statiques en doublon de Davis.</li>
+      <li>Négliger les tags : impossible ensuite de savoir qui est responsable de quoi.</li>
+    </ul>
+  </div>
+
+  <div class="callout ok">
+    <strong>Prêt pour le quiz ?</strong>
+    Le module suivant contient 20 questions sur l'ensemble de la formation. Il faut 80 % de bonnes réponses pour le valider. Bonne chance !
+  </div>
+</section>
+
+<!-- ===================================================== QUIZ -->
+<section class="module" id="quiz" data-title="Quiz de validation">
+  <div class="eyebrow">Évaluation finale</div>
+  <h2 class="h">Quiz de validation des connaissances</h2>
+  <div id="quizRoot"></div>
+</section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- Stockage local (tolérant aux erreurs) ---------------- */
+  var STORE_KEY = "formation-dynatrace-v1";
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function save(s) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* ignoré */ }
+  }
+  var state = load();
+  state.done = state.done || {};
+
+  /* ---------------- Thème ---------------- */
+  var root = document.documentElement;
+  if (state.theme) root.setAttribute("data-theme", state.theme);
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme")
+      ? root.getAttribute("data-theme") === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    state.theme = dark ? "light" : "dark";
+    root.setAttribute("data-theme", state.theme);
+    save(state);
+  });
+
+  /* ---------------- Navigation ---------------- */
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section.module"));
+  var navList = document.getElementById("navList");
+  var learningIds = sections.filter(function (s) { return /^m[1-9]$/.test(s.id); }).map(function (s) { return s.id; });
+
+  sections.forEach(function (s, i) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#" + s.id;
+    a.dataset.id = s.id;
+    var label = s.id === "m0" ? "i" : (s.id === "quiz" ? "?" : s.id.slice(1));
+    a.innerHTML = '<span class="num">' + label + "</span><span></span>";
+    a.lastChild.textContent = s.dataset.title;
+    li.appendChild(a);
+    navList.appendChild(li);
+
+    // Pager
+    var pager = document.createElement("div");
+    pager.className = "pager";
+    var prev = sections[i - 1], next = sections[i + 1];
+    pager.innerHTML =
+      (prev ? '<a class="btn ghost" href="#' + prev.id + '">← ' + escapeHtml(prev.dataset.title) + "</a>" : "<span></span>") +
+      (next ? '<a class="btn" data-complete="' + s.id + '" href="#' + next.id + '">' + escapeHtml(next.dataset.title) + " →</a>" : "");
+    if (s.id !== "quiz") s.appendChild(pager);
+  });
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-complete]");
+    if (t) {
+      var id = t.getAttribute("data-complete");
+      if (learningIds.indexOf(id) !== -1) { state.done[id] = true; save(state); }
+    }
+  });
+
+  function show() {
+    var id = (location.hash || "#m0").slice(1);
+    if (!document.getElementById(id)) id = "m0";
+    sections.forEach(function (s) { s.classList.toggle("visible", s.id === id); });
+    navList.querySelectorAll("a").forEach(function (a) {
+      a.classList.toggle("active", a.dataset.id === id);
+      a.classList.toggle("done", !!state.done[a.dataset.id] || (a.dataset.id === "quiz" && state.passed));
+    });
+    updateProgress();
+    document.getElementById("sidebar").classList.remove("open");
+    window.scrollTo(0, 0);
+  }
+  function updateProgress() {
+    var n = learningIds.filter(function (id) { return state.done[id]; }).length;
+    document.getElementById("progressBar").style.width = (n / learningIds.length * 100) + "%";
+    document.getElementById("progressLabel").textContent = n + " / " + learningIds.length + " modules lus";
+  }
+  window.addEventListener("hashchange", show);
+  document.getElementById("menuBtn").addEventListener("click", function () {
+    document.getElementById("sidebar").classList.toggle("open");
+  });
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------------- Quiz ---------------- */
+  var PASS = 0.8;
+  var QUESTIONS = [
+    { t: "Concepts", q: "Quelle définition décrit le mieux l'observabilité ?",
+      o: ["La capacité à déclencher une alerte quand un seuil est dépassé",
+          "La capacité à comprendre l'état interne d'un système à partir des données qu'il produit, y compris pour des problèmes non anticipés",
+          "Le fait de disposer d'un tableau de bord par application",
+          "La collecte exhaustive de tous les logs pendant au moins un an"],
+      a: 1, e: "L'observabilité permet de déduire l'état interne à partir des sorties et de répondre à des questions qu'on n'avait pas prévues (« inconnues inconnues »)." },
+    { t: "Concepts", q: "Que mesure le MTTR ?",
+      o: ["Le temps moyen entre deux pannes", "Le temps moyen de détection d'un incident", "Le temps moyen de résolution d'un incident", "Le temps moyen de réponse d'une requête"],
+      a: 2, e: "MTTR = Mean Time To Repair (ou Resolve). Le temps de détection est le MTTD ; le temps entre deux pannes est le MTBF." },
+    { t: "Télémétrie", q: "Que signifie l'acronyme MELT ?",
+      o: ["Monitoring, Events, Latency, Tracing", "Metrics, Events, Logs, Traces", "Metrics, Errors, Latency, Throughput", "Measures, Exceptions, Logs, Topology"],
+      a: 1, e: "MELT : Metrics, Events, Logs, Traces, les grands types de données de télémétrie." },
+    { t: "Télémétrie", q: "Pourquoi faut-il éviter d'utiliser un identifiant utilisateur comme dimension d'une métrique ?",
+      o: ["Parce que les métriques ne supportent pas les chaînes de caractères",
+          "Parce que cela crée une très forte cardinalité : un grand nombre de séries temporelles, coûteuses et lentes à interroger",
+          "Parce que c'est interdit par OpenTelemetry",
+          "Ce n'est pas un problème, c'est même recommandé"],
+      a: 1, e: "Chaque valeur unique crée une nouvelle série temporelle. Les identifiants uniques ont leur place dans les logs et les traces." },
+    { t: "Télémétrie", q: "Une API a une latence moyenne de 180 ms, mais des utilisateurs se plaignent de lenteurs. Quel indicateur regarder en priorité ?",
+      o: ["La latence minimale", "La médiane (p50)", "Un percentile élevé (p95 / p99)", "Le nombre total de requêtes"],
+      a: 2, e: "La moyenne masque les cas extrêmes. Le p95 ou le p99 montre ce que vivent les utilisateurs les moins bien servis." },
+    { t: "Télémétrie", q: "Quel est le principal intérêt d'ajouter le trace_id dans les logs applicatifs ?",
+      o: ["Réduire la taille des logs", "Pouvoir relier un log à la trace distribuée correspondante (et inversement)", "Chiffrer les logs", "Remplacer l'horodatage"],
+      a: 1, e: "Le trace_id permet de passer d'un log à la trace associée et inversement : c'est la corrélation qui fait la valeur de l'observabilité." },
+    { t: "Traces", q: "Dans une trace distribuée, qu'est-ce qu'un span ?",
+      o: ["Un intervalle d'échantillonnage", "Une unité de travail (appel, requête, opération) avec un début, une durée et des attributs", "Un regroupement de plusieurs traces", "Un type de métrique"],
+      a: 1, e: "Une trace est composée de spans organisés en arbre parent/enfant ; chacun représente une opération." },
+    { t: "Traces", q: "Quel mécanisme permet de relier les spans de services différents au sein d'une même trace ?",
+      o: ["La synchronisation NTP des serveurs", "La propagation de contexte, par exemple via l'en-tête W3C traceparent", "Le partage d'une base de données commune", "L'adresse IP du client"],
+      a: 1, e: "Le contexte (trace_id, span_id parent) est transmis d'un service à l'autre, en général via l'en-tête HTTP W3C traceparent." },
+    { t: "Traces", q: "Quel est l'avantage du tail-based sampling par rapport au head-based sampling ?",
+      o: ["Il est plus simple à mettre en œuvre", "Il ne consomme aucune ressource", "Il décide après avoir vu la trace complète, ce qui permet de garder en priorité les traces lentes ou en erreur", "Il conserve toujours 100 % des traces"],
+      a: 2, e: "La décision prise en fin de trace permet de garder les traces intéressantes. Elle est en revanche plus coûteuse à mettre en œuvre." },
+    { t: "Traces", q: "Qu'est-ce qu'OpenTelemetry ?",
+      o: ["Un produit commercial de Dynatrace", "Un projet open source de la CNCF qui standardise la production et l'export de télémétrie (API, SDK, OTLP, Collector)", "Un format de base de données", "Un outil d'alerting"],
+      a: 1, e: "OpenTelemetry est un standard ouvert, indépendant des fournisseurs. Dynatrace accepte nativement les données OTLP." },
+    { t: "SLO", q: "Quels sont les quatre « Golden Signals » ?",
+      o: ["CPU, mémoire, disque, réseau", "Latence, trafic, erreurs, saturation", "Disponibilité, performance, sécurité, coût", "Rate, errors, duration, utilization"],
+      a: 1, e: "Les Four Golden Signals du livre SRE de Google : latence, trafic, erreurs, saturation." },
+    { t: "SLO", q: "La méthode USE (Utilization, Saturation, Errors) s'applique avant tout à :",
+      o: ["Les parcours utilisateur", "Les ressources (CPU, mémoire, disque, réseau)", "Les services qui reçoivent des requêtes", "Les campagnes marketing"],
+      a: 1, e: "USE est faite pour les ressources ; RED (Rate, Errors, Duration) pour les services." },
+    { t: "SLO", q: "Quelle affirmation est correcte ?",
+      o: ["Le SLA est un objectif interne, le SLO un contrat client", "Le SLI est l'objectif chiffré, le SLO la mesure", "Le SLI est une mesure, le SLO un objectif interne sur cette mesure, le SLA un engagement contractuel", "SLO et SLA sont deux noms pour la même chose"],
+      a: 2, e: "SLI = indicateur mesuré ; SLO = objectif interne ; SLA = contrat avec pénalités. Le SLO est en général plus strict que le SLA." },
+    { t: "SLO", q: "Un service a un SLO de disponibilité de 99,9 % sur 30 jours. Quel est son budget d'erreur ?",
+      o: ["Environ 4,3 minutes", "Environ 43 minutes", "Environ 7,2 heures", "Environ 3 jours"],
+      a: 1, e: "0,1 % × 30 j × 24 h × 60 min = 0,001 × 43 200 = 43,2 minutes." },
+    { t: "AIOps", q: "Quelle est la particularité de l'IA causale de Davis par rapport à une approche purement corrélative ?",
+      o: ["Elle a besoin de plusieurs mois d'apprentissage", "Elle s'appuie sur la topologie réelle des dépendances (Smartscape) pour remonter jusqu'à la cause racine", "Elle se contente de comparer des courbes entre elles", "Elle ne fonctionne qu'avec des seuils statiques"],
+      a: 1, e: "Davis suit la chaîne de dépendances réelle découverte par Smartscape, ce qui permet une analyse de cause racine déterministe et explicable." },
+    { t: "AIOps", q: "Une base de données saturée provoque des anomalies sur 15 services dépendants. Que produit Davis ?",
+      o: ["15 alertes distinctes, une par service", "Aucune alerte, car la base de données n'est pas un service", "Un seul Problème qui regroupe les anomalies, indique l'impact et désigne la base de données comme cause racine", "Une alerte par hôte"],
+      a: 2, e: "Davis regroupe les anomalies liées en un seul Problème, ce qui évite les tempêtes d'alertes." },
+    { t: "Dynatrace", q: "Quel composant Dynatrace s'installe une fois par hôte et instrumente automatiquement les applications sans modification de code ?",
+      o: ["ActiveGate", "OneAgent", "OpenPipeline", "Grail"],
+      a: 1, e: "OneAgent découvre et instrumente automatiquement processus, services et dépendances." },
+    { t: "Dynatrace", q: "Parmi ces rôles, lequel N'EST PAS assuré par l'ActiveGate ?",
+      o: ["Servir de proxy et de point de routage entre OneAgent et Dynatrace", "Surveiller des services cloud via leurs API", "Héberger des emplacements privés de surveillance synthétique", "Stocker les logs à long terme et exécuter les requêtes DQL"],
+      a: 3, e: "Le stockage et les requêtes DQL relèvent de Grail, dans la plateforme Dynatrace. L'ActiveGate gère le routage, le monitoring par API, les extensions et le synthétique privé." },
+    { t: "Dynatrace", q: "Qu'est-ce que Grail ?",
+      o: ["Le moteur de traçage distribué de Dynatrace", "Le data lakehouse de Dynatrace, qui stocke logs, métriques, traces et événements avec une approche schema-on-read", "Le langage de requête de Dynatrace", "Un tableau de bord de topologie"],
+      a: 1, e: "Grail est le stockage unifié. Le traçage s'appelle PurePath, le langage DQL et la topologie Smartscape." },
+    { t: "Dynatrace", q: "Que fait cette requête DQL ?\nfetch logs | filter loglevel == \"ERROR\" | summarize count(), by: { dt.entity.service }",
+      o: ["Elle supprime les logs d'erreur", "Elle compte les logs de niveau ERROR pour chaque service", "Elle crée une alerte par service", "Elle affiche la topologie des services en erreur"],
+      a: 1, e: "fetch charge les logs, filter garde les erreurs, summarize compte le résultat par service." },
+    { t: "Dynatrace", q: "Quelle est la différence principale entre le RUM et la surveillance synthétique ?",
+      o: ["Le RUM simule des utilisateurs, le synthétique mesure les vrais utilisateurs", "Le RUM mesure le trafic des vrais utilisateurs ; le synthétique simule des parcours en continu, même sans trafic", "Il n'y a aucune différence", "Le synthétique ne fonctionne que sur mobile"],
+      a: 1, e: "RUM = utilisateurs réels ; synthétique = utilisateurs simulés à intervalles réguliers, utile pour une détection proactive." },
+    { t: "Dynatrace", q: "Quel outil Dynatrace permet de masquer des données sensibles et de filtrer des logs inutiles avant leur stockage ?",
+      o: ["Session Replay", "Smartscape", "OpenPipeline", "Site Reliability Guardian"],
+      a: 2, e: "OpenPipeline traite les données à l'ingestion : parsing, masquage, filtrage, extraction et routage vers les buckets Grail." },
+    { t: "Bonnes pratiques", q: "Pourquoi est-il recommandé d'envoyer les événements de déploiement de la CI/CD vers Dynatrace ?",
+      o: ["Pour accélérer les déploiements", "Pour que Davis et les équipes puissent relier un problème au changement qui l'a provoqué", "C'est obligatoire pour que OneAgent fonctionne", "Pour réduire le coût de la licence"],
+      a: 1, e: "Une grande partie des incidents suit un changement. L'événement de déploiement apporte un contexte essentiel à l'analyse." },
+    { t: "Bonnes pratiques", q: "Quelle pratique d'alerting est recommandée ?",
+      o: ["Une alerte par métrique technique, avec seuil fixe", "Alerter sur les symptômes qui touchent les utilisateurs (SLO, burn rate), avec des alertes actionnables", "Envoyer toutes les alertes à toute l'équipe par e-mail", "Désactiver les alertes la nuit"],
+      a: 1, e: "Alerter sur les symptômes (et le burn rate des SLO) limite la fatigue d'alerte et cible ce qui compte vraiment." }
+  ];
+  var QUIZ_SIZE = 20;
+
+  var quizRoot = document.getElementById("quizRoot");
+  var quiz = null;
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  function renderIntro() {
+    var unread = learningIds.length - learningIds.filter(function (id) { return state.done[id]; }).length;
+    var best = state.best != null ? '<p>Votre meilleur score : <strong>' + state.best + ' %</strong>' + (state.passed ? ' ✅ quiz validé' : '') + '</p>' : '';
+    quizRoot.innerHTML =
+      '<div class="card qcard">' +
+        '<p class="lead" style="margin-top:0">' + QUIZ_SIZE + ' questions tirées au hasard parmi ' + QUESTIONS.length + ', ordre des réponses mélangé. Une explication s\'affiche après chaque réponse.</p>' +
+        '<ul><li>Seuil de réussite : <strong>' + Math.round(PASS * 100) + ' %</strong> (' + Math.ceil(PASS * QUIZ_SIZE) + ' bonnes réponses sur ' + QUIZ_SIZE + ')</li>' +
+        '<li>Vous pouvez recommencer autant de fois que vous le souhaitez.</li></ul>' +
+        (unread > 0 ? '<div class="callout warn"><strong>Conseil</strong>Il vous reste ' + unread + ' module(s) non lu(s). Vous pouvez quand même commencer le quiz.</div>' : '') +
+        best +
+        '<div class="quiz-actions"><button class="btn" id="startQuiz">Commencer le quiz</button></div>' +
+      '</div>';
+    document.getElementById("startQuiz").onclick = startQuiz;
+  }
+
+  function startQuiz() {
+    var picked = shuffle(QUESTIONS).slice(0, QUIZ_SIZE).map(function (q) {
+      var order = shuffle(q.o.map(function (_, i) { return i; }));
+      return { t: q.t, q: q.q, e: q.e, o: order.map(function (i) { return q.o[i]; }), a: order.indexOf(q.a) };
+    });
+    quiz = { items: picked, idx: 0, answers: [] };
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    var item = quiz.items[quiz.idx];
+    var letters = "ABCD";
+    var html =
+      '<div class="quiz-head"><span>Question ' + (quiz.idx + 1) + ' / ' + quiz.items.length + '</span><span class="tag">' + escapeHtml(item.t) + '</span></div>' +
+      '<div class="progress" style="max-width:none;margin-bottom:16px"><div style="width:' + (quiz.idx / quiz.items.length * 100) + '%"></div></div>' +
+      '<div class="card qcard"><h3>' + escapeHtml(item.q).replace(/\n/g, '<br><code>').replace(/(<code>.*)$/, '$1</code>') + '</h3>' +
+      '<div class="options">' +
+      item.o.map(function (opt, i) {
+        return '<button class="opt" data-i="' + i + '"><span class="letter">' + letters[i] + '</span><span>' + escapeHtml(opt) + '</span></button>';
+      }).join("") +
+      '</div><div class="feedback" id="fb"></div>' +
+      '<div class="quiz-actions"><button class="btn" id="validate" disabled>Valider</button></div></div>';
+    quizRoot.innerHTML = html;
+
+    var selected = null;
+    var opts = quizRoot.querySelectorAll(".opt");
+    var btn = document.getElementById("validate");
+    opts.forEach(function (b) {
+      b.onclick = function () {
+        opts.forEach(function (x) { x.classList.remove("selected"); });
+        b.classList.add("selected");
+        selected = +b.dataset.i;
+        btn.disabled = false;
+      };
+    });
+    btn.onclick = function () {
+      if (btn.dataset.next) { next(); return; }
+      var ok = selected === item.a;
+      quiz.answers.push(selected);
+      opts.forEach(function (x, i) {
+        x.disabled = true;
+        x.classList.remove("selected");
+        if (i === item.a) x.classList.add("correct");
+        else if (i === selected) x.classList.add("wrong");
+      });
+      var fb = document.getElementById("fb");
+      fb.className = "feedback show " + (ok ? "good" : "bad");
+      fb.innerHTML = "<strong>" + (ok ? "✅ Bonne réponse" : "❌ Mauvaise réponse") + "</strong><br>" + escapeHtml(item.e);
+      btn.textContent = quiz.idx + 1 < quiz.items.length ? "Question suivante →" : "Voir mes résultats";
+      btn.dataset.next = "1";
+      btn.focus();
+    };
+  }
+
+  function next() {
+    quiz.idx++;
+    if (quiz.idx < quiz.items.length) renderQuestion(); else renderResult();
+    window.scrollTo(0, 0);
+  }
+
+  function renderResult() {
+    var total = quiz.items.length;
+    var good = quiz.items.filter(function (it, i) { return quiz.answers[i] === it.a; }).length;
+    var pct = Math.round(good / total * 100);
+    var passed = good / total >= PASS;
+    state.best = Math.max(state.best || 0, pct);
+    if (passed) state.passed = true;
+    save(state);
+    show();
+
+    var themes = {};
+    quiz.items.forEach(function (it, i) {
+      themes[it.t] = themes[it.t] || { g: 0, n: 0 };
+      themes[it.t].n++;
+      if (quiz.answers[i] === it.a) themes[it.t].g++;
+    });
+
+    var r = 64, c = 2 * Math.PI * r;
+    var color = passed ? "var(--ok)" : "var(--ko)";
+    var html =
+      '<div class="card qcard result">' +
+      '<svg class="score-ring" viewBox="0 0 160 160"><circle cx="80" cy="80" r="' + r + '" fill="none" stroke="var(--surface-2)" stroke-width="14"/>' +
+      '<circle cx="80" cy="80" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + (c * pct / 100) + ' ' + c + '" transform="rotate(-90 80 80)"/>' +
+      '<text x="80" y="88" text-anchor="middle" font-size="30" font-weight="700" fill="var(--text)">' + pct + '%</text></svg>' +
+      '<div class="verdict" style="color:' + color + '">' + (passed ? "🎉 Formation validée !" : "Pas encore validée") + '</div>' +
+      '<p>' + good + ' bonnes réponses sur ' + total + '. ' +
+      (passed ? "Vous maîtrisez les grands concepts de l'observabilité et de Dynatrace."
+              : "Il faut au moins " + Math.round(PASS * 100) + " %. Revoyez les thèmes les plus faibles ci-dessous puis réessayez.") + '</p>' +
+      '<div class="themes"><h3>Résultats par thème</h3>' +
+      Object.keys(themes).map(function (k) {
+        var p = Math.round(themes[k].g / themes[k].n * 100);
+        var col = p >= 80 ? "var(--ok)" : p >= 50 ? "var(--warn)" : "var(--ko)";
+        return '<div class="theme-row"><span>' + escapeHtml(k) + '</span><div class="theme-bar"><div style="width:' + p + '%;background:' + col + '"></div></div><span>' + themes[k].g + '/' + themes[k].n + '</span></div>';
+      }).join("") + '</div>' +
+      (passed
+        ? '<div class="cert"><h3 style="margin-top:0">Attestation de réussite</h3><p>Saisissez votre nom pour l\'afficher sur l\'attestation, puis imprimez-la.</p>' +
+          '<input id="certName" placeholder="Prénom Nom" aria-label="Votre nom"><p id="certText" style="font-size:1.05rem;margin-top:16px"></p></div>'
+        : "") +
+      '<div class="quiz-actions" style="justify-content:center;flex-wrap:wrap">' +
+      '<button class="btn ghost" id="toggleReview">Voir la correction détaillée</button>' +
+      (passed ? '<button class="btn ghost" id="printCert">Imprimer l\'attestation</button>' : '') +
+      '<button class="btn" id="retry">Recommencer le quiz</button></div>' +
+      '<div id="review" style="display:none;margin-top:20px"></div></div>';
+    quizRoot.innerHTML = html;
+
+    document.getElementById("retry").onclick = startQuiz;
+    document.getElementById("toggleReview").onclick = function () {
+      var rv = document.getElementById("review");
+      rv.style.display = rv.style.display === "none" ? "block" : "none";
+    };
+    document.getElementById("review").innerHTML = quiz.items.map(function (it, i) {
+      var ok = quiz.answers[i] === it.a;
+      return '<div class="review-item"><div><span class="' + (ok ? "badge-ok" : "badge-ko") + '">' + (ok ? "✓" : "✗") + '</span> <strong>' + (i + 1) + '. ' + escapeHtml(it.q) + '</strong></div>' +
+        (ok ? "" : '<div class="ans">Votre réponse : ' + escapeHtml(it.o[quiz.answers[i]]) + '</div>') +
+        '<div class="ans">Bonne réponse : <strong>' + escapeHtml(it.o[it.a]) + '</strong></div>' +
+        '<div class="ans">' + escapeHtml(it.e) + '</div></div>';
+    }).join("");
+
+    if (passed) {
+      var nameInput = document.getElementById("certName");
+      var certText = document.getElementById("certText");
+      var date = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+      var upd = function () {
+        var n = nameInput.value.trim() || "…";
+        certText.innerHTML = "Nous attestons que <strong>" + escapeHtml(n) + "</strong> a validé la formation <em>Observabilité &amp; Dynatrace</em> avec un score de <strong>" + pct + " %</strong>, le " + date + ".";
+        state.name = nameInput.value; save(state);
+      };
+      nameInput.value = state.name || "";
+      nameInput.oninput = upd; upd();
+      document.getElementById("printCert").onclick = function () {
+        document.body.classList.add("print-cert");
+        window.print();
+        document.body.classList.remove("print-cert");
+      };
+    }
+  }
+
+  renderIntro();
+  window.addEventListener("hashchange", function () { if (location.hash === "#quiz" && !quiz) renderIntro(); });
+  show();
+})();
+</script>
+</body>
+</html>
