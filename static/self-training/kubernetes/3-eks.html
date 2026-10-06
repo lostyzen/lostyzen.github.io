@@ -488,7 +488,9 @@
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip      <span class="cm"># le trafic va directement aux IP des pods</span>
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-3:123456789012:certificate/…
+    alb.ingress.kubernetes.io/listen-ports: <span class="str">'[{"HTTP": 80}, {"HTTPS": 443}]'</span>
+    alb.ingress.kubernetes.io/ssl-redirect: <span class="str">"443"</span>      <span class="cm"># redirige HTTP vers HTTPS</span>
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:eu-west-3:123456789012:certificate/…   <span class="cm"># certificat ACM</span>
 <span class="kw">spec</span>:
   ingressClassName: alb</code></pre>
   <p>Le mode <code>target-type: ip</code> envoie le trafic directement aux pods, ce qui est possible grâce aux IP du VPC. Le mode <code>instance</code> passe par un NodePort sur les nœuds. Plusieurs Ingress peuvent partager un même ALB grâce à l'annotation <code>group.name</code>, ce qui réduit les coûts.</p>

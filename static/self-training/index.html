@@ -43,11 +43,11 @@
   .parts a:hover { border-color: var(--c); background: var(--surface-2); }
   .num {
     flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
-    font-weight: 700; font-size: .85rem; color: #fff; background: var(--c);
+    font-weight: 700; font-size: .85rem; color: var(--text); background: var(--surface); border: 2px solid var(--c);
   }
   .parts .label { flex: 1; }
   .parts .label small { display: block; color: var(--muted); font-size: .82rem; }
-  .status { font-size: .78rem; font-weight: 700; color: var(--ok); background: var(--ok-soft); padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+  .status { font-size: .78rem; font-weight: 700; color: var(--text); background: var(--ok-soft); padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
   .status:empty { display: none; }
   footer { margin-top: 40px; color: var(--muted); font-size: .88rem; }
   .theme { position: fixed; top: 14px; right: 16px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; padding: 6px 10px; cursor: pointer; }

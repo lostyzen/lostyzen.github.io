@@ -454,10 +454,10 @@
 <span class="kw">metadata</span>:
   name: boutique
 <span class="kw">spec</span>:
-  ingressClassName: alb
+  ingressClassName: traefik       <span class="cm"># contrôleur installé dans le cluster</span>
   tls:
     - hosts: [shop.example.com]
-      secretName: shop-tls
+      secretName: shop-tls        <span class="cm"># certificat TLS, par exemple géré par cert-manager</span>
   rules:
     - host: shop.example.com
       http:
@@ -469,6 +469,10 @@
             pathType: Prefix
             backend: { service: { name: web, port: { number: 80 } } }</code></pre>
   <p>Un objet Ingress ne fait rien seul : il faut un <strong>contrôleur d'Ingress</strong> qui le met en œuvre (AWS Load Balancer Controller, Traefik, HAProxy, NGINX Inc., etc.). <strong>cert-manager</strong> automatise l'obtention et le renouvellement des certificats TLS (Let's Encrypt, PKI interne).</p>
+  <div class="callout">
+    <strong>Le TLS dépend du contrôleur</strong>
+    Les contrôleurs qui tournent dans le cluster (Traefik, HAProxy…) terminent le TLS avec le Secret indiqué par <code>secretName</code>. L'<strong>AWS Load Balancer Controller</strong> fonctionne autrement : le certificat est un certificat <strong>ACM</strong>, déclaré par annotations sur l'Ingress, avec un écouteur HTTPS (voir la <a href="3-eks.html">partie 3 : Amazon EKS</a>).
+  </div>
 
   <h3>Gateway API</h3>
   <p><strong>Gateway API</strong> est le successeur d'Ingress, stable depuis 2023. Il sépare les responsabilités en plusieurs objets :</p>
